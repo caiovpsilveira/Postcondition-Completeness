@@ -1,0 +1,728 @@
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsReverseArray {
+    public static boolean isReverseArray(int[] x, int[] y) {
+        if (x.length != y.length)
+            return false;
+        int index = 0;
+
+        while (index < x.length) {
+            if (x[index] != y[x.length - 1 - index]) {
+                return false;
+            } else {
+                index = index + 1;
+            }
+        }
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class IsReverseArray {
+    //@  requires x != null && y != null;
+    //@  requires x.length != y.length;
+    //@  ensures \result == false;
+    //@ also
+    //@  requires x != null && y != null;
+    //@  requires x.length == y.length;
+    //@  ensures \result == \forall int i; 0 <= i < x.length; x[i] == y[y.length - 1 - i];
+    //@ behaviors disjoint;
+    public static boolean isReverseArray(int[] x, int[] y) {
+        if (x.length != y.length)
+            return false;
+        int index = 0;
+
+        //@ maintaining 0 <= index <= x.length;
+        //@ maintaining \forall int i; 0 <= i < index; x[i] == y[y.length - 1 - i];
+        //@ loop_writes index;
+        //@ decreases x.length - index;
+        while (index < x.length) {
+            if (x[index] != y[x.length - 1 - index]) {
+                return false;
+            } else {
+                index = index + 1;
+            }
+        }
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+
+assistant: ```
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+```
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));
+        ^
+2 verification failures
+
+==============================
+=============== Mutation Phase ===============
+--------------- Mutation Iteration 1 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 < k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 < k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 2 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 < k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 < k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 3 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 4 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 5 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 - 1 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 - 1 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 6 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\forall int k; 0 - 1 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\forall int k; 0 - 1 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 7 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\exists int k; 0 < k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\exists int k; 0 < k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 8 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\exists int k; 0 < k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\exists int k; 0 < k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 9 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\exists int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\exists int k; 0 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 10 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\exists int k; 0 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\exists int k; 0 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 11 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\exists int k; 0 - 1 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:21: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+        return true;
+        ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:21:
+    //@ ensures \result == (\exists int k; 0 - 1 <= k < pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 12 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+    //@ ensures \result == (\exists int k; 0 - 1 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8: verify: The prover cannot establish an assertion (Postcondition: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4:) in method isPrefix
+            return false;
+            ^
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:4: verify: Associated declaration: /home/caio/workspace/reproduce-SpecGen-Artifact/tmp/IsPrefix.java:8:
+    //@ ensures \result == (\exists int k; 0 - 1 <= k <= pat.length(); pat.charAt(k) == txt.charAt(k));  
+        ^
+2 verification failures
+
+==============================
+--------------- Mutation Iteration 13 ---------------
+public class IsPrefix {
+    //@ requires pat != null && txt != null;
+    //@ assigns \nothing;
+ 
+    //@ pure
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+==============================
+
+==============================
+
+Finished. Verifier invoked 14 times
+Success

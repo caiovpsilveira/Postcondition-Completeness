@@ -1,0 +1,1022 @@
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Add {
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (y + n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (y + n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - (y + n);
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 2 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - (y + n);
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - (n);
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 3 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - (n);
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x + (-y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x + (-y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x + (-y - n);
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 4 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x + (-y - n);
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - ( -y - n );
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - ( -y - n );
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - ( -y - n );
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 5 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - ( -y - n );
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - (n);
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 6 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - (n);
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x + (y + n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x + (y + n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x + (y + n);
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 7 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x + (y + n);
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - ( (-y) - n );
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - ( (-y) - n );
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - ( (-y) - n );
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 8 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - ( (-y) - n );
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - n;
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - n;
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - n;
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 9 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x - n;
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```java
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x + (y + n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (y - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x + (y + n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x + (y + n);
+                ^
+1 verification failure
+
+==============================
+--------------- Iteration 10 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method add
+            //@ maintaining 0 <= n && sum == x + (y + n);
+                ^
+1 verification failure
+
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: The error you are encountering (`LoopInvariantBeforeLoop`) means that the loop invariant you specified does not hold *before* the loop starts. This usually means that the initial values of the variables do not satisfy the invariant.
+
+Let's analyze the problem carefully:
+
+- For the case `y > 0`:
+  - You set `n = y`.
+  - The invariant is `0 <= n && sum == x + (y - n)`.
+  - Before the loop, `n == y` and `sum == x`.
+  - So `sum == x + (y - n)` becomes `x == x + (y - y)` → `x == x + 0` → `x == x`, which is true.
+- For the case `y <= 0`:
+  - You set `n = -y`.
+  - The invariant you tried is `0 <= n && sum == x + (y + n)`.
+  - Before the loop, `n == -y` and `sum == x`.
+  - So `sum == x + (y + n)` becomes `x == x + (y + (-y))` → `x == x + 0` → `x == x`, which is true.
+
+So the invariant looks logically correct, but the prover might have trouble with the expression `y + n` or the sign manipulations.
+
+**A better approach** is to use a ghost variable or a helper variable to keep track of the original value of `n` or `y` to avoid confusion.
+
+---
+
+### Corrected code with explicit ghost variables and simpler invariants:
+
+```java
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ ghost int originalN = n;
+            //@ maintaining 0 <= n && sum == x + (originalN - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ ghost int originalN = n;
+            //@ maintaining 0 <= n && sum == x - (originalN - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+
+---
+
+### Explanation:
+
+- Introduced a ghost variable `originalN` to hold the initial value of `n`.
+- The invariant now relates `sum` to `x` and the difference between `originalN` and `n`.
+- For positive `y`, `sum == x + (originalN - n)` because each iteration adds 1 to `sum` and subtracts 1 from `n`.
+- For negative `y`, `sum == x - (originalN - n)` because each iteration subtracts 1 from `sum` and subtracts 1 from `n`.
+- This avoids the confusing expressions involving `y` and `n` together.
+
+This should allow the prover to establish the loop invariant before the loop starts.
+
+---
+
+If your verification tool does not support `ghost` variables, you can inline the initial value as a final variable:
+
+```java
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            final int originalN = y;
+            int n = y;
+            //@ maintaining 0 <= n && sum == x + (originalN - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            final int originalN = -y;
+            int n = -y;
+            //@ maintaining 0 <= n && sum == x - (originalN - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+```
+
+---
+
+Please try this version and let me know if you still encounter verification issues.
+public class Add {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == x + y;
+    public static int add(int x, int y) {
+        int sum = x;
+        if (y > 0) {
+            int n = y;
+            //@ ghost int originalN = n;
+            //@ maintaining 0 <= n && sum == x + (originalN - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum + 1;
+                n = n - 1;
+            }
+        } else {
+            int n = -y;
+            //@ ghost int originalN = n;
+            //@ maintaining 0 <= n && sum == x - (originalN - n);
+            //@ decreases n;
+            while (n > 0) {
+                sum = sum - 1;
+                n = n - 1;
+            }
+        }
+        return sum;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/Add.java:17: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method add: int negation
+            int n = -y;
+                    ^
+1 verification failure
+
+==============================
+
+Finished. Verifier invoked 10 times
+Failure

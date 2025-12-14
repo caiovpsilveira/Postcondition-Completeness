@@ -1,0 +1,448 @@
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ReverseArray {
+    public static int[] reverse(int[] original) {
+        int n = original.length;
+        int[] res = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            res[i] = original[n - i - 1];
+        }
+        return res;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, withou omitting any original content.
+
+
+assistant: ```
+public class ReverseArray {
+    //@ requires original != null;
+    //@ assigns \result[..];
+    //@ ensures \result != null && \result.length == original.length;
+    //@ ensures \forall int i; 0 <= i < original.length; \result[i] == original[original.length - i - 1];
+    public static int[] reverse(int[] original) {
+        int n = original.length;
+        int[] res = new int[n];
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int j; 0 <= j < i; res[j] == original[n - j - 1];
+        //@ maintaining \forall int k; i <= k < n; res[k] == 0;
+        //@ loop_writes res[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            res[i] = original[n - i - 1];
+        }
+        return res;
+    }
+}
+
+```
+public class ReverseArray {
+    //@ requires original != null;
+    //@ assigns \result[..];
+    //@ ensures \result != null && \result.length == original.length;
+    //@ ensures \forall int i; 0 <= i < original.length; \result[i] == original[original.length - i - 1];
+    public static int[] reverse(int[] original) {
+        int n = original.length;
+        int[] res = new int[n];
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int j; 0 <= j < i; res[j] == original[n - j - 1];
+        //@ maintaining \forall int k; i <= k < n; res[k] == 0;
+        //@ loop_writes res[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            res[i] = original[n - i - 1];
+        }
+        return res;
+    }
+}
+==============================
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/ReverseArray.java:3: error: A \result expression may not be in a assignable clause
+    //@ assigns \result[..];
+                 ^
+EXCEPTION-JmlMethodSpecs java.lang.NullPointerException: Cannot invoke "com.sun.tools.javac.tree.JCTree.accept(com.sun.tools.javac.tree.JCTree$Visitor)" because "tree" is null
+java.lang.NullPointerException: Cannot invoke "com.sun.tools.javac.tree.JCTree.accept(com.sun.tools.javac.tree.JCTree$Visitor)" because "tree" is null
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribTree(Attr.java:664)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribTree(JmlAttr.java:5023)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribExpr(Attr.java:718)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitIndexed(JmlAttr.java:6166)
+	at jdk.compiler/com.sun.tools.javac.tree.JCTree$JCArrayAccess.accept(JCTree.java:2547)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribTree(Attr.java:664)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribTree(JmlAttr.java:5023)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribExpr(Attr.java:711)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribExpr(JmlAttr.java:8136)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlMethodClauseStoreRef(JmlAttr.java:4208)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlMethodClauseStoreRef.accept(JmlTree.java:2777)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlSpecificationCase(JmlAttr.java:4416)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlSpecificationCase.accept(JmlTree.java:3195)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlMethodSpecs(JmlAttr.java:4491)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlMethodSpecs.accept(JmlTree.java:2848)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attrSpecs(JmlAttr.java:8685)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribMethodSpecsAndBody(JmlAttr.java:1533)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.visitMethodDef(Attr.java:1234)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitMethodDef(JmlAttr.java:1409)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlMethodDecl(JmlAttr.java:7814)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlMethodDecl.accept(JmlTree.java:1426)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribTree(Attr.java:664)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribTree(JmlAttr.java:5023)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribStat(Attr.java:739)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribStat(JmlAttr.java:589)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClassBody(Attr.java:5699)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribClassBody(JmlAttr.java:565)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClass(Attr.java:5586)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribClass(JmlAttr.java:446)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClass(Attr.java:5405)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attrib(Attr.java:5344)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.attribute(JavaCompiler.java:1360)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.attribute(JmlCompiler.java:546)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.compile(JavaCompiler.java:967)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.compile(JmlCompiler.java:221)
+	at jdk.compiler/com.sun.tools.javac.main.Main.compile(Main.java:325)
+	at jdk.compiler/org.jmlspecs.openjml.Main.compile(Main.java:565)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:403)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:360)
+	at jdk.compiler/org.jmlspecs.openjml.Main.main(Main.java:320)
+	at jdk.compiler/com.sun.tools.javac.Main.main(Main.java:53)
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/ReverseArray.java:16: error: Assignments are not allowed where pure expressions are expected
+            res[i] = original[n - i - 1];
+                   ^
+MISMATCHED JMLENV 157328970 2023438967
+java.lang.RuntimeException
+	at jdk.compiler/org.jmlspecs.openjml.Utils.dumpStack(Utils.java:2066)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr$JmlEnv.pop(JmlAttr.java:9035)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribClass(JmlAttr.java:469)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClass(Attr.java:5405)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attrib(Attr.java:5344)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.attribute(JavaCompiler.java:1360)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.attribute(JmlCompiler.java:546)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.compile(JavaCompiler.java:967)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.compile(JmlCompiler.java:221)
+	at jdk.compiler/com.sun.tools.javac.main.Main.compile(Main.java:325)
+	at jdk.compiler/org.jmlspecs.openjml.Main.compile(Main.java:565)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:403)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:360)
+	at jdk.compiler/org.jmlspecs.openjml.Main.main(Main.java:320)
+	at jdk.compiler/com.sun.tools.javac.Main.main(Main.java:53)
+2 errors
+
+==============================
+--------------- Iteration 2 ---------------
+user:
+Your specification got the following error information:
+
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/ReverseArray.java:3: error: A \result expression may not be in a assignable clause
+    //@ assigns \result[..];
+                 ^
+EXCEPTION-JmlMethodSpecs java.lang.NullPointerException: Cannot invoke "com.sun.tools.javac.tree.JCTree.accept(com.sun.tools.javac.tree.JCTree$Visitor)" because "tree" is null
+java.lang.NullPointerException: Cannot invoke "com.sun.tools.javac.tree.JCTree.accept(com.sun.tools.javac.tree.JCTree$Visitor)" because "tree" is null
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribTree(Attr.java:664)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribTree(JmlAttr.java:5023)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribExpr(Attr.java:718)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitIndexed(JmlAttr.java:6166)
+	at jdk.compiler/com.sun.tools.javac.tree.JCTree$JCArrayAccess.accept(JCTree.java:2547)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribTree(Attr.java:664)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribTree(JmlAttr.java:5023)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribExpr(Attr.java:711)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribExpr(JmlAttr.java:8136)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlMethodClauseStoreRef(JmlAttr.java:4208)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlMethodClauseStoreRef.accept(JmlTree.java:2777)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlSpecificationCase(JmlAttr.java:4416)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlSpecificationCase.accept(JmlTree.java:3195)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlMethodSpecs(JmlAttr.java:4491)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlMethodSpecs.accept(JmlTree.java:2848)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attrSpecs(JmlAttr.java:8685)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribMethodSpecsAndBody(JmlAttr.java:1533)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.visitMethodDef(Attr.java:1234)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitMethodDef(JmlAttr.java:1409)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.visitJmlMethodDecl(JmlAttr.java:7814)
+	at jdk.compiler/org.jmlspecs.openjml.JmlTree$JmlMethodDecl.accept(JmlTree.java:1426)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribTree(Attr.java:664)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribTree(JmlAttr.java:5023)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribStat(Attr.java:739)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribStat(JmlAttr.java:589)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClassBody(Attr.java:5699)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribClassBody(JmlAttr.java:565)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClass(Attr.java:5586)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribClass(JmlAttr.java:446)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClass(Attr.java:5405)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attrib(Attr.java:5344)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.attribute(JavaCompiler.java:1360)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.attribute(JmlCompiler.java:546)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.compile(JavaCompiler.java:967)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.compile(JmlCompiler.java:221)
+	at jdk.compiler/com.sun.tools.javac.main.Main.compile(Main.java:325)
+	at jdk.compiler/org.jmlspecs.openjml.Main.compile(Main.java:565)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:403)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:360)
+	at jdk.compiler/org.jmlspecs.openjml.Main.main(Main.java:320)
+	at jdk.compiler/com.sun.tools.javac.Main.main(Main.java:53)
+/home/caio/workspace/reproduce-SpecGen-Artifact/tmp/ReverseArray.java:16: error: Assignments are not allowed where pure expressions are expected
+            res[i] = original[n - i - 1];
+                   ^
+MISMATCHED JMLENV 157328970 2023438967
+java.lang.RuntimeException
+	at jdk.compiler/org.jmlspecs.openjml.Utils.dumpStack(Utils.java:2066)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr$JmlEnv.pop(JmlAttr.java:9035)
+	at jdk.compiler/com.sun.tools.javac.comp.JmlAttr.attribClass(JmlAttr.java:469)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attribClass(Attr.java:5405)
+	at jdk.compiler/com.sun.tools.javac.comp.Attr.attrib(Attr.java:5344)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.attribute(JavaCompiler.java:1360)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.attribute(JmlCompiler.java:546)
+	at jdk.compiler/com.sun.tools.javac.main.JavaCompiler.compile(JavaCompiler.java:967)
+	at jdk.compiler/com.sun.tools.javac.main.JmlCompiler.compile(JmlCompiler.java:221)
+	at jdk.compiler/com.sun.tools.javac.main.Main.compile(Main.java:325)
+	at jdk.compiler/org.jmlspecs.openjml.Main.compile(Main.java:565)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:403)
+	at jdk.compiler/org.jmlspecs.openjml.Main.execute(Main.java:360)
+	at jdk.compiler/org.jmlspecs.openjml.Main.main(Main.java:320)
+	at jdk.compiler/com.sun.tools.javac.Main.main(Main.java:53)
+2 errors
+
+
+Please generate again.
+
+assistant: ```java
+public class ReverseArray {
+    //@ requires original != null;
+    //@ ensures \result != null && \result.length == original.length;
+    //@ ensures \forall int i; 0 <= i < original.length; \result[i] == original[original.length - i - 1];
+    public static int[] reverse(int[] original) {
+        int n = original.length;
+        int[] res = new int[n];
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int j; 0 <= j < i; res[j] == original[n - j - 1];
+        //@ maintaining \forall int k; i <= k < n; res[k] == 0;
+        //@ loop_writes res[*];
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            res[i] = original[n - i - 1];
+        }
+        return res;
+    }
+}
+```
+public class ReverseArray {
+    //@ requires original != null;
+    //@ ensures \result != null && \result.length == original.length;
+    //@ ensures \forall int i; 0 <= i < original.length; \result[i] == original[original.length - i - 1];
+    public static int[] reverse(int[] original) {
+        int n = original.length;
+        int[] res = new int[n];
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int j; 0 <= j < i; res[j] == original[n - j - 1];
+        //@ maintaining \forall int k; i <= k < n; res[k] == 0;
+        //@ loop_writes res[*];
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            res[i] = original[n - i - 1];
+        }
+        return res;
+    }
+}
+==============================
+
+==============================
+
+Finished. Verifier invoked 2 times
+Success
