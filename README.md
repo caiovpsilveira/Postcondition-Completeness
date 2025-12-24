@@ -199,5 +199,8 @@ The files under the `specgen` directory were directly sourced or modified from t
 
 These files are licensed under the MIT License. Copyright Lezhi Ma and contributors.
 
+The major changes are in `spegcen/specgen.py` and for the feedback, either in the `specgen/refinement_prompt.py` or in the `specgen/prompts/refine/`.
+These were giving feedback suggesting usage of assumptions, which is undesired.
+
 ### Remaining files
 The remaining files are distributed under the MIT license. Copyright Caio Vinícius Pereira Silveira.

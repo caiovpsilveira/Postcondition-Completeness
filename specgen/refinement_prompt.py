@@ -64,7 +64,7 @@ def extract_err_type(err_info):
         "underflow sum": "underflow_sum",
         "underflow difference": "underflow_sub",
         "underflow multiply": "underflow_mul",
-        "underflow divide": "underflow_div",
+        #"underflow divide": "underflow_div",
     }
     for key in keyword_dict:
         keyword_list = key.split(' ')

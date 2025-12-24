@@ -14,6 +14,8 @@ from token_counter import count_config_token
 from generation_prompt import create_generation_prompt_config
 from refinement_prompt import create_specialized_patcher_prompt_config, gen_extra_guidance, extract_err_type
 
+from src.simple_tokenizer_java import simple_tokenize_java
+
 def extract_lineno_from_err_info(err_info):
     temp_list = []
     err_list = []
@@ -257,6 +259,7 @@ def main():
 
     openai.api_key = open(args.key_file, 'r').read().strip()
     input_code = file2str(args.input)
+    original_code_tokens = simple_tokenize_java(input_code)
 
     # required for creating files to check with OpenJML
     tmp_dir = os.path.join(os.path.abspath("."), "tmp")
@@ -365,6 +368,11 @@ def main():
 
         if "signals" in current_code:
             err_info += "Error: You MUST NOT account for exceptional behavior. Forbid all exception-causing states via preconditions ('requires' clause).\n"
+            err_types = []
+
+        current_code_tokens = simple_tokenize_java(current_code)
+        if original_code_tokens != current_code_tokens:
+            err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.\n"
             err_types = []
 
         if err_info == "":

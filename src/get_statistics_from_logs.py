@@ -3,6 +3,7 @@ import re
 from collections import deque
 import pandas as pd
 import argparse
+from simple_tokenizer_java import simple_tokenize_java
 
 NUM_RUNS = 10
 
@@ -285,51 +286,6 @@ def llm_changed_original_code(df, base_dir):
     For the last entry in each log, compare non-comments with the original code.
     It should have the exact same tokens.
     """
-    def simple_tokenize_java(src: str):
-        """
-        Remove // and /* */ comments and split only on whitespace.
-        Returns consecutive non-whitespace runs as tokens.
-        """
-        tokens = []
-        cur = []
-        i, n = 0, len(src)
-        while i < n:
-            ch = src[i]
-            nxt = src[i + 1] if i + 1 < n else ''
-
-            # line comment: //
-            if ch == '/' and nxt == '/':
-                if cur:
-                    tokens.append(''.join(cur)); cur = []
-                i += 2
-                while i < n and src[i] != '\n':
-                    i += 1
-                continue
-
-            # block comment: /* ... */
-            if ch == '/' and nxt == '*':
-                if cur:
-                    tokens.append(''.join(cur)); cur = []
-                i += 2
-                while i + 1 < n and not (src[i] == '*' and src[i + 1] == '/'):
-                    i += 1
-                i = i + 2 if i + 1 < n else n
-                continue
-
-            # whitespace splits tokens
-            if ch in (' ', '\t', '\r', '\n'):
-                if cur:
-                    tokens.append(''.join(cur)); cur = []
-                i += 1
-                continue
-
-            # accumulate non-whitespace chars
-            cur.append(ch)
-            i += 1
-
-        if cur:
-            tokens.append(''.join(cur))
-        return tokens
 
     # are we interested in seeing on the failures as well?
     successes = get_successfull_runs(df)
