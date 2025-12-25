@@ -1,6 +1,5 @@
 import string
 
-from chatgpt_wrapper import create_chatgpt_config
 from prompt_format import FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT
 from util import file2str
 
@@ -77,17 +76,7 @@ def extract_err_type(err_info):
             prompt_list.append(keyword_dict[key])
     return prompt_list
 
-def create_specialized_patcher_prompt_config(model, temperature, prompt_type, original_code, err_info):
-    msg_base = {
-        'role': 'system',
-        'content': 'You are an JML specification generator for java programs.'
-    }
-    messages = [msg_base]
-
-    prompt_list = extract_err_type(err_info)
-    for dirname in prompt_list:
-        messages.extend(read_refine_as_msg(prompt_type, dirname))
-
+def append_failed_code_with_prompt(msg_list, prompt_type, current_code, err_info):
     if prompt_type == "original":
         prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT
     elif prompt_type == "strict":
@@ -98,8 +87,20 @@ def create_specialized_patcher_prompt_config(model, temperature, prompt_type, or
 
     msg_request = {
         'role': 'user',
-        'content': prompt.format(code=original_code, info=err_info)
+        'content': prompt.format(code=current_code, info=err_info)
     }
     msg_request['content'] += gen_extra_guidance(err_info)
-    messages.append(msg_request)
-    return create_chatgpt_config(messages, model, temperature)
+    msg_list.append(msg_request)
+
+def create_specialized_patcher_prompt_config(config, original_config_length, prompt_type, current_code, err_info):
+    messages = []
+
+    prompt_list = extract_err_type(err_info)
+    for dirname in prompt_list:
+        messages.extend(read_refine_as_msg(prompt_type, dirname))
+
+    append_failed_code_with_prompt(messages, prompt_type, current_code, err_info)
+
+    assert original_config_length != 0
+    config['messages'] = config['messages'][0:original_config_length]
+    config['messages'].extend(messages)

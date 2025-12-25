@@ -9,10 +9,9 @@ import subprocess
 from chatgpt_wrapper import request_chatgpt_engine
 from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_ERR
 from util import file2str, parse_code_from_reply
-from token_counter import count_config_token
 
 from generation_prompt import create_generation_prompt_config
-from refinement_prompt import create_specialized_patcher_prompt_config, gen_extra_guidance, extract_err_type
+from refinement_prompt import create_specialized_patcher_prompt_config, gen_extra_guidance, extract_err_type, append_failed_code_with_prompt
 
 def extract_lineno_from_err_info(err_info):
     temp_list = []
@@ -28,13 +27,6 @@ def extract_lineno_from_err_info(err_info):
     for err in err_list:
         lineno_list.append(int(err[0].split(":")[1]))
     return lineno_list
-
-def token_limit_fitter(model, config, token_limit=120000):
-    res = config
-    while(count_config_token(model, res) > token_limit):
-        res['messages'] = res['messages'][3:len(res['messages'])]
-        res['messages'].insert(0, config['messages'][0])
-    return res
 
 class TimeoutException(Exception):
     pass
@@ -325,10 +317,14 @@ def main():
     current_code = input_code.strip()
     err_info = ""
     err_types = []
+    first_generation_message_length = 0
     for i in range(1, args.max_gen_iterations+1):
         if i == 1:
+            # First gen: gets the prompt, few shots and task description. Appends LLM's return as the last message
             print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
             config = create_generation_prompt_config(model, temperature, args.prompt_type, input_code, classname)
+            # in each attempt, we want to keep those and change the remaining
+            first_generation_message_length = len(config['messages']) -1 #-1 : remove raw code
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
             print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
@@ -338,37 +334,14 @@ def main():
                 err_info = "Gave up"
                 break
             current_code = str(parsed).strip()
-            config['messages'].append(
-                {
-                    'role': 'assistant',
-                    'content': "```\n{code}\n```".format(code=current_code)
-                }
-            )
         else:
             err_types = extract_err_type(err_info)
             if len(err_types) != 0:
+                # Failed gen, and we have guided feedback (examples regarding this specific failure).
+                # Add feedback. Replace last attempt by (feedback + current failed code)
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                tmp_config = create_specialized_patcher_prompt_config(model, temperature, args.prompt_type, current_code, err_info)
-                print_and_log_config(tmp_config, f_log)
-                ret = request_chatgpt_engine(tmp_config)
-                print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
-                parsed = parse_code_from_reply(ret.choices[0].message.content)
-                if parsed is None:
-                    print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
-                    err_info = "Gave up"
-                    break
-                current_code = str(parsed).strip()
-                config['messages'][-1]['content'] = "```\n{code}\n```".format(code=current_code)
-            elif not args.mutation or err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1:
-                print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                refine_msg = {
-                    'role': 'user',
-                    'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
-                }
-                refine_msg['content'] += gen_extra_guidance(err_info)
-                config['messages'].append(refine_msg)
-                print_and_log_msg(refine_msg, f_log)
-                token_limit_fitter(model, config, 3000)
+                create_specialized_patcher_prompt_config(config, first_generation_message_length, args.prompt_type, current_code, err_info)
+                print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)
                 print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
                 parsed = parse_code_from_reply(ret.choices[0].message.content)
@@ -377,13 +350,32 @@ def main():
                     err_info = "Gave up"
                     break
                 current_code = str(parsed).strip()
-                config['messages'].append(
-                    {
-                        'role': 'assistant',
-                        'content': "```\n{code}\n```".format(code=current_code)
-                    }
-                )
+            elif not args.mutation or err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1:
+                # Failed gen, we do not have guided feedback, and it does not have mutation candidates (or mutation is disabled)
+                # Replace last attempt by (fix instruction + current failed code)
+                print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
+                config['messages'] = config['messages'][0:first_generation_message_length]
+                append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
+                refine_msg = {
+                    'role': 'user',
+                    'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
+                }
+                refine_msg['content'] += gen_extra_guidance(err_info)
+                config['messages'].append(refine_msg)
+                
+                print_and_log_config(config, f_log)
+                ret = request_chatgpt_engine(config)
+                print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
+
+                parsed = parse_code_from_reply(ret.choices[0].message.content)
+                if parsed is None:
+                    print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
+                    err_info = "Gave up"
+                    break
+                current_code = str(parsed).strip()
             else:
+                # Correct gen OR
+                # Failed gen, we do not have guided feedback, and we do have mutation candidates (mutation is enabled)
                 assert args.mutation
                 done_flag = True # Skip to mutation phase/end
                 break
@@ -417,6 +409,7 @@ def main():
         current_code_tokens = simple_tokenize_java(current_code)
         if original_code_tokens != current_code_tokens:
             err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.\n"
+            err_info += f"The original source code is\n```\n{input_code}\n```\n"
             err_types = []
 
         if err_info == "":
