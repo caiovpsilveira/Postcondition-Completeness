@@ -14,8 +14,6 @@ from token_counter import count_config_token
 from generation_prompt import create_generation_prompt_config
 from refinement_prompt import create_specialized_patcher_prompt_config, gen_extra_guidance, extract_err_type
 
-from src.simple_tokenizer_java import simple_tokenize_java
-
 def extract_lineno_from_err_info(err_info):
     temp_list = []
     err_list = []
@@ -210,6 +208,52 @@ def print_and_log_msg(message, log_file):
     msg = "{r}:{c}\n".format(r=message['role'], c=message['content'])
     print_and_log(msg, log_file)
 
+def simple_tokenize_java(src: str):
+    """
+    Remove // and /* */ comments and split only on whitespace.
+    Returns consecutive non-whitespace runs as tokens.
+    Note: this does not handle things inside strings (but we do not have those in the dataset)
+    """
+    tokens = []
+    cur = []
+    i, n = 0, len(src)
+    while i < n:
+        ch = src[i]
+        nxt = src[i + 1] if i + 1 < n else ''
+
+        # line comment: //
+        if ch == '/' and nxt == '/':
+            if cur:
+                tokens.append(''.join(cur)); cur = []
+            i += 2
+            while i < n and src[i] != '\n':
+                i += 1
+            continue
+
+        # block comment: /* ... */
+        if ch == '/' and nxt == '*':
+            if cur:
+                tokens.append(''.join(cur)); cur = []
+            i += 2
+            while i + 1 < n and not (src[i] == '*' and src[i + 1] == '/'):
+                i += 1
+            i = i + 2 if i + 1 < n else n
+            continue
+
+        # whitespace splits tokens
+        if ch in (' ', '\t', '\r', '\n'):
+            if cur:
+                tokens.append(''.join(cur)); cur = []
+            i += 1
+            continue
+
+        # accumulate non-whitespace chars
+        cur.append(ch)
+        i += 1
+
+    if cur:
+        tokens.append(''.join(cur))
+    return tokens
 
 def main():
     parser = argparse.ArgumentParser()
