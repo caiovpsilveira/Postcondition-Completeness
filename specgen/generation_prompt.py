@@ -4,21 +4,13 @@ from chatgpt_wrapper import create_chatgpt_config
 from prompt_format import FORMAT_ORIGINAL_GENERATION_PROMPT, FORMAT_STRICT_GENERATION_PROMPT
 from util import file2str
 
-def read_oracle_as_msg(prompt_type, classname):
+def read_oracle_as_msg(classname):
     filename_oracle = "./dataset_v1_annotated/" + classname + ".java"
     filename_clean = "./dataset_v1_no_annotations/" + classname + ".java"
 
-    if prompt_type == "original":
-        prompt = FORMAT_ORIGINAL_GENERATION_PROMPT
-    elif prompt_type == "strict":
-        prompt = FORMAT_STRICT_GENERATION_PROMPT
-    else:
-        assert 0
-        prompt = ""
-
     msg_request = {
         'role': 'user',
-        'content': prompt.format(src_code=file2str(filename_clean))
+        'content': '```\n{code}\n```'.format(code=file2str(filename_clean))
     }
     msg_reply = {
         'role': 'assistant',
@@ -79,8 +71,8 @@ def create_generation_prompt_config(model, temperature, prompt_type, input_code,
 
     #prompt_list = randomly_select_prompt(list(few_shot_examples), 3, class_name)
     # prompt_list = manually_select_prompt()
-    for prompted_oracle in few_shot_examples:
-        messages.extend(read_oracle_as_msg(prompt_type, prompted_oracle))
+    for oracle in few_shot_examples:
+        messages.extend(read_oracle_as_msg(oracle))
 
     if prompt_type == "original":
         prompt = FORMAT_ORIGINAL_GENERATION_PROMPT

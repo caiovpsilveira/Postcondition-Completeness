@@ -1,6 +1,6 @@
 import string
 
-from prompt_format import FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT
+from prompt_format import FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT, FORMAT_REFINE_PROMPT
 from util import file2str
 
 def gen_extra_guidance(err_info):
@@ -23,30 +23,26 @@ def gen_extra_guidance(err_info):
     else:
         return ""
 
-def read_refine_as_msg(prompt_type, dirname):
+def read_refine_as_msg(dirname):
     dirpath = "specgen/prompts/refine/" + dirname + "/"
     original_code = file2str(dirpath + "original")
     err_info = file2str(dirpath + "err_info")
     refined_code = file2str(dirpath + "refined")
 
-    if prompt_type == "original":
-        prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT
-    elif prompt_type == "strict":
-        prompt = FORMAT_STRICT_REFINEMENT_PROMPT
-    else:
-        assert 0
-        prompt = ""
-
     msg_request = {
+        'role': 'assistant',
+        'content': '```\n{code}\n```'.format(code=original_code)
+    }
+    msg_err = {
         'role': 'user',
-        'content': prompt.format(code=original_code, info=err_info)
+        'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
     }
     msg_reply = {
         'role': 'assistant',
         'content': '```\n{code}\n```'.format(code=refined_code)
     }
     msg_request['content'] += gen_extra_guidance(err_info)
-    return [msg_request, msg_reply]
+    return [msg_request, msg_err, msg_reply]
 
 def extract_err_type(err_info):
     prompt_list = []
@@ -97,7 +93,7 @@ def create_specialized_patcher_prompt_config(config, original_config_length, pro
 
     prompt_list = extract_err_type(err_info)
     for dirname in prompt_list:
-        messages.extend(read_refine_as_msg(prompt_type, dirname))
+        messages.extend(read_refine_as_msg(dirname))
 
     append_failed_code_with_prompt(messages, prompt_type, current_code, err_info)
 
