@@ -31,7 +31,7 @@ def read_refine_as_msg(dirname):
 
     msg_request = {
         'role': 'assistant',
-        'content': '```\n{code}\n```'.format(code=original_code)
+        'content': '```java\n{code}\n```\n'.format(code=original_code)
     }
     msg_err = {
         'role': 'user',
@@ -39,7 +39,7 @@ def read_refine_as_msg(dirname):
     }
     msg_reply = {
         'role': 'assistant',
-        'content': '```\n{code}\n```'.format(code=refined_code)
+        'content': '```java\n{code}\n```\n'.format(code=refined_code)
     }
     msg_request['content'] += gen_extra_guidance(err_info)
     return [msg_request, msg_err, msg_reply]

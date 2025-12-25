@@ -10,11 +10,11 @@ def read_oracle_as_msg(classname):
 
     msg_request = {
         'role': 'user',
-        'content': '```\n{code}\n```'.format(code=file2str(filename_clean))
+        'content': '```java\n{code}\n```'.format(code=file2str(filename_clean))
     }
     msg_reply = {
         'role': 'assistant',
-        'content': '```\n{code}\n```'.format(code=file2str(filename_oracle))
+        'content': '```java\n{code}\n```'.format(code=file2str(filename_oracle))
     }
     return [msg_request, msg_reply]
 

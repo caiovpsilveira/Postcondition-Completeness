@@ -1,6 +1,6 @@
 FORMAT_ORIGINAL_GENERATION_PROMPT = """
 Please generate JML specifications for the Java program given below.
-```
+```java
 {src_code}
 ```
 Note that:
@@ -12,7 +12,7 @@ Note that:
 
 FORMAT_ORIGINAL_REFINEMENT_PROMPT = """
 The following Java code is instrumented with JML specifications:
-```
+```java
 {code}
 ```
 Verifier failed to verify the specifications given above, with error information as follows:

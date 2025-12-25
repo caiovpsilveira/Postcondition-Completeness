@@ -356,12 +356,6 @@ def main():
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
                 config['messages'] = config['messages'][0:first_generation_message_length]
                 append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
-                refine_msg = {
-                    'role': 'user',
-                    'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
-                }
-                refine_msg['content'] += gen_extra_guidance(err_info)
-                config['messages'].append(refine_msg)
                 
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)
@@ -379,7 +373,6 @@ def main():
                 assert args.mutation
                 done_flag = True # Skip to mutation phase/end
                 break
-        print_and_log(current_code + "\n==============================\n", f_log)
 
         # handle other invalid generations:
         err_info = ""
@@ -423,7 +416,6 @@ def main():
             err_types = []
             num_verify = num_verify + 1
 
-        print_and_log(err_info + "\n==============================\n", f_log)
         if err_info == "" or done_flag:
             break
 
