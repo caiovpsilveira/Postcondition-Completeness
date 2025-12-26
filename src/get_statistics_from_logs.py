@@ -149,7 +149,7 @@ def extract_stats(results_dirs):
                     gen_iter_pat = re.compile(r'--------------- Iteration (\d+) ---------------')
                     mut_iter_pat = re.compile(r'--------------- Mutation Iteration (\d+) ---------------')
                     gave_up_pat = re.compile(r'LLM gave up or generated incorrectly formatted code')
-                    time_pat = re.compile(r'Elapsed time: (\d+\.\d+) seconds')
+                    time_pat = re.compile(r'--- Elapsed time: (\d+) seconds ---')
 
                     for line in l:
                         matched_gen_iter = gen_iter_pat.search(line)

@@ -310,6 +310,8 @@ def main():
 
     num_verify = 0
 
+    start_time = time.perf_counter()
+
     # Candidate Generation Phase
     print_and_log("=============== Generation Phase ===============\n", f_log)
     done_flag = False
@@ -419,6 +421,8 @@ def main():
         if err_info == "" or done_flag:
             break
 
+        print_and_log(f"\n==== Gen Iteration finished with err_info ====\n{err_info}\n{46*'='}\n", f_log)
+
     # Gen phase is interrupted if it gets an error in postcondition or loop invariants
     # Mutation phase tries to fix these errors
     # If err_info is empty, it already succeeded in the gen phase and generated code accepted by the verifier
@@ -464,14 +468,16 @@ def main():
             current_code = ""
             for line in current_code_list:
                 current_code = current_code + line + "\n"
-            print_and_log(current_code + "\n==============================\n", f_log)
+            print_and_log(f"{current_code}", f_log)
             err_info = validate_openjml(openjml_command, current_code, classname)
             num_verify = num_verify + 1
-            print_and_log(err_info + "\n==============================\n", f_log)
+            print_and_log(f"\n== Mut Iteration finished with err_info ==\n{err_info}\n{42*'='}\n", f_log)
 
             i += 1
 
+    time_elapsed = int(time.perf_counter() - start_time)  # whole seconds (truncated)
     print_and_log("\nFinished. Verifier invoked {num} times\n".format(num=num_verify), f_log)
+    print_and_log(f"--- Elapsed time: {time_elapsed} seconds ---\n", f_log)
 
     if err_info == "":
         print_and_log('Success', f_log) # we externally check if it's valid, complete or complete_gt
