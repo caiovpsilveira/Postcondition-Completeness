@@ -57,9 +57,9 @@ def process_file(exp_name, filepath, output_dir, temporary_filename):
         equiv_result = subprocess.run(f"python3 src/equivalence_check.py {log_path} --to_file {temporary_filename} {completeness_check_flags}",
                             shell=True, capture_output=True, text=True)
 
-        # Copy equiv test and append equiv log
-        os.rename(temporary_filename, f"{output_dir}/log_{classname}_equiv.txt")
-        with open(f"{output_dir}/log_{classname}_equiv.txt", "a", encoding="utf-8") as equiv_file:
+        # Copy completeness test and append equiv log
+        os.rename(temporary_filename, f"{output_dir}/log_{classname}_compl.txt")
+        with open(f"{output_dir}/log_{classname}_compl.txt", "a", encoding="utf-8") as equiv_file:
             equiv_file.write(f"\n\n{equiv_result.stdout}\n\n{equiv_result.stderr}\n") 
 
         if equiv_result.returncode == 0: # Passed equiv test

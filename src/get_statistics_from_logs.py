@@ -128,13 +128,13 @@ def extract_stats(results_dirs):
                 # Check existence of log files.
                 # If only log_{classname}.txt exists, it can be either a true failure or a 'valid' with embedded completeness,
                 # that failed to prove complete. Need to check if "too weak" message exists
-                # If log_{classname}_equiv.txt exists, it is valid
+                # If log_{classname}_compl.txt exists, it is valid
                 # If log_{classname}_equiv_ground_truth.txt exists, it suceed completeness check
 
                 base = os.path.join(exp_dir, f'run_{i}')
 
                 log = os.path.join(base, f'log_{classname}.txt')
-                log_equiv = os.path.join(base, f'log_{classname}_equiv.txt')
+                log_equiv = os.path.join(base, f'log_{classname}_compl.txt')
                 log_equiv_gt = os.path.join(base, f'log_{classname}_equiv_ground_truth.txt')
 
                 # get number of iterations and time

@@ -77,7 +77,7 @@ After executing, it will create a `results_EXP` directory in the root of your re
 The `results_EXP` directory contains the log files of all individual tests.
 
 - `log_TEST.txt`: the log of the LLM iterations and mutation attempts. This is always produced.
-- `log_TEST_equiv.txt`: the log of the external `completeness check`, to classify proven results as Valid vs (Complete/CompleteGT). This is produced for correct results that finished the generation.
+- `log_TEST_compl.txt`: the log of the external `completeness check`, to classify proven results as Valid vs (Complete/CompleteGT). This is produced for correct results that finished the generation.
 - `log_TEST_equiv_ground_truth.txt`: the log of the logical equivalence check against the GT version, to classify complete results as Complete vs Complete GT. This is produced for correct and complete results.
 
 > When running, a `tmp` and `logs` directory and some additional files will be created to the root of the repository.
@@ -86,7 +86,7 @@ The `results_EXP` directory contains the log files of all individual tests.
 > To see what tests are running, see the `logs` directory.
 > (Some _SpecGen_ runs can take a while, as they can have 600+ mutation candidates).
 
-> If the embedded completeness check is used, `log_TEST_equiv.txt` might not exist even if the result is correct.
+> If the embedded completeness check is used, `log_TEST_compl.txt` might not exist even if the result is correct.
 > This is because the run does not end until a *complete* spec is generated.
 > Such cases are still counted as at least _Valid_ by filtering log messages (`src/get_statistics_from_logs.py`).
 
