@@ -284,6 +284,7 @@ def main():
     print_and_log(f'--input {args.input}\n'
                   f'--max_gen_iterations {args.max_gen_iterations}\n'
                   f'--model {model}\n'
+                  f'--temperature {temperature}\n'
                   f'--prompt_type {args.prompt_type}\n'
                   f'--mutation {args.mutation}\n'
                   f'--embedded_compl {args.embedded_compl}\n'
