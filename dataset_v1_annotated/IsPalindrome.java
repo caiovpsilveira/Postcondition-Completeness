@@ -1,5 +1,6 @@
 public class IsPalindrome {
     //@ requires s != null;
+    //@ assigns \nothing;
     //@ ensures \result == (\forall int i; 0 <= i < s.length(); s.charAt(i) == s.charAt(s.length() - 1 - i));
     public static boolean isPalindrome(String s) {
         int n = s.length();

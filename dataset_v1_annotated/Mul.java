@@ -1,6 +1,7 @@
 public class Mul {
     //@ requires Integer.MIN_VALUE <= x * y <= Integer.MAX_VALUE;
     //@ requires x != Integer.MIN_VALUE && y != Integer.MIN_VALUE;
+    //@ assigns \nothing;
     //@ ensures \result == x * y;
     public static int mul(int x, int y) {
         int res = 0, m = x, n = y, sign = 1;

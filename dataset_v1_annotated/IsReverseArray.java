@@ -1,10 +1,12 @@
 public class IsReverseArray {
     //@  requires x != null && y != null;
     //@  requires x.length != y.length;
+    //@  assigns \nothing;
     //@  ensures \result == false;
     //@ also
     //@  requires x != null && y != null;
     //@  requires x.length == y.length;
+    //@  assigns \nothing;
     //@  ensures \result == \forall int i; 0 <= i < x.length; x[i] == y[y.length - 1 - i];
     //@ behaviors disjoint;
     public static boolean isReverseArray(int[] x, int[] y) {

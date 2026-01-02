@@ -2,11 +2,13 @@ public class IsPrefix {
     //@  requires pat != null;
     //@  requires txt != null;
     //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
     //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
     //@ also
     //@  requires pat != null;
     //@  requires txt != null;
     //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
     //@  ensures \result == false;
     //@ behaviors disjoint;
     public static boolean isPrefix(String pat, String txt) {

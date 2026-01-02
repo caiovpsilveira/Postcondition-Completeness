@@ -1,4 +1,5 @@
 public class LeapYear {
+    //@ assigns \nothing;
     //@ ensures \result == (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
     public static boolean isLeapYear(int year) {
         boolean leap = false;
