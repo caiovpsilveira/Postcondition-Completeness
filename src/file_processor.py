@@ -66,13 +66,14 @@ class Behavior:
         self.postconditions = postconditions
 
 class MethodSpecification:
-    def __init__(self, name: str, is_model: bool, uniq_signature: str, args_decl: str, return_type: str, behaviors: list[Behavior],
+    def __init__(self, name: str, is_model: bool, uniq_signature: str, args_decl: str, return_type: str, is_fresh_return: bool, behaviors: list[Behavior],
                  extra_qualifiers: list[str], body: str) -> None:
         self.name = name
         self.is_model = is_model
         self.uniq_signature = uniq_signature
         self.args_decl = args_decl
         self.return_type = return_type
+        self.is_fresh_return = is_fresh_return
         self.behaviors = behaviors
         self.extra_qualifiers = extra_qualifiers
         self.body = body # includes the full signature
@@ -313,9 +314,29 @@ def preprocess_transform_source_code(source_code: str):
         "ghost",
     )
 
+    # Precompile: clause keyword as a whole word at the beginning (after optional whitespace).
+    _clause_start_re = re.compile(r"^\s*(?:" + "|".join(re.escape(k) for k in clause_starts) + r")\b", re.IGNORECASE)
+
     def is_clause_start(s: str) -> bool:
-        s_low = s.lstrip().lower()
-        return any(s_low.startswith(k) for k in clause_starts)
+        return _clause_start_re.match(s) is not None
+
+    _quantifier_re = re.compile(r"\\(forall|exists)\b")
+
+    def looks_like_quantifier_header(s: str) -> bool:
+        """
+        Quantifiers often use semicolons to separate binder/range/predicate:
+          \\forall int i; 0 <= i < n; P(i)
+        Those semicolons should NOT force a flush/annotation split.
+        """
+        return _quantifier_re.search(s) is not None
+
+    def ends_clause(s: str) -> bool:
+        """
+        Treat a trailing ';' as an end-of-annotation only if it *really* ends the line
+        (ignoring trailing whitespace) and we are not in a quantifier header-ish construct.
+        """
+        s2 = s.rstrip()
+        return s2.endswith(";") and not looks_like_quantifier_header(s2)
 
     joined: list[str] = []
     buffer_content: str | None = None
@@ -330,9 +351,12 @@ def preprocess_transform_source_code(source_code: str):
                 buffer_content = content
                 buffer_indent = indent
             else:
-                if is_clause_start(content) or buffer_content.rstrip().endswith(";"):
+                # Start a new annotation line if the new content starts a new clause,
+                # or if the previous buffered content truly ended a clause.
+                if is_clause_start(content) or ends_clause(buffer_content):
                     joined.append(f"{buffer_indent}//@ {buffer_content}")
                     buffer_content = content
+                    buffer_indent = indent
                 else:
                     buffer_content = buffer_content + " " + content
         else:
@@ -358,6 +382,7 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
     method_signature = ""
     method_body = ""
     brace_count = 0
+    is_fresh_return = False
 
     # Regex that Will Match a Java Method Declaration
     # https://stackoverflow.com/questions/68633/regex-that-will-match-a-java-method-declaration
@@ -403,6 +428,8 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                     current_pre.append(annotation)
                 elif "assigns" in annotation or "ensures" in annotation or 'measured_by' in annotation:
                     current_post.append(annotation)
+                    if "ensures" in annotation and "\\fresh(\\result)" in annotation:
+                        is_fresh_return = True
                 elif 'pure' in annotation or 'behaviors disjoint' in annotation or 'behaviors complete' in annotation:
                     extra_qualifiers.append(annotation)
             if current_pre or current_post:
@@ -427,7 +454,7 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                 i += 1
             method_body = "\n".join(method_body_lines)
 
-            methods.append(MethodSpecification(method_name, is_model, method_signature, method_args_decl, method_return_type, behaviors, extra_qualifiers, method_body))
+            methods.append(MethodSpecification(method_name, is_model, method_signature, method_args_decl, method_return_type, is_fresh_return, behaviors, extra_qualifiers, method_body))
 
     return methods
 

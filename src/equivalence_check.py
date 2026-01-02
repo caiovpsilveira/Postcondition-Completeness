@@ -144,15 +144,21 @@ def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpe
                     outStr += f'//@     {arg_type} {clone_name_s1} = {arg_name}.clone();\n'
                     outStr += f'//@     {arg_type} {clone_name_s2} = {arg_name}.clone();\n' 
 
+        both_fresh_returns = s1.is_fresh_return and s2.is_fresh_return
+        if both_fresh_returns:
+            arrays_by_ref_s1.append("ret1")
+            arrays_by_ref_s2.append("ret2")
+
         if s1.return_type != 'void':
             outStr += "//@     " + s1.return_type + " ret1 = " + s1.name + "(" + s1_args_use + ");\n"
             outStr += "//@     " + s2.return_type + " ret2 = " + s2.name + "(" + s2_args_use + ");\n"
 
             # Special case for comparing result types
-            if '[]' in s1.return_type: # Arrays
-                outStr += "//@     assert Arrays.equals(ret1, ret2);\n"
+            if '[]' in s1.return_type: # Arrays.
+                if not both_fresh_returns: # Only compare non-fresh references.
+                    outStr += "//@     assert Arrays.equals(ret1, ret2);\n"
             elif s1.return_type == 'String':
-                outStr += "//@     assert ret1.equals(ret2);\n"
+                outStr += "//@     assert ret1 != null && ret2 != null ? ret1.equals(ret2) : ret1 == ret2;\n"
             else: # Trivial data types
                 outStr += "//@     assert ret1 == ret2;\n"
         else:
