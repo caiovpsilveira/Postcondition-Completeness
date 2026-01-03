@@ -150,6 +150,24 @@ In summary: pass a single file to do the completeness check, pass the file and t
 * `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
 * `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
 
+NOTE: because this script has both the completeness and the logical equivalence checks "merged" together, the logical equivalence is only valid because the oracle is known to be complete upfront. If you were to compare two non-complete (but logically equivalent) methods, this WILL fail.
+A standalone logical equivalence needs to check if assuming the assertions of S1 implies the assertions of S2. It cannot "collapse" the result into varriables, as we do for the completeness check. The completeness check is independent because we check the completeness and if S1 is logically equivalent to itself (which logically is), so only the completeness check is left to be proven.
+
+```java
+//@ requires S1.precond;
+//@ model public static void standalone_logical_equiv_precondition(ARGS...) {
+//@     assert S2.postcond; # check if S1.precond ==> S2.precond
+//@ }
+
+//@ requires S1.precond;
+//@ requires S1.postcond;
+//@ model public static void standalone_logical_equiv_postcondition(ARGS...) {
+//@     assert S2.postcond; # check if S1.postcond ==> S2.postcond
+//@ }
+
+// For equivalence, needs to do the back as well (S2 ==> S1)...
+```
+
 > Why our tests have -no_check_feas (--check_feasibility=none)
 > --check_feasibility is an OpenJML switch that can check multiple things, such as unreachable code (Refer to the User Guide [documentation](https://www.openjml.org/documentation/)).
 > When I was experimenting, I decided to try with (--check_feasibility=all) to verify that the preconditions were not constraining any relevant part of the code.
