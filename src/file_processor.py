@@ -66,12 +66,13 @@ class Behavior:
         self.postconditions = postconditions
 
 class MethodSpecification:
-    def __init__(self, name: str, is_model: bool, uniq_signature: str, args_decl: str, return_type: str, is_fresh_return: bool, behaviors: list[Behavior],
+    def __init__(self, name: str, is_model: bool, uniq_signature: str, args_decl: str, assigned_locations: list[str], return_type: str, is_fresh_return: bool, behaviors: list[Behavior],
                  extra_qualifiers: list[str], body: str) -> None:
         self.name = name
         self.is_model = is_model
         self.uniq_signature = uniq_signature
         self.args_decl = args_decl
+        self.assigned_locations = assigned_locations
         self.return_type = return_type
         self.is_fresh_return = is_fresh_return
         self.behaviors = behaviors
@@ -121,6 +122,8 @@ class MethodSpecification:
         ret += f"Signature: {self.uniq_signature}\n"
         ret += f"Args decl: {self.args_decl}\n"
         ret += f"Args use: {self.args_use()}\n"
+        ret += f"Assigned locations: {self.assigned_locations}\n"
+        ret += f"Is fresh return: {self.is_fresh_return}\n"
         ret += f"Return type: {self.return_type}\n"
         ret += f"Extra qualifiers: {self.extra_qualifiers}\n"
         ret += f'Is model: {self.is_model}\n'
@@ -380,6 +383,12 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
     jml_buffer = []
     methods = []
     method_signature = ""
+    # memory locations (that might be) modified. If no "assigns" clause is present, it defaults to "assigns \everything".
+    # If one assigns clause if present (that is not \everything) (ie "assigns arr[*]"), then any other assignment MUST BE
+    # explicitly specified, or OpenJML errors.
+    # One easy way to do this is to enforce that there is at least one "assigns" clause (!= assigns \everything)
+    # This might be "behavior" dependent, but we want to account globally
+    method_assigned_locations = [] # we only need to check those in the compl check (+ return value)
     method_body = ""
     brace_count = 0
     is_fresh_return = False
@@ -430,6 +439,13 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                     current_post.append(annotation)
                     if "ensures" in annotation and "\\fresh(\\result)" in annotation:
                         is_fresh_return = True
+                    elif "assigns" in annotation:
+                        rhs = annotation.split("assigns", 1)[1].strip()
+                        if rhs.endswith(";"):
+                            rhs = rhs[:-1].strip()
+                        parts = [p.strip() for p in rhs.split(",")]
+                        parts = [p for p in parts if p] # remove empties if any
+                        method_assigned_locations.extend(parts)
                 elif 'pure' in annotation or 'behaviors disjoint' in annotation or 'behaviors complete' in annotation:
                     extra_qualifiers.append(annotation)
             if current_pre or current_post:
@@ -454,7 +470,7 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                 i += 1
             method_body = "\n".join(method_body_lines)
 
-            methods.append(MethodSpecification(method_name, is_model, method_signature, method_args_decl, method_return_type, is_fresh_return, behaviors, extra_qualifiers, method_body))
+            methods.append(MethodSpecification(method_name, is_model, method_signature, method_args_decl, method_assigned_locations, method_return_type, is_fresh_return, behaviors, extra_qualifiers, method_body))
 
     return methods
 
