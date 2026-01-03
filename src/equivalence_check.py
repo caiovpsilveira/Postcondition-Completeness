@@ -8,7 +8,19 @@
 
 # TODO: accept 'int arr[]' aswell. Today only accepts 'int[] arr'
 
+NUM_METHOD_MISMATCH = -1 # the files have a different number of methods provided
+SIGNATURE_MISMATCH = -2 # the files have different methods
+
+def err_code_to_str(ec):
+    if ec == NUM_METHOD_MISMATCH:
+        return "NUM_METHOD_MISMATCH"
+    elif ec == SIGNATURE_MISMATCH:
+        return "SIGNATURE_MISMATCH"
+    else:
+        return "UNKNOWN"
+
 from file_processor import process_file, MethodSpecification, Behavior
+from typing import Union
 import subprocess
 import argparse
 import sys
@@ -31,11 +43,16 @@ def replace_method_names(methods: list[MethodSpecification], suffix: str) -> Non
 # in both source 1 and source2 {S1, S2}.
 # For every tuple {S1, S2}, fill the equivalence template check # NO Need to check model methods, as they are inteded for assist in a prove only
 # Check 'template.java'
-def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpecification], source2_methods: list[MethodSpecification]) -> str:
+def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpecification], source2_methods: list[MethodSpecification]) -> Union[str, int]:
     # assumes that the tuples are already ordered.
-    assert len(source1_methods) == len(source2_methods)
+    #assert len(source1_methods) == len(source2_methods)
+    if len(source1_methods) != len(source2_methods):
+        return NUM_METHOD_MISMATCH
+
     for s1, s2 in zip(source1_methods, source2_methods):
-        assert s1.uniq_signature == s2.uniq_signature # This is updated after 'replace_method_names'
+        #assert s1.uniq_signature == s2.uniq_signature # This is updated after 'replace_method_names'
+        if s1.uniq_signature != s2.uniq_signature:
+            return SIGNATURE_MISMATCH
         # since the signature is the same, the list of arguments must be the same
         assert len(s1.args_decl.split(",")) == len(s2.args_decl.split(","))
         assert s1.return_type == s2.return_type
@@ -184,7 +201,15 @@ def check_equivalence(source_file1_filepath: str, source_file2_filepath: str, ch
 
     # pass to_file to Java not complain about 'class should be declared in Class.java'
     file_classname = os.path.splitext(os.path.basename(to_file))[0]
-    test = generate_openjml_equivalence_test(file_classname, file1_methods_specs, file2_methods_specs)
+    union = generate_openjml_equivalence_test(file_classname, file1_methods_specs, file2_methods_specs)
+    if isinstance(union, int):
+        # propagate error code
+        print("Stdout:")
+        print("Stderr: Pre-requisites not met in equivalence_test.py:", err_code_to_str(int(union)))
+        print("Return Code:", int(union))
+        return int(union)
+
+    test = str(union)
 
     with open(f"{to_file}", "w", encoding="utf-8") as outfile:
         outfile.write(test)
