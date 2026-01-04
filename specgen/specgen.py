@@ -54,32 +54,32 @@ def validate_openjml(opnejml_command, code_with_spec, classname):
         res = res + line
     return res
 
-def validate_openjml_equiv(completeness_equiv_flags, code_with_spec, classname):
+def validate_openjml_completeness(completeness_flags, code_with_spec, classname):
     tmp_filename_code = os.path.abspath(".") + "/tmp/{filename}.java".format(filename=classname)
     with open(tmp_filename_code, 'w') as tmp_file:
         tmp_file.write(code_with_spec)
 
-    tmp_filename_equiv_test = os.path.abspath(".") + "/tmp/{filename}_Test.java".format(filename=classname)
+    tmp_filename_compl_test = os.path.abspath(".") + "/tmp/{filename}_Test_Compl.java".format(filename=classname)
 
     try:
-        equiv_result = subprocess.run(
+        compl_result = subprocess.run(
             [
                 "python3",
-                "src/equivalence_check.py",
+                "src/completeness_check.py",
                 tmp_filename_code,
-                *completeness_equiv_flags.split(),
+                *completeness_flags.split(),
                 "--to_file",
-                tmp_filename_equiv_test,
+                tmp_filename_compl_test,
             ],
             capture_output=True,
             text=True,
-            timeout=120,   # seconds
+            timeout=300,   # seconds. Give slighty more than the OpenJML for the standalone class
             check=False,
         )
     except subprocess.TimeoutExpired:
         return "TIMEOUT"
 
-    return "" if equiv_result.returncode == 0 else WEAK_SPEC_ERR
+    return "" if compl_result.returncode == 0 else WEAK_SPEC_ERR
 
 def mutate_token_list_random(token_list, has_forall, dont_mutate_logical):
     res_list = []
@@ -304,10 +304,10 @@ def main():
 
     if args.use_nonnull_and_no_ovf_asm: # the setup from Ma et al. evaluation
         openjml_command = "openjml --esc --esc-max-warnings 1 --arithmetic-failure=quiet --nonnull-by-default --timeout 200 "
-        completeness_equiv_flags = "-no_check_feas -no_check_arith -no_check_null"
+        completeness_flags = "-no_check_feas -no_check_arith -no_check_null"
     else:
         openjml_command = "openjml --esc --esc-max-warnings 1 --nullable-by-default --timeout 200 "
-        completeness_equiv_flags = "-no_check_feas"
+        completeness_flags = "-no_check_feas"
 
     num_verify = 0
 
@@ -419,7 +419,7 @@ def main():
 
         if err_info == "" and args.embedded_compl:
             # Valid code. Check if it is also 'complete'
-            err_info = validate_openjml_equiv(completeness_equiv_flags, current_code, classname)
+            err_info = validate_openjml_completeness(completeness_flags, current_code, classname)
             err_types = []
             num_verify = num_verify + 1
 

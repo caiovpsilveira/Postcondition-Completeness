@@ -122,7 +122,7 @@ It should be placed at `exp_results/combined_results.csv`.
 `src/run_experiments.py --exp EXP`
 This script runs the experiments over all files in the dataset, 10 times each.
 It calls `specgen/specgen.py`, which has both the conversational and the SpecGen flow; and after that evaluates the result by inspecting the log file
-with the `equivalence_check.py` script. For each attempt (out of 10) the dataset is parallelized in 8 threads. The result logs (generation loop logs and quality classification logs) are stored in `results` dir at the repo root.
+with the `src/completeness_check.py` and `src/logical_equivalence_check.py` scripts. For each attempt (out of 10) the dataset is parallelized in 8 threads. The result logs (generation loop logs and quality classification logs) are stored in `results` dir at the repo root.
 * `--exp EXP` : the experiment name to reproduce. Should be a string E1..E17. For a detailed description of what experiment is, refer to the paper or see `get_experiment_settings()` at `src/run_experiments.py`.
 
 `python specgen/specgen.py --input FILE [--key_file FILE] [--max_gen_iterations N] --model MODEL --prompt_type TYPE [--mutation] [--embedded_compl] [--use_nonnull_and_no_ovf_asm]`
@@ -135,6 +135,17 @@ This is the script that runs either the _SpecGen_ flow or the plain conversation
 * `--mutation` : enables the _SpecGen_ workflow. Default is a plain conversational LLM loop, iterating until 'max_gen_iterations' or until proven
 * `--embedded_compl` : enables integrating the *completeness check* in the feedback loop. Iterates until 'max_gen_iterations' or until proven and complete.
 * `--use_nonnull_and_no_ovf_asm` : uses OpenJML switches to assume always valid references and absence of arithmetic overflow (Ma et al. original setup). Default is off.
+
+`python src/completeness_check.py SOURCE_FILE [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
+This is the completeness check. The main method is `check_completeness`. It creates a new test file,
+copies the methods body and specifications, adds an auxiliary `test_completeness` method and runs OpenJML.
+The file provided as a parameter should either be a Java source file with JML specifications, or the log from `specgen.py`, in which case
+it will get the latest attempt (delimited by the Java class).
+* `SOURCE_FILE` : the Java source file with JML annotations or log to be checked.
+* `-no_check_feas` : disables the OpenJML `--check_feasibility=all` switch (changes to `--check_feasibility=none`).
+* `-no_check_null` : uses assumptions of always valid references with OpenJML: `--nonnull-by-default`. If unspecified, it uses `--nullable-by-default`.
+* `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
+* `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
 
 `python src/equivalence_check.py SOURCE_FILE1 [SOURCE_FILE2] [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
 This is the script that checks two things: the *completeness check* and the *logical equivalence check*.
@@ -149,24 +160,6 @@ In summary: pass a single file to do the completeness check, pass the file and t
 * `-no_check_null` : uses assumptions of always valid references with OpenJML: `--nonnull-by-default`. If unspecified, it uses `--nullable-by-default`.
 * `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
 * `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
-
-NOTE: because this script has both the completeness and the logical equivalence checks "merged" together, the logical equivalence is only valid because the oracle is known to be complete upfront. If you were to compare two non-complete (but logically equivalent) methods, this WILL fail.
-A standalone logical equivalence needs to check if assuming the assertions of S1 implies the assertions of S2. It cannot "collapse" the result into varriables, as we do for the completeness check. The completeness check is independent because we check the completeness and if S1 is logically equivalent to itself (which logically is), so only the completeness check is left to be proven.
-
-```java
-//@ requires S1.precond;
-//@ model public static void standalone_logical_equiv_precondition(ARGS...) {
-//@     assert S2.postcond; # check if S1.precond ==> S2.precond
-//@ }
-
-//@ requires S1.precond;
-//@ requires S1.postcond;
-//@ model public static void standalone_logical_equiv_postcondition(ARGS...) {
-//@     assert S2.postcond; # check if S1.postcond ==> S2.postcond
-//@ }
-
-// For equivalence, needs to do the back as well (S2 ==> S1)...
-```
 
 > Why our tests have -no_check_feas (--check_feasibility=none)
 > --check_feasibility is an OpenJML switch that can check multiple things, such as unreachable code (Refer to the User Guide [documentation](https://www.openjml.org/documentation/)).

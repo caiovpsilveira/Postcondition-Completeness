@@ -54,7 +54,7 @@ def process_file(exp_name, filepath, output_dir, temporary_filename):
         # Passed generation phase.
         # This experiment has the equiv NOT embedded. Lets see if just asking the LLM to generate a complete code is enough.
         # NOTE: must be the LOG path (which contains the LLM generated code at the end...), the equiv test parses the log for the last
-        equiv_result = subprocess.run(f"python3 src/equivalence_check.py {log_path} --to_file {temporary_filename} {completeness_check_flags}",
+        equiv_result = subprocess.run(f"python3 src/completeness_check.py {log_path} --to_file {temporary_filename} {completeness_check_flags}",
                             shell=True, capture_output=True, text=True)
 
         # Copy completeness test and append equiv log

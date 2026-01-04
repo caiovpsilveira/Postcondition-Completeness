@@ -1,10 +1,11 @@
-set -euo pipefail
+# this is the "continuous regression" system that I have
+set -uo pipefail
+shopt -s nullglob
 
 input_dir="dataset_v1_annotated"
 out_dir="compl_outputs"
 mkdir -p "$out_dir"
 
-shopt -s nullglob
 for path in "$input_dir"/*; do
     file="$(basename "$path")"
     out_file="$out_dir/${file%.*}.java"
@@ -15,9 +16,15 @@ for path in "$input_dir"/*; do
         echo "FAILED: OpenJML FAILED for $file" >&2
     fi
 
-    if python src/equivalence_check.py "$path" -no_check_feas --to_file "$out_file" &> /dev/null; then
+    output=$(python src/completeness_check.py "$path" -no_check_feas --to_file "$out_file" 2>&1)
+    exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
         : # echo "Completeness check passed for $file" >&2
+        echo "$output" >> "$out_file"
     else
         echo "FAILED: Completeness check FAILED for $file" >&2
+        echo "===================" >> "$out_file"
+        echo "$output" >> "$out_file"
     fi
 done
