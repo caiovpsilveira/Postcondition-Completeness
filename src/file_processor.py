@@ -66,7 +66,7 @@ class Behavior:
         self.postconditions = postconditions
 
 class MethodSpecification:
-    def __init__(self, name: str, is_model: bool, uniq_signature: str, args_decl: str, assigned_locations: list[str], return_type: str, is_fresh_return: bool, behaviors: list[Behavior],
+    def __init__(self, name: str, is_model: bool, uniq_signature: str, args_decl: str, assigned_locations: list[str], return_type: str, behaviors: list[Behavior],
                  extra_qualifiers: list[str], body: str) -> None:
         self.name = name
         self.is_model = is_model
@@ -74,7 +74,6 @@ class MethodSpecification:
         self.args_decl = args_decl
         self.assigned_locations = assigned_locations
         self.return_type = return_type
-        self.is_fresh_return = is_fresh_return
         self.behaviors = behaviors
         self.extra_qualifiers = extra_qualifiers
         self.body = body # includes the full signature
@@ -123,7 +122,6 @@ class MethodSpecification:
         ret += f"Args decl: {self.args_decl}\n"
         ret += f"Args use: {self.args_use()}\n"
         ret += f"Assigned locations: {self.assigned_locations}\n"
-        ret += f"Is fresh return: {self.is_fresh_return}\n"
         ret += f"Return type: {self.return_type}\n"
         ret += f"Extra qualifiers: {self.extra_qualifiers}\n"
         ret += f'Is model: {self.is_model}\n'
@@ -296,6 +294,7 @@ def preprocess_transform_source_code(source_code: str):
         "requires",
         "ensures",
         "assigns",
+        "assignable",
         "assume",
         "assert",
         "maintaining",
@@ -391,7 +390,6 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
     method_assigned_locations = [] # we only need to check those in the compl check (+ return value)
     method_body = ""
     brace_count = 0
-    is_fresh_return = False
 
     # Regex that Will Match a Java Method Declaration
     # https://stackoverflow.com/questions/68633/regex-that-will-match-a-java-method-declaration
@@ -435,12 +433,13 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                     current_post = []
                 elif "requires" in annotation:
                     current_pre.append(annotation)
-                elif "assigns" in annotation or "ensures" in annotation or 'measured_by' in annotation:
+                elif "assigns" in annotation or "assignable" in annotation or "ensures" in annotation or 'measured_by' in annotation:
                     current_post.append(annotation)
-                    if "ensures" in annotation and "\\fresh(\\result)" in annotation:
-                        is_fresh_return = True
-                    elif "assigns" in annotation:
-                        rhs = annotation.split("assigns", 1)[1].strip()
+                    if "assigns" in annotation or "assignable" in annotation:
+                        if "assigns" in annotation:
+                            rhs = annotation.split("assigns", 1)[1].strip()
+                        else:
+                            rhs = annotation.split("assignable", 1)[1].strip()
                         if rhs.endswith(";"):
                             rhs = rhs[:-1].strip()
                         parts = [p.strip() for p in rhs.split(",")]
@@ -470,7 +469,7 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                 i += 1
             method_body = "\n".join(method_body_lines)
 
-            methods.append(MethodSpecification(method_name, is_model, method_signature, method_args_decl, method_assigned_locations, method_return_type, is_fresh_return, behaviors, extra_qualifiers, method_body))
+            methods.append(MethodSpecification(method_name, is_model, method_signature, method_args_decl, method_assigned_locations, method_return_type, behaviors, extra_qualifiers, method_body))
 
     return methods
 

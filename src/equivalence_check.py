@@ -60,7 +60,7 @@ def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpe
 
     outStr = ""
     # Import some stuff that might be useful later
-    outStr += "import java.util.Arrays;\n"
+    outStr += "import src.completeness.util.CompletenessUtil;\n"
     outStr += "public class " + classname + " {\n"
 
     for idx, (s1, s2) in enumerate(zip(source1_methods, source2_methods)):
@@ -106,8 +106,8 @@ def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpe
         s1_args_use = s1.args_use()
         s2_args_use = s2.args_use()
 
-        arrays_by_ref_s1 = []
-        arrays_by_ref_s2 = []
+        args_by_ref_modified_s1 = []
+        args_by_ref_modified_s2 = []
 
         # FIXME: this is WRONG if the function accepts more than 1 array as a parameter
         # It can be the case that the function expects the arrays to be the same reference!
@@ -125,67 +125,55 @@ def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpe
         #//@     assert Arrays.equals(b_ref_1_s1, b_ref_1_s2);
         #//@ }
 
-        for idx, arg in enumerate(s1.args_decl.split(',')): # replace arrays with clones
-            if '[]' in arg:
-                arg_type = arg.strip().split(' ')[0]
-                arg_name = arg.strip().split(' ')[1]
-                clone_name_s1 = f'{arg_name}_clone_{idx}_s1'
-                clone_name_s2 = f'{arg_name}_clone_{idx}_s2'
-                arrays_by_ref_s1.append(clone_name_s1)
-                arrays_by_ref_s2.append(clone_name_s2)
+        # Completeness Check on the locations that may be modified in the frame condition (assigns clause)
+        # The generation_phase must enforce that at leas one assigns clause is provided.
+        # i.e.: we do NOT accept "assigns \everything" (defaut JML clause)
 
-                s1_args_use = s1_args_use.replace(arg_name, clone_name_s1)
-                s2_args_use = s2_args_use.replace(arg_name, clone_name_s2)
+        # TODO: migrate all of these to a custom util library that provided both "T DeepClone(T a)" and "boolean Equals(T a, T b)"
+        # (Not the Java.Obj.Equals). Maintaining here in the code is hard to maintain.
+        # And then include this library in the check header
 
-                # Avoid 'Infeasible' if the precondition already requires 'arr != null' in all behaviors
-                # TODO: fix for when we have multiple 'arrays != null' in the same requires expr.
-                # //@ requires x != null && y != null
-                redundant_in_all_behaviors = True # Must be redundant in ALL behaviors
-                for behavior in s1.behaviors:
-                    redundant_in_this_behavior = False
-                    for precond in behavior.preconditions:
-                        for line in precond.splitlines():
-                            line = ''.join([char for char in line if char != ' ' and char != '\t']) #remove spaces
-                            if line == f'//@requires{arg_name}!=null;':
-                                redundant_in_this_behavior = True
-                                break
-                        if not redundant_in_this_behavior:
-                            redundant_in_all_behaviors = False
-                            break
+        modified_locations = set()
+        for location in (s1.assigned_locations + s2.assigned_locations):
+            if "\\nothing" in location: # skip assigns nothing
+                continue
+            arg_name = location.split("[", 1)[0].strip() # We only want the name of the arg.
+            modified_locations.add(arg_name)
 
-                if not redundant_in_all_behaviors:
-                    # Otherwise the null from '? {arg_name}.clone() : null' is always unreachable
-                    outStr += f'//@     {arg_type} {clone_name_s1} = {arg_name} != null ? {arg_name}.clone() : null;\n'
-                    outStr += f'//@     {arg_type} {clone_name_s2} = {arg_name} != null ? {arg_name}.clone() : null;\n'
-                else:
-                    outStr += f'//@     {arg_type} {clone_name_s1} = {arg_name}.clone();\n'
-                    outStr += f'//@     {arg_type} {clone_name_s2} = {arg_name}.clone();\n' 
+        for idx, arg_name in enumerate(modified_locations): # replace references with deep clones
+            arg_type = ""
+            # get the type from the parameter list
+            for arg_decl in s1.args_decl.split(','):
+                decl_arg_name = arg_decl.strip().split(' ')[1]
+                if decl_arg_name == arg_name:
+                    arg_type = arg_decl.strip().split(' ')[0]
+                    break
+            assert arg_type != ""
 
-        both_fresh_returns = s1.is_fresh_return and s2.is_fresh_return
-        if both_fresh_returns:
-            arrays_by_ref_s1.append("ret1")
-            arrays_by_ref_s2.append("ret2")
+            clone_name_s1 = f'{arg_name}_clone_{idx}_s1'
+            clone_name_s2 = f'{arg_name}_clone_{idx}_s2'
+            args_by_ref_modified_s1.append(clone_name_s1)
+            args_by_ref_modified_s2.append(clone_name_s2)
 
+            s1_args_use = s1_args_use.replace(arg_name, clone_name_s1)
+            s2_args_use = s2_args_use.replace(arg_name, clone_name_s2)
+
+            outStr += f'//@     {arg_type} {clone_name_s1} = CompletenessUtil.DeepCopy({arg_name});\n'
+            outStr += f'//@     {arg_type} {clone_name_s2} = CompletenessUtil.DeepCopy({arg_name});\n' 
+
+        # Completeness check on the return value
         if s1.return_type != 'void':
             outStr += "//@     " + s1.return_type + " ret1 = " + s1.name + "(" + s1_args_use + ");\n"
             outStr += "//@     " + s2.return_type + " ret2 = " + s2.name + "(" + s2_args_use + ");\n"
-
-            # Special case for comparing result types
-            if '[]' in s1.return_type: # Arrays.
-                if not both_fresh_returns: # Only compare non-fresh references.
-                    outStr += "//@     assert Arrays.equals(ret1, ret2);\n"
-            elif s1.return_type == 'String':
-                outStr += "//@     assert ret1 != null && ret2 != null ? ret1.equals(ret2) : ret1 == ret2;\n"
-            else: # Trivial data types
-                outStr += "//@     assert ret1 == ret2;\n"
+            outStr += "//@     assert CompletenessUtil.Equals(ret1, ret2);\n"
         else:
             outStr += "//@     " + s1.name + "(" + s1_args_use + ");\n"
             outStr += "//@     " + s2.name + "(" + s2_args_use + ");\n"
 
         # If it contained arrays, we also want to check if they are equal (if the function modifies by reference)
-        assert len(arrays_by_ref_s1) == len(arrays_by_ref_s2)
-        for i in range(len(arrays_by_ref_s1)):
-            outStr += f"//@     assert Arrays.equals({arrays_by_ref_s1[i]}, {arrays_by_ref_s2[i]});\n"
+        assert len(args_by_ref_modified_s1) == len(args_by_ref_modified_s2)
+        for i in range(len(args_by_ref_modified_s1)):
+            outStr += f"//@     assert CompletenessUtil.Equals({args_by_ref_modified_s1[i]}, {args_by_ref_modified_s2[i]});\n"
 
         outStr += "//@ }\n"
 

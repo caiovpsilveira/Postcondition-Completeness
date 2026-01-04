@@ -398,6 +398,10 @@ def main():
             err_info += "Error: You MUST add at least one postcondition (ensures). Consider adding more postconditions to strengthen your specification.\n"
             err_types = []
 
+        if not "assigns" and not "assignable" in current_code:
+            err_info += "Error: You MUST add a frame condition (assigns). If no memory location is modified as a side effect, add \"assigns \\nothing;\".\n"
+            err_types = []
+
         if "signals" in current_code:
             err_info += "Error: You MUST NOT account for exceptional behavior. Forbid all exception-causing states via preconditions ('requires' clause).\n"
             err_types = []
