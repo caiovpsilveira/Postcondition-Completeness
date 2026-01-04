@@ -20,6 +20,8 @@ def process_method_signature(full_signature: str):
     # Goal: "int add(int, int)"
     # Some tests have more than one method per test, and some with method name overloading
 
+    # Also moves array declarations to be in the type. Such as "int arr[]" to be "int[] arr"
+
     sig_pattern = re.compile(
         r'^(?:public|protected|private|static|final|synchronized|abstract|native|transient|volatile|\s)*'  # modifiers
         r'(?P<ret_type>[\w<>\[\],\s]+?)\s+'  # return type
@@ -36,6 +38,8 @@ def process_method_signature(full_signature: str):
     args_decl = match.group('args').strip()
     arg_types = []
     arg_names = []
+
+    args_decl_reconstructed = "" # reorg [] to be in the type and not after the name
     if args_decl:
         # Only keep the type part of each argument
         for arg in args_decl.split(','):
@@ -49,16 +53,26 @@ def process_method_signature(full_signature: str):
             parts = arg.split()
             if len(parts) > 1:
                 arg_type = ' '.join(parts[:-1]).strip()
-                arg_names.append(parts[-1].strip())
+                arg_name = parts[-1].strip()
+                # Remove [] from the names and append to the type
+                # int arr[] -> int[] arr
+                # int[] arr[] -> int[][] arr
+                while arg_name.endswith('[]'):
+                    arg_type += "[]"
+                    arg_name = arg_name[:-2]
+                arg_names.append(arg_name)
+                args_decl_reconstructed += arg_type + " " + arg_name + ","
             else:
                 arg_type = parts[0].strip()
+                args_decl_reconstructed += arg_type + ","
 
             arg_types.append(arg_type)
         signature = f"{ret_type} {method_name}({', '.join(arg_types)})"
     else:
         signature = f"{ret_type} {method_name}()"
 
-    return method_name, args_decl, ret_type, signature
+    args_decl_reconstructed = args_decl_reconstructed.strip(',')
+    return method_name, args_decl_reconstructed, ret_type, signature
 
 class Behavior:
     def __init__(self, preconditions: list[str], postconditions: list[str]) -> None:
@@ -171,9 +185,6 @@ def preprocess_transform_source_code(source_code: str):
     out_lines: list[str] = []
     inside_block = False
     block_indent = ""
-
-    # Special JML modifiers that can appear inside method signatures
-    special_modifiers = {"pure", "strictly_pure", "spec_pure", "no_state"}
 
     def clean_block_content(s: str) -> str:
         # Trim and remove leading '*' or '@' decorations and trailing '@'
