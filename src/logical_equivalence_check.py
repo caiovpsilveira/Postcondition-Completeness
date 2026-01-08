@@ -106,7 +106,7 @@ def generate_openjml_equivalence_test(classname, source1_methods: list[MethodSpe
     outStr += "}\n"
     return outStr
 
-def check_logical_equivalence(source_file1_filepath: str, source_file2_filepath: str, check_feas: bool, check_null: bool, check_arith: bool, to_file: str):
+def check_logical_equivalence(source_file1_filepath: str, source_file2_filepath: str, check_null: bool, check_arith: bool, to_file: str):
     file1_methods_specs = process_file(source_file1_filepath)
     file2_methods_specs = process_file(source_file2_filepath)
 
@@ -128,10 +128,9 @@ def check_logical_equivalence(source_file1_filepath: str, source_file2_filepath:
     with open(f"{to_file}", "w", encoding="utf-8") as outfile:
         outfile.write(test)
 
-    feas_switch = "--check-feasibility=all" if check_feas else "--check-feasibility=none" 
     null_switch = "--nullable-by-default" if check_null else "--nonnull-by-default"
     arith_switch = "" if check_arith else "--arithmetic-failure=quiet"
-    result = subprocess.run(f"openjml --esc --esc-max-warnings 1 {feas_switch} {null_switch} {arith_switch} --timeout 600 --progress {to_file}",
+    result = subprocess.run(f"openjml --esc --esc-max-warnings 1 {null_switch} {arith_switch} --timeout 600 --progress {to_file}",
                             shell=True, capture_output=True, text=True)
 
     print("Stdout:", result.stdout)
@@ -145,7 +144,6 @@ if __name__ == "__main__":
     parser.add_argument("source_file1", help="Path to the first Java source file (or the log)")
     parser.add_argument("source_file2", help="Path to the second Java source file (or the log)")
 
-    parser.add_argument("-no_check_feas", action="store_true", default=False, help="Disable feasibility check")
     parser.add_argument("-no_check_null", action="store_true", default=False, help="Enable --nonnull-by-default (will assume that references are always valid)")
     parser.add_argument("-no_check_arith", action="store_true", default=False, help="Disable arithmetic failure")
 
@@ -155,10 +153,9 @@ if __name__ == "__main__":
 
     path1 = args.source_file1
     path2 = args.source_file2
-    check_feas = not args.no_check_feas
     check_null = not args.no_check_null
     check_arith = not args.no_check_arith
     to_file = args.to_file
 
-    retcode = check_logical_equivalence(path1, path2, check_feas, check_null, check_arith, to_file)
+    retcode = check_logical_equivalence(path1, path2, check_null, check_arith, to_file)
     sys.exit(retcode)

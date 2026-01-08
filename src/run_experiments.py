@@ -129,9 +129,9 @@ def get_experiment_settings(exp):
 
 def get_completeness_check_flags(exp):
     if exp == "E1" or exp == "E2":
-        return "-no_check_feas -no_check_null -no_check_arith"
+        return "-no_check_null -no_check_arith"
     else:
-        return "-no_check_feas"
+        return ""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

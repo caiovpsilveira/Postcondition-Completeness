@@ -18,7 +18,7 @@ for path in "$input_dir"/*; do
         echo "FAILED: OpenJML FAILED for $file" >&2
     fi
 
-    output=$(python src/completeness_check.py "$path" -no_check_feas --to_file "$out_file" 2>&1)
+    output=$(python src/completeness_check.py "$path" --to_file "$out_file" 2>&1)
     exit_code=$?
 
     if [ $exit_code -eq 0 ]; then
@@ -31,7 +31,7 @@ for path in "$input_dir"/*; do
     fi
 
     out_file="$logical_equiv_out_dir/${file%.*}.java"
-    output=$(python src/logical_equivalence_check.py "$path" "$path" -no_check_feas --to_file "$out_file" 2>&1)
+    output=$(python src/logical_equivalence_check.py "$path" "$path" --to_file "$out_file" 2>&1)
     exit_code=$?
 
     if [ $exit_code -eq 0 ]; then

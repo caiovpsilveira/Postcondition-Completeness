@@ -4,6 +4,9 @@
 
 This repository contains the experimental data and source code artifacts.
 
+This is a Proof of Concept implementation done in python.
+It does not have a proper Java or JML parser and relies heavily on heuristics to extract those from the source code.
+
 ---
 
 ## Table of contents
@@ -140,13 +143,12 @@ This is the script that runs either the _SpecGen_ flow or the plain conversation
 
 ---
 
-`python src/completeness_check.py SOURCE_FILE [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
+`python src/completeness_check.py SOURCE_FILE [-no_check_null] [-no_check_arith] --to_file FILE`
 This is the completeness check. The main method is `check_completeness`. It creates a new test file,
 copies the methods body and specifications, adds an auxiliary `test_completeness` method and runs OpenJML.
 The file provided as a parameter should either be a Java source file with JML specifications, or the log from `specgen.py`, in which case
 it will get the latest attempt (delimited by the Java class).
 * `SOURCE_FILE` : the Java source file with JML annotations or log to be checked.
-* `-no_check_feas` : disables the OpenJML `--check_feasibility=all` switch (changes to `--check_feasibility=none`).
 * `-no_check_null` : uses assumptions of always valid references with OpenJML: `--nonnull-by-default`. If unspecified, it uses `--nullable-by-default`.
 * `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
 * `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
@@ -204,15 +206,20 @@ public class Calc {
 ```
 </details>
 
+The completeness check relies on a library that provides overloads for methods `T DeepCopy(T a)` and `boolean Equals(T a, T b)`.
+These overloads are required to ensure that for references, a deep copy will be performed and that we will compare only the effective content,
+not reference values.
+
+The library specification is available in `src/completeness/util/CompletenessUtil.jml` and the implementation (for validating the specs) is available on `src/completeness/util/CompletenessUtil.java`.
+
 ---
 
-`python src/logical_equivalence_check.py SOURCE_FILE1 SOURCE_FILE2 [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
+`python src/logical_equivalence_check.py SOURCE_FILE1 SOURCE_FILE2 [-no_check_null] [-no_check_arith] --to_file FILE`
 This is the script that checks the logical equivalence of methods with JML annotations in two Java files (or logs).
 The main method is `check_logical_equivalence`. It creates a new test file, copies the method body and specification, adds auxiliary methods and runs OpenJML.
 
 * `SOURCE_FILE1` : the first file to be checked
 * `SOURCE_FILE2` : the second file to be checked.
-* `-no_check_feas` : disables the OpenJML `--check_feasibility=all` switch (changes to `--check_feasibility=none`).
 * `-no_check_null` : uses assumptions of always valid references with OpenJML: `--nonnull-by-default`. If unspecified, it uses `--nullable-by-default`.
 * `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
 * `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
@@ -293,13 +300,6 @@ First, check if it's verified with OpenJML:
 `openjml --esc --nullable-by-default --timeout 30 --progress Abs2.java`
 Now run `python src/logical_equivalence_check.py Abs1.java Abs2.java --to_file Test.java`
 </details>
-
-> Why our tests have -no_check_feas (--check_feasibility=none)
-> --check_feasibility is an OpenJML switch that can check multiple things, such as unreachable code (Refer to the User Guide [documentation](https://www.openjml.org/documentation/)).
-> When I was experimenting, I decided to try with (--check_feasibility=all) to verify that the preconditions were not constraining any relevant part of the code.
-> However, I got some issues, where OpenJML was pointing --check_feasibility failures in weird parts, such as the end of the Java class (like 2nd example in [#888](https://github.com/OpenJML/OpenJML/issues/888)).
-> For that reason, I decided to not enable it.
-> Later David R. Cok suggested using only --check_feasibility=basic, but I had already run some of the experiments.
 
 ---
 
