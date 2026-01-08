@@ -78,7 +78,7 @@ The `results_EXP` directory contains the log files of all individual tests.
 
 - `log_TEST.txt`: the log of the LLM iterations and mutation attempts. This is always produced.
 - `log_TEST_compl.txt`: the log of the external `completeness check`, to classify proven results as Valid vs (Complete/CompleteGT). This is produced for correct results that finished the generation.
-- `log_TEST_equiv_ground_truth.txt`: the log of the logical equivalence check against the GT version, to classify complete results as Complete vs Complete GT. This is produced for correct and complete results.
+- `log_TEST_logical_equiv_GT.txt`: the log of the logical equivalence check against the GT version, to classify complete results as Complete vs Complete GT. This is produced for correct and complete results.
 
 > When running, a `tmp` and `logs` directory and some additional files will be created to the root of the repository.
 > Do not remove these files until the execution finishes.
@@ -125,6 +125,8 @@ It calls `specgen/specgen.py`, which has both the conversational and the SpecGen
 with the `src/completeness_check.py` and `src/logical_equivalence_check.py` scripts. For each attempt (out of 10) the dataset is parallelized in 8 threads. The result logs (generation loop logs and quality classification logs) are stored in `results` dir at the repo root.
 * `--exp EXP` : the experiment name to reproduce. Should be a string E1..E17. For a detailed description of what experiment is, refer to the paper or see `get_experiment_settings()` at `src/run_experiments.py`.
 
+---
+
 `python specgen/specgen.py --input FILE [--key_file FILE] [--max_gen_iterations N] --model MODEL --prompt_type TYPE [--mutation] [--embedded_compl] [--use_nonnull_and_no_ovf_asm]`
 This is the script that runs either the _SpecGen_ flow or the plain conversational loop.
 * `--input FILE` : the Java source code to try to generate JML specifications for.
@@ -135,6 +137,8 @@ This is the script that runs either the _SpecGen_ flow or the plain conversation
 * `--mutation` : enables the _SpecGen_ workflow. Default is a plain conversational LLM loop, iterating until 'max_gen_iterations' or until proven
 * `--embedded_compl` : enables integrating the *completeness check* in the feedback loop. Iterates until 'max_gen_iterations' or until proven and complete.
 * `--use_nonnull_and_no_ovf_asm` : uses OpenJML switches to assume always valid references and absence of arithmetic overflow (Ma et al. original setup). Default is off.
+
+---
 
 `python src/completeness_check.py SOURCE_FILE [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
 This is the completeness check. The main method is `check_completeness`. It creates a new test file,
@@ -147,19 +151,148 @@ it will get the latest attempt (delimited by the Java class).
 * `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
 * `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
 
-`python src/equivalence_check.py SOURCE_FILE1 [SOURCE_FILE2] [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
-This is the script that checks two things: the *completeness check* and the *logical equivalence check*.
-The main method is `check_equivalence`. It creates a new test file, copies the method body and specification, adds auxiliary methods and runs OpenJML.
-It receives two files as a parameter. If you specify the same file, it will do the `completeness check` (as it is logically equivalent to itself).
-If you specify two different files, it will check if the preconditions are `logically equivalent` and will perform the `completeness check`.
-In summary: pass a single file to do the completeness check, pass the file and the oracle (dataset_v1_annotated) to do the logical equivalence check.
+<details closed>
+<summary><strong>[Expand] Completeness check example</strong></summary>
+
+Copy the following contents to a Java file `Calc.java`.
+
+First, check if it's verified with OpenJML:
+`openjml --esc --nullable-by-default --timeout 30 --progress Calc.java`
+Now run `python src/completeness_check.py Calc.java --to_file Test.java`
+
+```java
+public class Calc {
+    //@  requires op == '+'
+    //@  requires Integer.MIN_VALUE <= a + b <= Integer.MAX_VALUE;
+    //@  assigns \nothing;
+    //@  ensures \result == a + b;
+    //@ also
+    //@  requires op == '-'
+    //@  requires Integer.MIN_VALUE <= a - b <= Integer.MAX_VALUE;
+    //@  assigns \nothing;
+    //@  ensures \result == a - b;
+    public static int calc(int a, int b, char op) {
+        if (op == '+') {
+            return a + b;
+        } else if (op == '-') {
+            return a - b;
+        }
+    }
+}
+```
+Now change `Calc.java` to be the following:
+This is not complete, because it does not capture the implication of the operator value.
+
+First, check if it's verified with OpenJML:
+`openjml --esc --nullable-by-default --timeout 30 --progress Calc.java`
+Now run `python src/completeness_check.py Calc.java --to_file Test.java`
+```java
+public class Calc {
+    //@  requires op == '+' || op == '-';
+    //@  requires Integer.MIN_VALUE <= a + b <= Integer.MAX_VALUE;
+    //@  requires Integer.MIN_VALUE <= a - b <= Integer.MAX_VALUE;
+    //@  assigns \nothing;
+    //@  ensures \result == a + b || \result == a - b;
+    public static int calc(int a, int b, char op) {
+        if (op == '+') {
+            return a + b;
+        } else if (op == '-') {
+            return a - b;
+        }
+    }
+}
+```
+</details>
+
+---
+
+`python src/logical_equivalence_check.py SOURCE_FILE1 SOURCE_FILE2 [-no_check_feas] [-no_check_null] [-no_check_arith] --to_file FILE`
+This is the script that checks the logical equivalence of methods with JML annotations in two Java files (or logs).
+The main method is `check_logical_equivalence`. It creates a new test file, copies the method body and specification, adds auxiliary methods and runs OpenJML.
 
 * `SOURCE_FILE1` : the first file to be checked
-* `SOURCE_FILE2` : an optional second file to be checked. If omitted, the script will check `SOURCE_FILE1` against itself.
+* `SOURCE_FILE2` : the second file to be checked.
 * `-no_check_feas` : disables the OpenJML `--check_feasibility=all` switch (changes to `--check_feasibility=none`).
 * `-no_check_null` : uses assumptions of always valid references with OpenJML: `--nonnull-by-default`. If unspecified, it uses `--nullable-by-default`.
 * `-no_check_arith` : uses assumptions that arithmetic overflow cannot happen with OpenJML: `--arithmetic-failure=quiet`.
 * `--to_file FILE` : specifies the filename in which the checks will be performed. This file needs to be created to invoke OpenJML on it. This parameter allows for parallelizing the dataset.
+
+<details closed>
+<summary><strong>[Expand] Logical equivalence check example</strong></summary>
+
+Copy contents below to two Java files: `Abs1.java` and `Abs2.java`
+
+Abs1.java:
+```java
+public class Abs1
+{
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x > 0 ? x : -x);
+    public static int abs(int x) {
+        return x > 0 ? x : -x;
+    }
+}
+```
+Abs2.java:
+```java
+public class Abs2
+{
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result >= 0;
+    //@ ensures \result == x || \result == -x;
+    public static int abs(int x) {
+        return x > 0 ? x : -x;
+    }
+}
+```
+The specifications above are logically equivalent specifications.
+First, check if it's verified with OpenJML:
+`openjml --esc --nullable-by-default --timeout 30 --progress Abs1.java`
+`openjml --esc --nullable-by-default --timeout 30 --progress Abs2.java`
+Now run `python src/logical_equivalence_check.py Abs1.java Abs2.java --to_file Test.java`
+
+Now change `Abs2.java` to:
+```java
+public class Abs2
+{
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result >= 0;
+    public static int abs(int x) {
+        return x > 0 ? x : -x;
+    }
+}
+```
+
+`Abs2.java` postcondition is now not-equivalent to `Abs1.java` postcondition.
+First, check if it's verified with OpenJML:
+`openjml --esc --nullable-by-default --timeout 30 --progress Abs1.java`
+`openjml --esc --nullable-by-default --timeout 30 --progress Abs2.java`
+Now run `python src/logical_equivalence_check.py Abs1.java Abs2.java --to_file Test.java`
+
+Now change `Abs2.java` to:
+Abs2.java:
+```java
+public class Abs2
+{
+    //@ requires x >= 0;
+    //@ assigns \nothing;
+    //@ ensures \result >= 0;
+    //@ ensures \result == x || \result == -x;
+    public static int abs(int x) {
+        return x > 0 ? x : -x;
+    }
+}
+```
+
+`Abs2.java` precondition is now not-equivalent to `Abs1.java` precondition.
+First, check if it's verified with OpenJML:
+`openjml --esc --nullable-by-default --timeout 30 --progress Abs1.java`
+`openjml --esc --nullable-by-default --timeout 30 --progress Abs2.java`
+Now run `python src/logical_equivalence_check.py Abs1.java Abs2.java --to_file Test.java`
+</details>
 
 > Why our tests have -no_check_feas (--check_feasibility=none)
 > --check_feasibility is an OpenJML switch that can check multiple things, such as unreachable code (Refer to the User Guide [documentation](https://www.openjml.org/documentation/)).
@@ -167,6 +300,8 @@ In summary: pass a single file to do the completeness check, pass the file and t
 > However, I got some issues, where OpenJML was pointing --check_feasibility failures in weird parts, such as the end of the Java class (like 2nd example in [#888](https://github.com/OpenJML/OpenJML/issues/888)).
 > For that reason, I decided to not enable it.
 > Later David R. Cok suggested using only --check_feasibility=basic, but I had already run some of the experiments.
+
+---
 
 `python src/file_processor.py SOURCE_FILE`
 This is a "parser", that reads a source code or the log, gets the code of the last attempt generated and creates an auxiliary data structure, list\[MethodSpecification]. The main method is `process_file`.

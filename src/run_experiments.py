@@ -66,12 +66,12 @@ def process_file(exp_name, filepath, output_dir, temporary_filename):
             # check ground truth
             if equiv_result.returncode == 0:
                 ground_truth_filepath = f"dataset_v1_annotated/{classname}.java"
-                equiv_ground_truth_result = subprocess.run(f"python3 src/equivalence_check.py {log_path} {ground_truth_filepath} --to_file {temporary_filename} {completeness_check_flags}",
+                logical_equiv_GT_result = subprocess.run(f"python3 src/logical_equivalence_check.py {log_path} {ground_truth_filepath} --to_file {temporary_filename} {completeness_check_flags}",
                                 shell=True, capture_output=True, text=True)
 
-                os.rename(temporary_filename, f"{output_dir}/log_{classname}_equiv_ground_truth.txt")
-                with open(f"{output_dir}/log_{classname}_equiv_ground_truth.txt", "a", encoding="utf-8") as equiv_gt_file:
-                    equiv_gt_file.write(f"\n\n{equiv_ground_truth_result.stdout}\n\n{equiv_ground_truth_result.stderr}\n")
+                os.rename(temporary_filename, f"{output_dir}/log_{classname}_logical_equiv_GT.txt")
+                with open(f"{output_dir}/log_{classname}_logical_equiv_GT.txt", "a", encoding="utf-8") as equiv_gt_file:
+                    equiv_gt_file.write(f"\n\n{logical_equiv_GT_result.stdout}\n\n{logical_equiv_GT_result.stderr}\n")
 
     # Copy log
     os.rename(log_path, f"{output_dir}/{log_filename}")
