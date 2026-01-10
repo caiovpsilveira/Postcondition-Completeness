@@ -348,5 +348,10 @@ These files are licensed under the MIT License. Copyright Lezhi Ma and contribut
 The major changes are in `spegcen/specgen.py` and for the feedback, either in the `specgen/refinement_prompt.py` or in the `specgen/prompts/refine/`.
 These were giving feedback suggesting usage of assumptions, which is undesired.
 
+### Dataset
+The dataset is a mix of common computer science tasks and algorithms, sourced from [SpecGenBench](https://github.com/Lezhi-Ma/SpecGen-Artifact), [CloverBench](https://github.com/ChuyueSun/Clover), [LeetCode tasks](https://github.com/fluency03/leetcode-java/) and mixed sources.
+
+The JML annotations were mannually added and verified for correctness and completeness by Caio Vinícius Pereira Silveira.
+
 ### Remaining files
 The remaining files are distributed under the MIT license. Copyright Caio Vinícius Pereira Silveira.
