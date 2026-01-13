@@ -306,7 +306,7 @@ def main():
         openjml_command = "openjml --esc --esc-max-warnings 1 --arithmetic-failure=quiet --nonnull-by-default --timeout 200 "
         completeness_flags = "-no_check_arith -no_check_null"
     else:
-        openjml_command = "openjml --esc --esc-max-warnings 1 --nullable-by-default --timeout 200 "
+        openjml_command = "openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 "
         completeness_flags = ""
 
     num_verify = 0

@@ -129,7 +129,7 @@ def check_logical_equivalence(source_file1_filepath: str, source_file2_filepath:
         outfile.write(test)
 
     null_switch = "--nullable-by-default" if check_null else "--nonnull-by-default"
-    arith_switch = "" if check_arith else "--arithmetic-failure=quiet"
+    arith_switch = "--arithmetic-failure=hard" if check_arith else "--arithmetic-failure=quiet"
     result = subprocess.run(f"openjml --esc --esc-max-warnings 1 {null_switch} {arith_switch} --timeout 600 --progress {to_file}",
                             shell=True, capture_output=True, text=True)
 

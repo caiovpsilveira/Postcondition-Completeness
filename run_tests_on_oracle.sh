@@ -12,7 +12,7 @@ for path in "$input_dir"/*; do
     file="$(basename "$path")"
     out_file="$compl_out_dir/${file%.*}.java"
 
-    if openjml --esc --nullable-by-default --timeout 300 "$path" &> /dev/null; then
+    if openjml --esc --nullable-by-default --arithmetic-failure=hard --timeout 300 "$path" &> /dev/null; then
         : # echo "OpenJML passed for $file" >&2
     else
         echo "FAILED: OpenJML FAILED for $file" >&2

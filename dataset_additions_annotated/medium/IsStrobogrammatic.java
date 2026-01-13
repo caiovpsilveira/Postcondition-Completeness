@@ -25,12 +25,12 @@ public class IsStrobogrammatic {
         int len = digits.length;
 
         //@ maintaining 0 <= i <= len/2;
-        //@ maintaining \forall int j; 0 <= j < i;
+        //@ maintaining (\forall int j; 0 <= j < i;
         //@   ((digits[j] == 0 && digits[digits.length - j - 1] == 0) ||
         //@    (digits[j] == 1 && digits[digits.length - j - 1] == 1) ||
         //@    (digits[j] == 8 && digits[digits.length - j - 1] == 8) ||
         //@    (digits[j] == 6 && digits[digits.length - j - 1] == 9) ||
-        //@    (digits[j] == 9 && digits[digits.length - j - 1] == 6));
+        //@    (digits[j] == 9 && digits[digits.length - j - 1] == 6)));
         //@ loop_writes i;
         //@ decreases len/2 - i;
         for (int i = 0; i < len / 2; i++) {
