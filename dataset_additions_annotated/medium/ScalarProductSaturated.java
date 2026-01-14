@@ -1,4 +1,4 @@
-public class ScalarProduct {
+public class ScalarProductSaturated {
     //@  requires vec == null;
     //@  assigns \nothing;
     //@  ensures \result == null;
