@@ -1,4 +1,4 @@
-public class AllUnique2 {
+public class AllUnique {
     //@  requires arr == null;
     //@  assigns \nothing;
     //@  ensures \result == true;
