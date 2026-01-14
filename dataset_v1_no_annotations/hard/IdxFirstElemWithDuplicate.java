@@ -1,0 +1,14 @@
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
