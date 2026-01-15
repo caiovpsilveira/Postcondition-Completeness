@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import subprocess
 import threading
 import argparse
@@ -6,14 +7,6 @@ import argparse
 NUM_RUNS = 10
 
 NUM_THREADS = 8
-
-def list_all_files_os_walk(directory_path, names_only=False):
-    file_paths = []
-    for root, _, files in os.walk(directory_path):
-        for file in files:
-            full_path = os.path.join(root, file)
-            file_paths.append(os.path.basename(full_path) if names_only else full_path)
-    return file_paths
 
 # note: this is only to parallelize one RUN, parallelizing each attempt
 # because today the log is stored in like logs/log_Mul.java
@@ -142,7 +135,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     exp_name = args.exp
 
-    dataset = list_all_files_os_walk("dataset_v1_no_annotations")
+    dataset_no_annotations_path = Path('dataset_v1_no_annotations')
+    dataset = list(dataset_no_annotations_path.glob('**/*.java'))
 
     num_threads = min(NUM_THREADS, len(dataset))
 

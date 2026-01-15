@@ -4,6 +4,7 @@ from collections import deque
 import pandas as pd
 import argparse
 from simple_tokenizer_java import simple_tokenize_java
+from pathlib import Path
 
 NUM_RUNS = 10
 
@@ -28,82 +29,27 @@ def tail(path, n):
     except Exception:
         return ""
 
-def get_classification_map():
-    cmap = {}
-
-    cmap['easy'] = set(['Abs1',
-                        'Abs2',
-                        'Avg1',
-                        'Avg2',
-                        'Calculator1',
-                        'Calculator2',
-                        'Clamp',
-                        'ConvertTemperature',
-                        'IsCommonFactor',
-                        'IsCommonMultiple',
-                        'LeapYear',
-                        'SafeSum',
-                        'Swap1',
-                        'Swap2'])
-
-    cmap['medium'] = set(['Add',
-                          'AllDigits',
-                          'ArrayAppend',
-                          'CompareArray',
-                          'CopyArray',
-                          'DivArrayByTwo',
-                          'DoubleArrayElements',
-                          'Find',
-                          'IsPalindrome',
-                          'IsPrefix',
-                          'IsReverseArray',
-                          'IsStrictlyDecreasing',
-                          'IsStrictlyMonotonic',
-                          'Max',
-                          'Min',
-                          'ReverseArray'])
-
-    cmap['hard'] = set(['Mul', 'TwoSum'])
-    return cmap
-
 def get_reverse_classification_map():
-    rmap = {}
-    rmap['Abs1'] = 'easy'
-    rmap['Abs2'] = 'easy'
-    rmap['Avg1'] = 'easy'
-    rmap['Avg2'] = 'easy'
-    rmap['Calculator1'] = 'easy'
-    rmap['Calculator2'] = 'easy'
-    rmap['Clamp'] = 'easy'
-    rmap['ConvertTemperature'] = 'easy'
-    rmap['IsCommonFactor'] = 'easy'
-    rmap['IsCommonMultiple'] = 'easy'
-    rmap['LeapYear'] = 'easy'
-    rmap['SafeSum'] = 'easy'
-    rmap['Swap1'] = 'easy'
-    rmap['Swap2'] = 'easy'
+    dataset_no_annotations_path = Path('dataset_v1_no_annotations')
+    easy_path = dataset_no_annotations_path / 'easy'
+    medium_path = dataset_no_annotations_path / 'medium'
+    hard_path = dataset_no_annotations_path / 'hard'
 
-    rmap['Add'] = 'medium'
-    rmap['AllDigits'] = 'medium'
-    rmap['ArrayAppend'] = 'medium'
-    rmap['CompareArray'] = 'medium'
-    rmap['CopyArray'] = 'medium'
-    rmap['DivArrayByTwo'] = 'medium'
-    rmap['DoubleArrayElements'] = 'medium'
-    rmap['Find'] = 'medium'
-    rmap['IsPalindrome'] = 'medium'
-    rmap['IsPrefix'] = 'medium'
-    rmap['IsReverseArray'] = 'medium'
-    rmap['IsStrictlyDecreasing'] = 'medium'
-    rmap['IsStrictlyMonotonic'] = 'medium'
-    rmap['Max'] = 'medium'
-    rmap['Min'] = 'medium'
-    rmap['ReverseArray'] = 'medium'
+    difficulty_map = {}
 
-    rmap['Mul'] = 'hard'
-    rmap['TwoSum'] = 'hard'
+    for file in easy_path.glob('**/*.java'):
+        classname = file.stem
+        difficulty_map[classname] = 'easy'
 
-    return rmap
+    for file in medium_path.glob('**/*.java'):
+        classname = file.stem
+        difficulty_map[classname] = 'medium'
+
+    for file in hard_path.glob('**/*.java'):
+        classname = file.stem
+        difficulty_map[classname] = 'hard'
+
+    return difficulty_map
 
 def extract_stats(results_dirs):
     # Parse logs to create a dataframe with

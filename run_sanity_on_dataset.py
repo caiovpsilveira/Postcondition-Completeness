@@ -4,6 +4,7 @@ import tempfile
 import tqdm
 
 def check_java_compiler(dataset_annotated_path, dataset_no_annotations_path):
+    all_succeed = True
 
     java_files = list(dataset_annotated_path.glob('**/*.java')) + list(dataset_no_annotations_path.glob('**/*.java'))
 
@@ -15,6 +16,7 @@ def check_java_compiler(dataset_annotated_path, dataset_no_annotations_path):
                 text=True,
             )
             if result.returncode != 0:
+                all_succeed = False
                 print(f"[FAIL] javac {java_file}")
                 # if result.stdout:
                 #     print(result.stdout)
@@ -24,19 +26,28 @@ def check_java_compiler(dataset_annotated_path, dataset_no_annotations_path):
                 #print(f"[OK] {java_file}")
                 pass
 
+    return all_succeed
+
 def check_removed_annotations(dataset_no_annotations_path):
+    all_succeed = True
+
     java_files = list(dataset_no_annotations_path.glob('**/*.java'))
     
     for java_file in tqdm.tqdm(java_files, desc="Checking removed annotations"):
         with open(java_file, 'r') as f:
             content = f.read()
             if '//@' in content or '/*@' in content or '@*/' in content:
+                all_succeed = False
                 print(f"[FAIL] annotations not removed in {java_file}")
             else:
                 #print(f"[OK] {java_file}")
                 pass
 
+    return all_succeed
+
 def check_openjml(dataset_annotated_path):
+    all_succeed = True
+
     java_files = list(dataset_annotated_path.glob('**/*.java'))
 
     # openjml --esc --esc-max-warnings 1 --nullable-by-default --arithmetic-failure=hard --timeout 30 --progress
@@ -48,6 +59,7 @@ def check_openjml(dataset_annotated_path):
             text=True,
         )
         if result.returncode != 0:
+            all_succeed = False
             print(f"[FAIL] openjml {java_file}")
             # if result.stdout:
             #     print(result.stdout)
@@ -57,7 +69,11 @@ def check_openjml(dataset_annotated_path):
             #print(f"[OK] {java_file}")
             pass
 
+    return all_succeed
+
 def check_logical_equivalence(dataset_annotated_path):
+    all_succeed = True
+
     java_files = list(dataset_annotated_path.glob('**/*.java'))
 
     # python src/logical_equivalence_check.py file file --to_file tmp_file
@@ -70,6 +86,7 @@ def check_logical_equivalence(dataset_annotated_path):
                 text=True,
             )
             if result.returncode != 0:
+                all_succeed = False
                 print(f"[FAIL] logical equivalence {java_file}")
                 # if result.stdout:
                 #     print(result.stdout)
@@ -79,7 +96,11 @@ def check_logical_equivalence(dataset_annotated_path):
                 #print(f"[OK] {java_file}")
                 pass
 
+    return all_succeed
+
 def check_completeness(dataset_annotated_path):
+    all_succeed = True
+
     java_files = list(dataset_annotated_path.glob('**/*.java'))
 
     # python src/completeness_check.py file --to_file tmp_file
@@ -92,6 +113,7 @@ def check_completeness(dataset_annotated_path):
                 text=True,
             )
             if result.returncode != 0:
+                all_succeed = False
                 print(f"[FAIL] completeness {java_file}")
                 # if result.stdout:
                 #     print(result.stdout)
@@ -101,11 +123,20 @@ def check_completeness(dataset_annotated_path):
                 #print(f"[OK] {java_file}")
                 pass
 
+    return all_succeed
+
 if __name__ == "__main__":
     dataset_annotated_path = Path('dataset_v1_annotated')
     dataset_no_annotations_path = Path('dataset_v1_no_annotations')
-    check_java_compiler(dataset_annotated_path, dataset_no_annotations_path)
-    check_removed_annotations(dataset_no_annotations_path)
-    check_openjml(dataset_annotated_path)
-    check_logical_equivalence(dataset_annotated_path)
-    check_completeness(dataset_annotated_path)
+
+    all_succeed = True
+    all_succeed &= check_java_compiler(dataset_annotated_path, dataset_no_annotations_path)
+    all_succeed &= check_removed_annotations(dataset_no_annotations_path)
+    all_succeed &= check_openjml(dataset_annotated_path)
+    all_succeed &= check_logical_equivalence(dataset_annotated_path)
+    all_succeed &= check_completeness(dataset_annotated_path)
+
+    if all_succeed:
+        print("All sanity checks passed!")
+    else:
+        print("Some sanity checks failed. Refer to the stdout for details.")
