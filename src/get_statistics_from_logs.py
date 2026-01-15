@@ -80,6 +80,10 @@ def extract_stats(results_dirs):
                 base = os.path.join(exp_dir, f'run_{i}')
 
                 log = os.path.join(base, f'log_{classname}.txt')
+                if not log in log_files:
+                    print(f'Missing log file: {log}')
+                    continue
+
                 log_equiv_gt = os.path.join(base, f'log_{classname}_logical_equiv_GT.txt')
 
                 # get number of iterations and time

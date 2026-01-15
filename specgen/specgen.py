@@ -28,31 +28,26 @@ def extract_lineno_from_err_info(err_info):
         lineno_list.append(int(err[0].split(":")[1]))
     return lineno_list
 
-class TimeoutException(Exception):
-    pass
-
-def timeout_handler(signum, frame):
-    raise TimeoutException
-
-signal.signal(signal.SIGALRM, timeout_handler)
-
-def validate_openjml(opnejml_command, code_with_spec, classname):
+def validate_openjml(openjml_command, code_with_spec, classname):
     tmp_filename = os.path.abspath(".") + "/tmp/{filename}.java".format(filename=classname)
-    tmp_file = open(tmp_filename, 'w')
-    tmp_file.write(code_with_spec)
-    tmp_file.close()
-    cmd = opnejml_command + tmp_filename
-    TIMEOUT = 0 # seconds
-    signal.alarm(TIMEOUT)
-    try:        
-        res_lines = os.popen(cmd).readlines()
-        signal.alarm(0)
-    except TimeoutException:
+    with open(tmp_filename, "w") as tmp_file:
+        tmp_file.write(code_with_spec)
+
+    # openjml_command is a string with args; split is OK because we don't use shell quoting here
+    cmd = openjml_command.split() + [tmp_filename]
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=200,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
         return "Timeout"
-    res = ""
-    for line in res_lines:
-        res = res + line
-    return res
+
+    # OpenJML reports verification feedback via stdout/stderr depending on version/config.
+    return (proc.stdout or "") + (proc.stderr or "")
 
 def validate_openjml_completeness(completeness_flags, code_with_spec, classname):
     tmp_filename_code = os.path.abspath(".") + "/tmp/{filename}.java".format(filename=classname)
@@ -73,11 +68,11 @@ def validate_openjml_completeness(completeness_flags, code_with_spec, classname)
             ],
             capture_output=True,
             text=True,
-            timeout=300,   # seconds. Give slighty more than the OpenJML for the standalone class
+            timeout=600, # seconds. Give more time than validate_openjml() as we check more methods
             check=False,
         )
     except subprocess.TimeoutExpired:
-        return "TIMEOUT"
+        return "Timeout"
 
     return "" if compl_result.returncode == 0 else WEAK_SPEC_ERR
 
@@ -294,7 +289,8 @@ def main():
         print("Cannot open input file {filename}".format(filename=args.input))
         exit(-1)
 
-    openai.api_key = open(args.key_file, 'r').read().strip()
+    # Pass API key via env var so `request_chatgpt_engine` can pick it up.
+    os.environ["OPENAI_API_KEY"] = open(args.key_file, 'r').read().strip()
     input_code = file2str(args.input)
     original_code_tokens = simple_tokenize_java(input_code)
 
@@ -394,11 +390,11 @@ def main():
             err_info += "Error: you must NOT use assumptions. Please review your loop invariants or forbid all exception-causing states via preconditions ('requires' clause).\n"
             err_types = []
 
-        if not "ensures" in current_code:
+        if "ensures" not in current_code:
             err_info += "Error: You MUST add at least one postcondition (ensures). Consider adding more postconditions to strengthen your specification.\n"
             err_types = []
 
-        if not "assigns" and not "assignable" in current_code:
+        if "assigns" not in current_code and "assignable" not in current_code:
             err_info += "Error: You MUST add a frame condition (assigns). If no memory location is modified as a side effect, add \"assigns \\nothing;\".\n"
             err_types = []
 

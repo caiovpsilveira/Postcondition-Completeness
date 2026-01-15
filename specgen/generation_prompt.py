@@ -59,15 +59,15 @@ def create_generation_prompt_config(model, temperature, prompt_type, input_code,
     # Since the examples are still in the dataset, need to remove them if they are the source code tasked.
     # Do not replace one example by another one with a very simmilar task
 
-    few_shot_examples = ["Abs1", "DivArrayByTwo", "IsPrefix", "Find"]
+    few_shot_examples = ["easy/Abs1", "medium/DivArrayByTwo", "medium/IsPrefix", "medium/Find"]
     if class_name == 'Abs1': # Example with arithmetic failure if not considered
-        few_shot_examples[0] = "Avg1"
+        few_shot_examples[0] = "easy/Avg1"
     elif class_name == 'DivArrayByTwo': # Example that modifies the array
-        few_shot_examples[1] = 'ReverseArray'
+        few_shot_examples[1] = 'medium/ReverseArray'
     elif class_name == 'IsPrefix': # Example with behaviors
-        few_shot_examples[2] = 'IsReverseArray'
+        few_shot_examples[2] = 'medium/IsReverseArray'
     elif class_name == 'Find': # Example of 'order relevant in result'
-        few_shot_examples[3] = 'Min'
+        few_shot_examples[3] = 'medium/Min'
 
     #prompt_list = randomly_select_prompt(list(few_shot_examples), 3, class_name)
     # prompt_list = manually_select_prompt()
