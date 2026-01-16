@@ -4,7 +4,7 @@ import subprocess
 import threading
 import argparse
 
-NUM_RUNS = 10
+NUM_RUNS = 1
 
 NUM_THREADS = 8
 
@@ -27,54 +27,159 @@ def split_dataset_n_chunks(dataset, num_chunks):
     
     return chunks
 
-def process_file(exp_name, filepath, output_dir, temporary_filename):
-    print(f'Running {filepath}')
-    classname = filepath.split('/')[-1].split('.')[0]
+
+def _split_flags(flags: str) -> list[str]:
+    return flags.split() if flags else []
+
+
+def _safe_replace(src: Path, dst: Path) -> bool:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if not src.exists():
+        return False
+    src.replace(dst)
+    return True
+
+
+def _ensure_file(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.touch()
+
+
+def _append_subprocess_output(path: Path, result: subprocess.CompletedProcess[str]) -> None:
+    with path.open("a", encoding="utf-8") as f:
+        f.write(f"\n\n{result.stdout}\n\n{result.stderr}\n")
+
+
+def _ground_truth_path_for_input(input_file: Path) -> Path:
+    no_annot_root = Path("dataset_v1_no_annotations").resolve()
+    annot_root = Path("dataset_v1_annotated").resolve()
+
+    try:
+        rel = input_file.resolve().relative_to(no_annot_root)
+        return annot_root / rel
+    except ValueError:
+        # Fallback to old flat layout (or if input_file is outside dataset root).
+        return annot_root / input_file.name
+
+
+def _build_annotated_index(annotated_root: Path) -> dict[str, Path]:
+    index: dict[str, Path] = {}
+    for p in annotated_root.glob("**/*.java"):
+        stem = p.stem
+        if stem in index and index[stem] != p:
+            # Keep the first occurrence, but warn; duplicates would be ambiguous.
+            print(f"[run_experiments] WARNING: duplicate annotated classname {stem}: {index[stem]} and {p}")
+            continue
+        index[stem] = p
+    return index
+
+def process_file(
+    exp_name,
+    filepath: Path,
+    output_dir: Path,
+    temporary_filename: Path,
+    annotated_index: dict[str, Path],
+):
+    print(f"Running {filepath}")
+    classname = filepath.stem
 
     exp_settings_str = get_experiment_settings(exp_name)
     completeness_check_flags = get_completeness_check_flags(exp_name)
 
     # 10 runs, each with 10 attempts for the LLM
-    specgen_result = subprocess.run(f"python specgen/specgen.py --input {filepath} {exp_settings_str}",
-                            shell=True, capture_output=True, text=True)
+    specgen_cmd = [
+        "python",
+        "specgen/specgen.py",
+        "--input",
+        str(filepath),
+        *_split_flags(exp_settings_str),
+    ]
+    specgen_result = subprocess.run(specgen_cmd, capture_output=True, text=True)
 
     print(f'{specgen_result.stdout}\n{specgen_result.stderr}')
 
     log_filename = f"log_{classname}.txt"
-    log_path = f"logs/{log_filename}"
+    log_path = Path("logs") / log_filename
 
     if specgen_result.returncode == 0:
         # Passed generation phase.
         # This experiment has the equiv NOT embedded. Lets see if just asking the LLM to generate a complete code is enough.
         # NOTE: must be the LOG path (which contains the LLM generated code at the end...), the equiv test parses the log for the last
-        equiv_result = subprocess.run(f"python3 src/completeness_check.py {log_path} --to_file {temporary_filename} {completeness_check_flags}",
-                            shell=True, capture_output=True, text=True)
+        equiv_cmd = [
+            "python3",
+            "src/completeness_check.py",
+            str(log_path),
+            "--to_file",
+            str(temporary_filename),
+            *_split_flags(completeness_check_flags),
+        ]
+        equiv_result = subprocess.run(equiv_cmd, capture_output=True, text=True)
 
-        # Copy completeness test and append equiv log
-        os.rename(temporary_filename, f"{output_dir}/log_{classname}_compl.txt")
-        with open(f"{output_dir}/log_{classname}_compl.txt", "a", encoding="utf-8") as equiv_file:
-            equiv_file.write(f"\n\n{equiv_result.stdout}\n\n{equiv_result.stderr}\n") 
+        # Copy completeness test and append completeness log
+        compl_log_path = output_dir / f"log_{classname}_compl.txt"
+        if not _safe_replace(temporary_filename, compl_log_path):
+            _ensure_file(compl_log_path)
+            with compl_log_path.open("a", encoding="utf-8") as f:
+                f.write(
+                    "\n\n[run_experiments] WARNING: completeness tmp file was not created. "
+                    "See subprocess output below.\n"
+                )
+        _append_subprocess_output(compl_log_path, equiv_result)
 
-        if equiv_result.returncode == 0: # Passed equiv test
+        if equiv_result.returncode == 0: # Passed completeness test
             # check ground truth
             if equiv_result.returncode == 0:
-                ground_truth_filepath = f"dataset_v1_annotated/{classname}.java"
-                logical_equiv_GT_result = subprocess.run(f"python3 src/logical_equivalence_check.py {log_path} {ground_truth_filepath} --to_file {temporary_filename} {completeness_check_flags}",
-                                shell=True, capture_output=True, text=True)
+                ground_truth_filepath = _ground_truth_path_for_input(filepath)
+                ground_truth_filepath = annotated_index.get(classname, ground_truth_filepath)
+                if not ground_truth_filepath.exists():
+                    print(
+                        f"[run_experiments] Missing ground truth for {classname}: {ground_truth_filepath}"
+                    )
+                else:
+                    logical_equiv_cmd = [
+                        "python3",
+                        "src/logical_equivalence_check.py",
+                        str(log_path),
+                        str(ground_truth_filepath),
+                        "--to_file",
+                        str(temporary_filename),
+                        *_split_flags(completeness_check_flags),
+                    ]
+                    logical_equiv_GT_result = subprocess.run(
+                        logical_equiv_cmd, capture_output=True, text=True
+                    )
 
-                os.rename(temporary_filename, f"{output_dir}/log_{classname}_logical_equiv_GT.txt")
-                with open(f"{output_dir}/log_{classname}_logical_equiv_GT.txt", "a", encoding="utf-8") as equiv_gt_file:
-                    equiv_gt_file.write(f"\n\n{logical_equiv_GT_result.stdout}\n\n{logical_equiv_GT_result.stderr}\n")
+                    logical_equiv_log_path = output_dir / f"log_{classname}_logical_equiv_GT.txt"
+                    if not _safe_replace(temporary_filename, logical_equiv_log_path):
+                        _ensure_file(logical_equiv_log_path)
+                        with logical_equiv_log_path.open("a", encoding="utf-8") as f:
+                            f.write(
+                                "\n\n[run_experiments] WARNING: logical-equivalence tmp file was not created. "
+                                "See subprocess output below.\n"
+                            )
+                    _append_subprocess_output(logical_equiv_log_path, logical_equiv_GT_result)
 
     # Copy log
-    os.rename(log_path, f"{output_dir}/{log_filename}")
+    run_log_path = output_dir / log_filename
+    if not _safe_replace(log_path, run_log_path):
+        _ensure_file(run_log_path)
+        with run_log_path.open("a", encoding="utf-8") as f:
+            f.write(
+                "\n\n[run_experiments] WARNING: expected specgen log file was not found at "
+                f"{log_path}.\n"
+            )
+        _append_subprocess_output(run_log_path, specgen_result)
 
-def worker(exp_name, thread_idx, files_chunk, output_dir):
+def worker(exp_name, thread_idx, files_chunk, output_dir: Path, annotated_index: dict[str, Path]):
     for filepath in files_chunk:
-        classname = os.path.splitext(os.path.basename(filepath))[0]
-        tmp_name = f"{classname}_{thread_idx}_tmp.java"
+        filepath = Path(filepath)
+        classname = filepath.stem
+        tmp_dir = Path("tmp")
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        tmp_name = tmp_dir / f"{classname}_{thread_idx}_tmp.java"
         try:
-            process_file(exp_name, filepath, output_dir, tmp_name)
+            process_file(exp_name, filepath, output_dir, tmp_name, annotated_index)
         except Exception as e:
             print(f"[Thread {thread_idx}] Error processing {filepath}: {e}")
 
@@ -138,6 +243,9 @@ if __name__ == "__main__":
     dataset_no_annotations_path = Path('dataset_v1_no_annotations')
     dataset = list(dataset_no_annotations_path.glob('**/*.java'))
 
+    annotated_root = Path("dataset_v1_annotated")
+    annotated_index = _build_annotated_index(annotated_root)
+
     num_threads = min(NUM_THREADS, len(dataset))
 
     chunks = split_dataset_n_chunks(dataset, num_threads)
@@ -145,8 +253,8 @@ if __name__ == "__main__":
     for i in range(0, NUM_RUNS):
 
         print(f'run {i}')
-        run_dir = f"results_{exp_name}/run_{i}"
-        os.makedirs(run_dir, exist_ok=True)
+        run_dir = Path(f"results_{exp_name}") / f"run_{i}"
+        run_dir.mkdir(parents=True, exist_ok=True)
 
         # Create N threads
         # Each thread will have a chunk
@@ -155,7 +263,11 @@ if __name__ == "__main__":
         # Then proceed to next run (outer loop)
         threads = []
         for idx, chunk in enumerate(chunks):
-            t = threading.Thread(target=worker, args=(exp_name, idx, chunk, run_dir), name=f"worker-{i}-{idx}")
+            t = threading.Thread(
+                target=worker,
+                args=(exp_name, idx, chunk, run_dir, annotated_index),
+                name=f"worker-{i}-{idx}",
+            )
             t.start()
             threads.append(t)
 

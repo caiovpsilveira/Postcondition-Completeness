@@ -305,6 +305,9 @@ def main():
         openjml_command = "openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 "
         completeness_flags = ""
 
+    print_and_log(f"Using OpenJML command: {openjml_command}\n", f_log)
+    print_and_log(f"Using completeness flags: {completeness_flags}\n", f_log)
+
     num_verify = 0
 
     start_time = time.perf_counter()

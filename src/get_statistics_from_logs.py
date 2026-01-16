@@ -51,6 +51,23 @@ def get_reverse_classification_map():
 
     return difficulty_map
 
+
+def find_original_source_file(classname: str) -> Path | None:
+    """Find the original (no-annotations) Java file for a classname.
+
+    Supports both the old flat layout and the new easy/medium/hard subdirectories.
+    """
+    root = Path("dataset_v1_no_annotations")
+    # New layout: dataset_v1_no_annotations/{easy,medium,hard}/Class.java
+    candidates = list(root.glob(f"**/{classname}.java"))
+    if candidates:
+        return candidates[0]
+    # Old layout fallback
+    flat = root / f"{classname}.java"
+    if flat.exists():
+        return flat
+    return None
+
 def extract_stats(results_dirs):
     # Parse logs to create a dataframe with
     # 'run,difficulty,classname,result,time,number_of_iterations_before_first_valid,number_of_iterations'
@@ -244,7 +261,11 @@ def llm_changed_original_code(df, base_dir):
 
     for run, classname in successes:
         logpath = os.path.join(base_dir, f'{run}/log_{classname}.txt')
-        original_code_path = f'dataset_v1_no_annotations/{classname}.java'
+        original_code = find_original_source_file(classname)
+        if original_code is None:
+            print(f"missing original source for {classname} (looked under dataset_v1_no_annotations/**)")
+            continue
+        original_code_path = str(original_code)
 
         # the process_file function does not get the 'public class', etc.
         # just the body is relevant here, so lets process both

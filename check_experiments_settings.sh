@@ -49,7 +49,7 @@ fi
 # Check if the following is present in results_dir (literal match)
 # Note: verify 'withou' is intended (typo?).
 if git grep --untracked -q -F \
-  -e "+ You SHOULD output the code in its entirety, withou omitting any original content." \
+  -e "+ You SHOULD output the code in its entirety, without omitting any original content." \
   -- "$results_dir"; then
   echo "original prompt"
 else
