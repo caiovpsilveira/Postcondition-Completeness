@@ -1,6 +1,71 @@
 import pandas as pd
 import argparse
 import os
+import re
+from typing import List
+
+
+COMBINED_RESULTS_COLUMNS = [
+    'experiment',
+    'run',
+    'difficulty',
+    'classname',
+    'result',
+    'time',
+    'number_of_iterations_before_first_valid',
+    'number_of_gen_iterations',
+    'number_of_mut_iterations',
+    'llm_gave_up',
+    'had_embedded_compl_check',
+]
+
+
+def _sorted_results_dirs(all_results_dir: str) -> List[str]:
+    """Return absolute paths of results_E* directories under all_results_dir."""
+    if not os.path.isdir(all_results_dir):
+        raise FileNotFoundError(f"Not a directory: {all_results_dir}")
+
+    entries: List[str] = []
+    for name in os.listdir(all_results_dir):
+        full = os.path.join(all_results_dir, name)
+        if os.path.isdir(full) and name.startswith('results_E'):
+            entries.append(full)
+
+    # If the user passes a single results_E* dir as all_results_dir, accept it too.
+    base = os.path.basename(os.path.abspath(all_results_dir))
+    if os.path.isdir(all_results_dir) and base.startswith('results_E'):
+        csv_path = os.path.join(all_results_dir, 'experiments_results.csv')
+        if os.path.isfile(csv_path) and all_results_dir not in entries:
+            entries.append(all_results_dir)
+
+    def key(path: str):
+        name = os.path.basename(path)
+        m = re.match(r"^results_E(\d+)$", name)
+        return (0, int(m.group(1))) if m else (1, name)
+
+    return sorted(entries, key=key)
+
+
+def _ensure_columns(df: pd.DataFrame, required_cols: List[str]) -> pd.DataFrame:
+    """Ensure all required columns exist; missing ones become NA."""
+    out = df.copy()
+    for col in required_cols:
+        if col not in out.columns:
+            out[col] = pd.NA
+    return out
+
+
+def _append_csv(df: pd.DataFrame, path: str, header_cols: List[str], *, append: bool) -> None:
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+
+    # Default behavior is to overwrite on first write of this run, unless append=True.
+    write_header = True
+    mode = 'w'
+    if append and os.path.exists(path):
+        write_header = False
+        mode = 'a'
+
+    df.to_csv(path, sep=',', index=False, columns=header_cols, mode=mode, header=write_header)
 
 def avg_mutation_iterations_on_suc(df):
     """
@@ -371,36 +436,104 @@ def number_of_times_llm_gave_up(df):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Process results directory to group values analysis.")
-    parser.add_argument("results_csv", help="Path to experiments_results.csv")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Process an all_results directory containing multiple results_E* directories. "
+            "For each results_E* directory, read experiments_results.csv, print the same stdout tables, "
+            "and also write combined CSV outputs."
+        )
+    )
+    parser.add_argument(
+        "all_results",
+        help=(
+            "Directory containing results_E* directories (or a single results_E* directory). "
+            "Each results_E* must contain experiments_results.csv"
+        ),
+    )
+    parser.add_argument(
+        "--combined_csv",
+        default=None,
+        help="Output path for combined_results.csv (default: <all_results>/combined_results.csv)",
+    )
+    parser.add_argument(
+        "--grouped_csv",
+        default=None,
+        help=(
+            "Output path for grouped_data_classification_only.csv "
+            "(default: <all_results>/grouped_data_classification_only.csv)"
+        ),
+    )
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append to output CSVs if they already exist (otherwise overwrite).",
+    )
     args = parser.parse_args()
 
-    df = pd.read_csv(args.results_csv)
+    combined_csv = args.combined_csv or os.path.join(args.all_results, 'combined_results.csv')
+    grouped_csv = args.grouped_csv or os.path.join(args.all_results, 'grouped_data_classification_only.csv')
 
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
-    counts = df['result'].value_counts().reindex(categories, fill_value=0)
-    counts_df = counts.rename_axis('result').reset_index(name='count')
-    print(counts_df.to_csv(sep=',', index=False))
+    # If not appending, clear outputs once per run.
+    if not args.append:
+        for p in [combined_csv, grouped_csv]:
+            try:
+                if os.path.exists(p):
+                    os.remove(p)
+            except Exception:
+                pass
 
-    grouped_df = group_results_categories(df)
-    print('Grouped by difficulty')
-    print(grouped_df.to_csv(sep=',', index=False))
+    results_dirs = _sorted_results_dirs(args.all_results)
+    if not results_dirs:
+        raise FileNotFoundError(
+            f"No results_E* directories found under: {args.all_results}"
+        )
 
-    grouped_impacted_by_mutation = group_impacted_by_mutation(df)
-    print('Grouped impacted by mutation')
-    print(grouped_impacted_by_mutation.to_csv(sep=',', index=False))
+    for results_dir in results_dirs:
+        results_csv_path = os.path.join(results_dir, 'experiments_results.csv')
+        if not os.path.isfile(results_csv_path):
+            continue
 
-    # This is the data for each testcase individually
-    # grouped_classname = group_by_classname(df)
-    # selected_cols = ['difficulty', 'classname', 'num_failures', 'num_valid', 'num_complete', 'num_complete_gt']
-    # print('Grouped results by classname')
-    # print(grouped_classname[selected_cols].to_csv(sep=',', index=False))
+        df = pd.read_csv(results_csv_path)
 
-    impacted_by_embedded_compl = see_impact_of_embedded_compl(df)
-    print('Impacted by embedded completeness')
-    print(impacted_by_embedded_compl.to_csv(sep=',', index=False))
+        # Keep stdout printing behavior (same tables as before) for each directory.
+        categories = ['failure', 'valid', 'complete', 'complete_gt']
+        counts = df['result'].value_counts().reindex(categories, fill_value=0)
+        counts_df = counts.rename_axis('result').reset_index(name='count')
+        print(counts_df.to_csv(sep=',', index=False))
 
-    # this is also just a curiosity
-    #times_llm_gave_up = number_of_times_llm_gave_up(df)
-    #print('Number of times it gave up')
-    #print(times_llm_gave_up.to_csv(sep=',', index=False))
+        grouped_df = group_results_categories(df)
+        print('Grouped by difficulty')
+        print(grouped_df.to_csv(sep=',', index=False))
+
+        grouped_impacted_by_mutation = group_impacted_by_mutation(df)
+        print('Grouped impacted by mutation')
+        print(grouped_impacted_by_mutation.to_csv(sep=',', index=False))
+
+        impacted_by_embedded_compl = see_impact_of_embedded_compl(df)
+        print('Impacted by embedded completeness')
+        print(impacted_by_embedded_compl.to_csv(sep=',', index=False))
+
+        # Append combined raw rows
+        combined_df = _ensure_columns(df, COMBINED_RESULTS_COLUMNS)[COMBINED_RESULTS_COLUMNS]
+        _append_csv(combined_df, combined_csv, COMBINED_RESULTS_COLUMNS, append=True)
+
+        # Append grouped classification-only counts
+        grouped_for_csv = grouped_df.rename(columns={
+            'count_failures': 'failure',
+            'count_valid': 'valid',
+            'count_complete': 'complete',
+            'count_complete_gt': 'complete_gt',
+        })
+        grouped_for_csv = _ensure_columns(
+            grouped_for_csv,
+            ['experiment', 'difficulty', 'failure', 'valid', 'complete', 'complete_gt'],
+        )
+        grouped_for_csv = grouped_for_csv[
+            ['experiment', 'difficulty', 'failure', 'valid', 'complete', 'complete_gt']
+        ]
+        _append_csv(
+            grouped_for_csv,
+            grouped_csv,
+            ['experiment', 'difficulty', 'failure', 'valid', 'complete', 'complete_gt'],
+            append=True,
+        )
