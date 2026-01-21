@@ -5,6 +5,9 @@ import matplotlib.patheffects as pe
 import numpy as np
 import seaborn as sns
 import matplotlib.colors as mcolors
+import argparse
+import os
+import re
 
 # 0 no change
 def lighten_color(color, amount=0.2):
@@ -14,7 +17,72 @@ def lighten_color(color, amount=0.2):
     blended = np.clip(blended, 0.0, 1.0)
     return mcolors.to_hex(tuple(blended))
 
-def create_graphics(experiments, custom_labels=None):
+
+def _parse_experiment_number(experiment: str):
+    """Extract integer experiment number from 'expN' or 'results_EN'. Returns None if unknown."""
+    s = str(experiment).strip()
+    m = re.match(r'^exp(\d+)$', s)
+    if m:
+        return int(m.group(1))
+    m = re.match(r'^results_E(\d+)$', s)
+    if m:
+        return int(m.group(1))
+    return None
+
+
+def _resolve_input_to_grouped_df(input_path: str) -> pd.DataFrame:
+    """Load grouped classification-only results from a CSV or from an all_results directory."""
+    if os.path.isfile(input_path):
+        return pd.read_csv(input_path)
+
+    if not os.path.isdir(input_path):
+        raise FileNotFoundError(f"Input path not found: {input_path}")
+
+    grouped_candidate = os.path.join(input_path, 'grouped_data_classification_only.csv')
+    if os.path.isfile(grouped_candidate):
+        return pd.read_csv(grouped_candidate)
+
+    # Otherwise, attempt to build from results_E*/experiments_results.csv.
+    rows = []
+    for name in os.listdir(input_path):
+        d = os.path.join(input_path, name)
+        if not (os.path.isdir(d) and name.startswith('results_E')):
+            continue
+        csv_path = os.path.join(d, 'experiments_results.csv')
+        if os.path.isfile(csv_path):
+            rows.append(pd.read_csv(csv_path))
+
+    if not rows:
+        raise FileNotFoundError(
+            f"No grouped_data_classification_only.csv and no results_E*/experiments_results.csv found under: {input_path}"
+        )
+
+    tmp = pd.concat(rows, ignore_index=True)
+    required = {'experiment', 'difficulty', 'result'}
+    missing = [c for c in required if c not in tmp.columns]
+    if missing:
+        raise KeyError(f"Missing required columns in experiments_results.csv: {missing}")
+
+    tmp['experiment'] = tmp['experiment'].astype(str).str.strip()
+    tmp['difficulty'] = tmp['difficulty'].astype(str).str.strip()
+    tmp['result'] = tmp['result'].astype(str).str.strip()
+
+    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    counts = (
+        tmp.groupby(['experiment', 'difficulty'])['result']
+           .value_counts()
+           .unstack(fill_value=0)
+    )
+    for col in categories:
+        if col not in counts.columns:
+            counts[col] = 0
+    counts = counts[categories]
+    out = counts.reset_index()
+    out.columns.name = None
+    out.index.name = None
+    return out
+
+def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None = None, out_dir: str = 'figures'):
     """
     df is a dataframe containing columns:
     experiment,difficulty,failure,valid,complete,complete_gt
@@ -26,31 +94,43 @@ def create_graphics(experiments, custom_labels=None):
         custom_labels: optional list of custom labels for each experiment (same length as experiments)
                       Use None for any experiment to fall back to the default label
     """
-    df = pd.read_csv('exp_results/grouped_data_classification_only.csv')
 
-    # Mapping experiment data -> label shown
+    if df is None:
+        df = pd.read_csv('exp_results/grouped_data_classification_only.csv')
+
+    # Normalize and ensure numeric columns
+    df = df.copy()
+    df['experiment'] = df['experiment'].astype(str).str.strip()
+    df['difficulty'] = df['difficulty'].astype(str).str.strip()
+
+    for col in ['failure', 'valid', 'complete', 'complete_gt']:
+        if col not in df.columns:
+            df[col] = 0
+        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+
+    df['_exp_num'] = df['experiment'].apply(_parse_experiment_number)
+    df = df[df['_exp_num'].notna()].copy()
+    df['_exp_num'] = df['_exp_num'].astype(int)
+
+    # Mapping experiment number -> label shown
     experiment_names = {
-        # gpt 3.5 turbo
-        'exp1': 'E1: SpecGen\nnon-null/no ovf asm',
-        'exp2': 'E2: OG Prompt\nnon-null/no ovf asm',
-
-        'exp3': 'E3: SpegGen',
-        'exp4': 'E4: OG prompt',
-        'exp5': 'E5: strict prompt',
-        'exp6': 'E6: OG prompt + EC',
-        'exp7': 'E7: strict prompt + EC',
-        # gpt 4.1 mini
-        'exp8': 'E8: SpegGen',
-        'exp9': 'E9: OG prompt',
-        'exp10': 'E10: strict prompt',
-        'exp11': 'E11: OG prompt + EC',
-        'exp12': 'E12: strict prompt + EC',
-        # gpt 5 mini
-        'exp13': 'E13: SpegGen',
-        'exp14': 'E14: OG prompt',
-        'exp15': 'E15: strict prompt',
-        'exp16': 'E16: OG prompt + EC',
-        'exp17': 'E17: strict prompt + EC',
+        1: 'E1: SpecGen\nnon-null/no ovf asm',
+        2: 'E2: OG Prompt\nnon-null/no ovf asm',
+        3: 'E3: SpegGen',
+        4: 'E4: OG prompt',
+        5: 'E5: strict prompt',
+        6: 'E6: OG prompt + EC',
+        7: 'E7: strict prompt + EC',
+        8: 'E8: SpegGen',
+        9: 'E9: OG prompt',
+        10: 'E10: strict prompt',
+        11: 'E11: OG prompt + EC',
+        12: 'E12: strict prompt + EC',
+        13: 'E13: SpegGen',
+        14: 'E14: OG prompt',
+        15: 'E15: strict prompt',
+        16: 'E16: OG prompt + EC',
+        17: 'E17: strict prompt + EC',
     }
 
     # Override with custom labels if provided
@@ -58,8 +138,18 @@ def create_graphics(experiments, custom_labels=None):
         if len(custom_labels) != len(experiments):
             raise ValueError(f"custom_labels length ({len(custom_labels)}) must match experiments length ({len(experiments)})")
         for exp, custom_label in zip(experiments, custom_labels):
+            exp_num = _parse_experiment_number(exp)
+            if exp_num is None:
+                continue
             if custom_label is not None:
-                experiment_names[exp] = custom_label
+                experiment_names[int(exp_num)] = custom_label
+
+    exp_nums = []
+    for e in experiments:
+        n = _parse_experiment_number(e)
+        if n is None:
+            raise ValueError(f"Unrecognized experiment id: {e} (expected expN or results_EN)")
+        exp_nums.append(int(n))
 
     difficulties = ['easy', 'medium', 'hard']
     categories = ['failure', 'valid', 'complete', 'complete_gt']
@@ -143,8 +233,8 @@ def create_graphics(experiments, custom_labels=None):
         # Filter and order by experiment
         sub = (
             df[df['difficulty'] == diff]
-            .set_index('experiment')
-            .reindex(list(experiments))
+            .set_index('_exp_num')
+            .reindex(list(exp_nums))
             .reset_index()
         )
 
@@ -223,7 +313,7 @@ def create_graphics(experiments, custom_labels=None):
             bottoms += heights
 
         # X ticks as experiment short names
-        ax.set_xticks(x, [experiment_names.get(e, e) for e in sub['experiment']])
+        ax.set_xticks(x, [experiment_names.get(int(e), f"E{int(e)}") for e in sub['_exp_num']])
 
         if ROTATE_XTICK_LABELS:
             # Slant labels to improve readability for long names
@@ -274,10 +364,10 @@ def create_graphics(experiments, custom_labels=None):
     plt.subplots_adjust(bottom=BOTTOM_MARGIN, wspace=0.15)
     #plt.tight_layout()
 
-    exp_nums = [e[3:] if isinstance(e, str) and e.startswith('exp') else str(e) for e in experiments]
-    fig_name = f"{'_'.join(exp_nums)}.pdf"
+    fig_name = f"{'_'.join(str(n) for n in exp_nums)}.pdf"
 
-    fig.savefig(f'figures/{fig_name}', dpi=600, bbox_inches='tight', format='pdf')
+    os.makedirs(out_dir, exist_ok=True)
+    fig.savefig(os.path.join(out_dir, fig_name), dpi=600, bbox_inches='tight', format='pdf')
     plt.close()
     #plt.show()
 
@@ -327,11 +417,66 @@ if __name__ == '__main__':
         (['exp7', 'exp12', 'exp17'], ['E7: GPT-3.5 turbo', 'E12: GPT-4.1 mini', 'E17: GPT-5 mini'])
     ]
 
+    parser = argparse.ArgumentParser(
+        description=(
+            "Generate 100% stacked bar charts for predefined experiment comparisons. "
+            "Works with partial/intermediate experiment sets and supports expN or results_EN." 
+        )
+    )
+    parser.add_argument(
+        'input',
+        nargs='?',
+        default='exp_results/grouped_data_classification_only.csv',
+        help=(
+            "Path to grouped_data_classification_only.csv OR an all_results directory containing results_E* directories. "
+            "Default: exp_results/grouped_data_classification_only.csv"
+        ),
+    )
+    parser.add_argument(
+        '--out_dir',
+        default='figures',
+        help="Output directory for PDFs (default: figures)",
+    )
+    args = parser.parse_args()
+
+    df = _resolve_input_to_grouped_df(args.input)
+    df['experiment'] = df['experiment'].astype(str).str.strip()
+    df['_exp_num'] = df['experiment'].apply(_parse_experiment_number)
+    df = df[df['_exp_num'].notna()].copy()
+    df['_exp_num'] = df['_exp_num'].astype(int)
+    exp_nums_available = set(df['_exp_num'].unique().tolist())
+
+    generated = 0
+    skipped = 0
+
     for item in all_experiments_comparisons:
-        # Check if item is a tuple/list with custom labels or just a list of experiments
         if isinstance(item, tuple) and len(item) == 2:
-            exp_tuple, custom_labels = item
-            create_graphics(exp_tuple, custom_labels)
+            exp_list, custom_labels = item
         else:
-            # Just a list of experiments, use default labels
-            create_graphics(item)
+            exp_list, custom_labels = item, None
+
+        required_nums = []
+        unknown = []
+        for e in exp_list:
+            n = _parse_experiment_number(e)
+            if n is None:
+                unknown.append(str(e))
+            else:
+                required_nums.append(int(n))
+
+        if unknown:
+            skipped += 1
+            print(f"WARNING: skipping comparison {exp_list} (unknown experiment ids: {unknown})")
+            continue
+
+        missing = [n for n in required_nums if n not in exp_nums_available]
+        if missing:
+            skipped += 1
+            print(f"WARNING: skipping comparison {exp_list} (missing experiments: {missing})")
+            continue
+
+        # Generate the figure
+        create_graphics(exp_list, custom_labels, df=df, out_dir=args.out_dir)
+        generated += 1
+
+    print(f"Generated {generated} figures; skipped {skipped} comparisons due to missing data.")
