@@ -5,6 +5,9 @@ import matplotlib.patheffects as pe
 import numpy as np
 import seaborn as sns
 import matplotlib.colors as mcolors
+import argparse
+import os
+import re
 
 # 0 no change
 def lighten_color(color, amount=0.2):
@@ -14,13 +17,87 @@ def lighten_color(color, amount=0.2):
     blended = np.clip(blended, 0.0, 1.0)
     return mcolors.to_hex(tuple(blended))
 
+
+def _parse_experiment_number(experiment: str):
+    """Extract integer experiment number from 'expN' or 'results_EN'. Returns None if unknown."""
+    s = str(experiment).strip()
+    m = re.match(r'^exp(\d+)$', s)
+    if m:
+        return int(m.group(1))
+    m = re.match(r'^results_E(\d+)$', s)
+    if m:
+        return int(m.group(1))
+    return None
+
+
+def _experiment_display_label(exp_num: int) -> str:
+    starred = {1, 3, 8, 13}
+    return f"E{exp_num}{'*' if exp_num in starred else ''}"
+
+
+def _resolve_input_to_dataframe(input_path: str) -> pd.DataFrame:
+    """Load combined results from a CSV or from an all_results directory."""
+    if os.path.isfile(input_path):
+        return pd.read_csv(input_path)
+
+    if not os.path.isdir(input_path):
+        raise FileNotFoundError(f"Input path not found: {input_path}")
+
+    # If directory already has a precomputed combined_results.csv, prefer it.
+    combined_candidate = os.path.join(input_path, 'combined_results.csv')
+    if os.path.isfile(combined_candidate):
+        return pd.read_csv(combined_candidate)
+
+    # Otherwise, try to build a dataframe by concatenating results_E*/experiments_results.csv.
+    rows = []
+    for name in os.listdir(input_path):
+        d = os.path.join(input_path, name)
+        if not (os.path.isdir(d) and name.startswith('results_E')):
+            continue
+        csv_path = os.path.join(d, 'experiments_results.csv')
+        if os.path.isfile(csv_path):
+            rows.append(pd.read_csv(csv_path))
+
+    if not rows:
+        raise FileNotFoundError(
+            f"No combined_results.csv and no results_E*/experiments_results.csv found under: {input_path}"
+        )
+    return pd.concat(rows, ignore_index=True)
+
 if __name__ == '__main__':
     """
     df is a dataframe containing columns
     experiment,run,difficulty,classname,result,time,number_of_iterations_before_first_valid,number_of_gen_iterations,number_of_mut_iterations,llm_gave_up,had_embedded_compl_check
     """
 
-    df = pd.read_csv('exp_results/combined_results.csv')
+    parser = argparse.ArgumentParser(
+        description=(
+            "Generate gen-iterations boxplots from a combined results CSV or from an all_results directory. "
+            "Works with partial/intermediate experiment sets (no need for all 17)."
+        )
+    )
+    parser.add_argument(
+        'input',
+        nargs='?',
+        default='exp_results/combined_results.csv',
+        help=(
+            "Path to combined_results.csv OR an all_results directory containing results_E* directories. "
+            "Default: exp_results/combined_results.csv"
+        ),
+    )
+    parser.add_argument(
+        '--out_dir',
+        default='figures',
+        help="Output directory for PDFs (default: figures)",
+    )
+    parser.add_argument(
+        '--prefix',
+        default='gen_iterations_boxplot',
+        help="Output filename prefix (default: gen_iterations_boxplot)",
+    )
+    args = parser.parse_args()
+
+    df = _resolve_input_to_dataframe(args.input)
 
     """
     For each difficulty, plot the box plot of the 'number_of_gen_iterations' of each experiment.
@@ -36,37 +113,19 @@ if __name__ == '__main__':
     categories = ['failure', 'valid', 'complete', 'complete_gt']
     category_labels = ['Failure', 'Valid', 'Complete', 'Complete GT']
 
-    # Mapping experiment data -> label shown
-    experiment_names = {
-        'exp1': 'E1*',
-        'exp2': 'E2',
-        'exp3': 'E3*',
-        'exp4': 'E4',
-        'exp5': 'E5',
-        'exp6': 'E6',
-        'exp7': 'E7',
-        'exp8': 'E8*',
-        'exp9': 'E9',
-        'exp10': 'E10',
-        'exp11': 'E11',
-        'exp12': 'E12',
-        'exp13': 'E13*',
-        'exp14': 'E14',
-        'exp15': 'E15',
-        'exp16': 'E16',
-        'exp17': 'E17',
-    }
-
-    experiments = list(experiment_names.keys())
-
     # Normalize data
     df['experiment'] = df['experiment'].astype(str).str.strip()
     df['difficulty'] = df['difficulty'].astype(str).str.strip()
     df['result'] = df['result'].astype(str).str.strip()
     df['number_of_gen_iterations'] = pd.to_numeric(df['number_of_gen_iterations'], errors='coerce')
 
-    # Restrict to known experiments (defensive)
-    df = df[df['experiment'].isin(experiments)]
+    df['_exp_num'] = df['experiment'].apply(_parse_experiment_number)
+    df = df[df['_exp_num'].notna()].copy()
+    df['_exp_num'] = df['_exp_num'].astype(int)
+    df['_exp_label'] = df['_exp_num'].apply(_experiment_display_label)
+
+    # Infer which experiments exist in the data, ordered by number
+    exp_nums_present = sorted(df['_exp_num'].unique().tolist())
 
     # Filter rows to categories we will plot directly (no renaming)
     plot_df = df[df['result'].isin(categories)]
@@ -83,8 +142,7 @@ if __name__ == '__main__':
     }
 
     # Create output directory if needed
-    import os
-    out_dir = 'figures'
+    out_dir = args.out_dir
     os.makedirs(out_dir, exist_ok=True)
 
     # For spacing: for each experiment we place k boxes with small offsets
@@ -95,17 +153,17 @@ if __name__ == '__main__':
 
         # Collect iteration data per experiment/category
         data_entries = []
-        for exp in experiments:
-            sub = dif_df[dif_df['experiment'] == exp]
+        for exp_num in exp_nums_present:
+            sub = dif_df[dif_df['_exp_num'] == exp_num]
             if sub.empty:
                 continue
-            exp_label = experiment_names[exp]
+            exp_label = _experiment_display_label(exp_num)
             for cat in categories:
                 subset_cat = sub[sub['result'] == cat]
                 if subset_cat.empty:
                     continue
                 iterations = subset_cat['number_of_gen_iterations'].tolist()
-                data_entries.append((exp, exp_label, cat, iterations))
+                data_entries.append((exp_num, exp_label, cat, iterations))
 
         if not data_entries:
             continue
@@ -127,13 +185,13 @@ if __name__ == '__main__':
         last_exp = None
         base_pos_map = {}
 
-        for exp, exp_label, cat, iterations in data_entries:
-            if exp != last_exp:
+        for exp_num, exp_label, cat, iterations in data_entries:
+            if exp_num != last_exp:
                 if last_exp is not None:
                     current_x += gap_between_experiments
-                last_exp = exp
-                base_pos_map[exp] = current_x
-            base_x = base_pos_map[exp]
+                last_exp = exp_num
+                base_pos_map[exp_num] = current_x
+            base_x = base_pos_map[exp_num]
             offset = (cat_index_map[cat] - 1.5) * (width + inner_gap)
             pos = base_x + offset
             positions.append(pos)
@@ -166,8 +224,9 @@ if __name__ == '__main__':
             median = bp['medians'][i]
             median.set_color(color); median.set_linewidth(2.5)
 
-        centers = [exp_center_positions[experiment_names[e]] for e in experiments if experiment_names[e] in exp_center_positions]
-        tick_labels = [experiment_names[e] for e in experiments if experiment_names[e] in exp_center_positions]
+        ordered_labels = [_experiment_display_label(n) for n in exp_nums_present]
+        centers = [exp_center_positions[lbl] for lbl in ordered_labels if lbl in exp_center_positions]
+        tick_labels = [lbl for lbl in ordered_labels if lbl in exp_center_positions]
         ax.set_xticks(centers)
         ax.set_xticklabels(tick_labels, rotation=0)
 
@@ -188,9 +247,9 @@ if __name__ == '__main__':
         ax.set_axisbelow(True)
 
         groups = [
-            ('GPT 3.5 turbo', ['E1*', 'E2', 'E3*', 'E4', 'E5', 'E6', 'E7']),
-            ('GPT 4.1 mini', ['E8*', 'E9', 'E10', 'E11', 'E12']),
-            ('GPT 5 mini', ['E13*', 'E14', 'E15', 'E16', 'E17']),
+            ('GPT 3.5 turbo', [_experiment_display_label(n) for n in range(1, 8)]),
+            ('GPT 4.1 mini', [_experiment_display_label(n) for n in range(8, 13)]),
+            ('GPT 5 mini', [_experiment_display_label(n) for n in range(13, 18)]),
         ]
         span_colors = ['#ffffff', '#f5f5f5', '#ffffff']
 
@@ -237,21 +296,21 @@ if __name__ == '__main__':
                     ha='center', va='bottom', fontsize=20, fontweight='bold',
                     color='#444', zorder=5, clip_on=False)
 
-        sorted_centers = [exp_center_positions[experiment_names[e]] for e in experiments if experiment_names[e] in exp_center_positions]
+        sorted_centers = [exp_center_positions[lbl] for lbl in ordered_labels]
         for i in range(1, len(sorted_centers)):
             mid = (sorted_centers[i-1] + sorted_centers[i]) / 2.0
             ax.axvline(mid, color='grey', linestyle=':', linewidth=0.8, alpha=0.7)
 
         plt.tight_layout()
         plt.subplots_adjust(bottom=0.22, top=0.93)
-        out_path = os.path.join(out_dir, f'gen_iterations_boxplot_{dif}.pdf')
+        out_path = os.path.join(out_dir, f'{args.prefix}_{dif}.pdf')
         plt.savefig(out_path, dpi=600, format='pdf')
         plt.close()
 
     # Optionally print where files were saved
     print('Saved boxplots to figures/:')
     for dif in difficulties:
-        p = os.path.join(out_dir, f'gen_iterations_boxplot_{dif}.pdf')
+        p = os.path.join(out_dir, f'{args.prefix}_{dif}.pdf')
         if os.path.isfile(p):
             print(f'  {p}')
 
