@@ -29,6 +29,34 @@ def tail(path, n):
     except Exception:
         return ""
 
+
+_RETURN_CODE_FOOTER_RE = re.compile(r"Return Code: (\d+)\n\n\n\n\Z")
+
+
+def get_return_code_if_valid_footer(path: str, *, read_bytes: int = 4096) -> int | None:
+    """Return the trailing Return Code if the file ends with the expected footer.
+
+    Expected footer (must be at end-of-file):
+        Return Code: <int>\n\n\n\n
+    """
+    try:
+        with open(path, 'rb') as f:
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            f.seek(max(0, size - read_bytes), os.SEEK_SET)
+            tail_bytes = f.read(read_bytes)
+        tail_text = tail_bytes.decode('utf-8', errors='replace')
+    except Exception:
+        return None
+
+    m = _RETURN_CODE_FOOTER_RE.search(tail_text)
+    if not m:
+        return None
+    try:
+        return int(m.group(1))
+    except ValueError:
+        return None
+
 def get_reverse_classification_map():
     dataset_no_annotations_path = Path('dataset_v1_no_annotations')
     easy_path = dataset_no_annotations_path / 'easy'
@@ -102,6 +130,28 @@ def extract_stats(results_dirs):
                     continue
 
                 log_equiv_gt = os.path.join(base, f'log_{classname}_logical_equiv_GT.txt')
+                log_compl = os.path.join(base, f'log_{classname}_compl.txt')
+
+                compl_rc: int | None = None
+                gt_rc: int | None = None
+
+                if log_compl in log_files:
+                    compl_rc = get_return_code_if_valid_footer(log_compl)
+                    if compl_rc is None:
+                        print(
+                            "Warning: completeness log has unexpected ending; expected "
+                            "'Return Code: <int>\\n\\n\\n\\n' at EOF: "
+                            f"{log_compl}"
+                        )
+
+                if log_equiv_gt in log_files:
+                    gt_rc = get_return_code_if_valid_footer(log_equiv_gt)
+                    if gt_rc is None:
+                        print(
+                            "Warning: logical_equiv_GT log has unexpected ending; expected "
+                            "'Return Code: <int>\\n\\n\\n\\n' at EOF: "
+                            f"{log_equiv_gt}"
+                        )
 
                 # get number of iterations and time
                 iterations_to_first_valid = 0
@@ -157,11 +207,27 @@ def extract_stats(results_dirs):
                     invalid_run = True
                     print(f'{log} is an invalid run') # but other files might be present...
 
+                # Cross-file consistency checks
+                ended_success = ('Success' in last_log_line)
+                if at_least_valid:
+                    if log_compl not in log_files:
+                        reason = 'ended with Success' if ended_success else 'had "too weak" message'
+                        print(
+                            "Warning: missing completeness log (rule violation) for "
+                            f"{exp_dir}/run_{i} {classname}: {reason}; expected {log_compl}"
+                        )
+
+                if compl_rc == 0 and log_equiv_gt not in log_files:
+                    print(
+                        "Warning: missing logical_equiv_GT log (rule violation) for "
+                        f"{exp_dir}/run_{i} {classname}: {log_compl} ended with Return Code: 0; "
+                        f"expected {log_equiv_gt}"
+                    )
+
                 result = ""
                 # Store results
                 if log_equiv_gt in log_files:
-                    last_lines = tail(log_equiv_gt, 5)
-                    if 'Return Code: 0' in last_lines:
+                    if gt_rc == 0:
                         # Success, generated something that is even equal to GT
                         result = "complete_gt"
                     else:
