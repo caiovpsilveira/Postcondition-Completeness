@@ -10,7 +10,7 @@ public class CopyArray {
 
         //@ maintaining iBegin <= k <= iEnd;
         //@ maintaining \forall int i; iBegin <= i < k; a[i] == b[i];
-        //@ loop_writes a[iBegin .. iEnd - 1];
+        //@ loop_writes a[iBegin .. iEnd - 1], k;
         //@ decreases iEnd - k;
         while (iEnd - k > 0) {
             a[k] = b[k];

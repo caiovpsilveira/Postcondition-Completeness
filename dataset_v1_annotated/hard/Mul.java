@@ -1,10 +1,9 @@
 public class Mul {
-    //@ requires Integer.MIN_VALUE <= x * y <= Integer.MAX_VALUE;
     //@ requires x != Integer.MIN_VALUE && y != Integer.MIN_VALUE;
     //@ assigns \nothing;
     //@ ensures \result == x * y;
-    public static int mul(int x, int y) {
-        int res = 0, m = x, n = y, sign = 1;
+    public static long mul(int x, int y) {
+        int m = x, n = y, sign = 1;
         if (x < 0) {
             m = -x;
             sign = -sign;
@@ -14,25 +13,20 @@ public class Mul {
             sign = -sign;
         }
 
-        //@ ghost int aux = res;
+        long res = 0;
 
         //@ maintaining 0 <= i <= m;
         //@ maintaining res == i * n;
-        //@ maintaining aux == res;
         //@ loop_writes res, i;
         //@ decreases m - i;
         for (int i = 0; i < m; i++) {
-
             //@ maintaining 0 <= j <= n;
-            //@ maintaining aux <= res <= aux + n;
-            //@ maintaining res == aux + j;
+            //@ maintaining res == i * n + j;
             //@ loop_writes res, j;
             //@ decreases n - j;
             for (int j = 0; j < n; j++) {
                 res = res + 1;
             }
-
-            //@ set aux = res;
         }
         return sign * res;
     }

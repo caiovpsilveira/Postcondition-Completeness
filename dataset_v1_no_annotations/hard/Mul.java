@@ -1,6 +1,6 @@
 public class Mul {
-    public static int mul(int x, int y) {
-        int res = 0, m = x, n = y, sign = 1;
+    public static long mul(int x, int y) {
+        int m = x, n = y, sign = 1;
         if (x < 0) {
             m = -x;
             sign = -sign;
@@ -9,6 +9,8 @@ public class Mul {
             n = -y;
             sign = -sign;
         }
+
+        long res = 0;
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {

@@ -4,6 +4,7 @@ public class TitleCase {
     //@  ensures \result == null;
     //@ also
     //@  requires arr != null;
+    //@  assigns \nothing;
     //@  ensures \fresh(\result);
     //@  ensures \result.length == arr.length;
     //@  ensures \forall int i; 0 <= i < arr.length; Character.isWhitespace(arr[i]) ==> \result[i] == arr[i];
