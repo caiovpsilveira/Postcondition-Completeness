@@ -3,29 +3,12 @@ from pathlib import Path
 import subprocess
 import threading
 import argparse
+import queue
+import sys
 
-NUM_RUNS = 1
+NUM_RUNS = 10
 
-NUM_THREADS = 8
-
-# note: this is only to parallelize one RUN, parallelizing each attempt
-# because today the log is stored in like logs/log_Mul.java
-# we would need to change this to support parallelizing {num_runs * num_files}
-def split_dataset_n_chunks(dataset, num_chunks):
-    """Split dataset into num_chunks roughly equal parts."""
-    chunk_size = len(dataset) // num_chunks
-    remainder = len(dataset) % num_chunks
-    
-    chunks = []
-    start = 0
-    
-    for i in range(num_chunks):
-        # Distribute remainder across first chunks
-        end = start + chunk_size + (1 if i < remainder else 0)
-        chunks.append(dataset[start:end])
-        start = end
-    
-    return chunks
+NUM_THREADS = 12
 
 
 def _split_flags(flags: str) -> list[str]:
@@ -49,6 +32,13 @@ def _ensure_file(path: Path) -> None:
 def _append_subprocess_output(path: Path, result: subprocess.CompletedProcess[str]) -> None:
     with path.open("a", encoding="utf-8") as f:
         f.write(f"\n\n{result.stdout}\n\n{result.stderr}\n")
+
+
+def _append_subprocess_stderr(path: Path, result: subprocess.CompletedProcess[str]) -> None:
+    if not result.stderr:
+        return
+    with path.open("a", encoding="utf-8") as f:
+        f.write(f"\n\n{result.stderr}\n")
 
 
 def _ground_truth_path_for_input(input_file: Path) -> Path:
@@ -76,38 +66,63 @@ def _build_annotated_index(annotated_root: Path) -> dict[str, Path]:
 
 def process_file(
     exp_name,
+    run_idx: int,
+    thread_idx: int,
     filepath: Path,
-    output_dir: Path,
-    temporary_filename: Path,
+    thread_tmp_dir: Path,
     annotated_index: dict[str, Path],
 ):
     print(f"Running {filepath}")
     classname = filepath.stem
 
+    output_dir = Path(f"results_{exp_name}") / f"run_{run_idx}"
+    # Note: directories are pre-created at startup, no mkdir needed here
+
     exp_settings_str = get_experiment_settings(exp_name)
     completeness_check_flags = get_completeness_check_flags(exp_name)
 
+    # Temp layout:
+    # - thread_tmp_dir is unique per (exp, pid, thread)
+    # - inside it, specgen gets its own subdir
+    specgen_tmp_dir = thread_tmp_dir / "specgen"
+    specgen_tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    # Unique per-job temporary filename for completeness/equivalence tests.
+    temporary_filename = thread_tmp_dir / f"{classname}_r{run_idx}_tmp.java"
+
+    # Put specgen log directly into the run directory to avoid global ./logs collisions.
+    log_filename = f"log_{classname}.txt"
+    log_path = output_dir / log_filename
+
     # 10 runs, each with 10 attempts for the LLM
     specgen_cmd = [
-        "python",
+        sys.executable,
         "specgen/specgen.py",
         "--input",
         str(filepath),
+        "--log_file",
+        str(log_path),
+        "--tmp_dir",
+        str(specgen_tmp_dir),
         *_split_flags(exp_settings_str),
     ]
     specgen_result = subprocess.run(specgen_cmd, capture_output=True, text=True)
 
     print(f'{specgen_result.stdout}\n{specgen_result.stderr}')
 
-    log_filename = f"log_{classname}.txt"
-    log_path = Path("logs") / log_filename
+    wrote_fallback_log = False
+    if not log_path.exists():
+        # If specgen failed before creating the log, still persist stdout/stderr for debugging.
+        _ensure_file(log_path)
+        _append_subprocess_output(log_path, specgen_result)
+        wrote_fallback_log = True
 
     if specgen_result.returncode == 0:
         # Passed generation phase.
         # This experiment has the equiv NOT embedded. Lets see if just asking the LLM to generate a complete code is enough.
         # NOTE: must be the LOG path (which contains the LLM generated code at the end...), the equiv test parses the log for the last
         equiv_cmd = [
-            "python3",
+            sys.executable,
             "src/completeness_check.py",
             str(log_path),
             "--to_file",
@@ -138,7 +153,7 @@ def process_file(
                     )
                 else:
                     logical_equiv_cmd = [
-                        "python3",
+                        sys.executable,
                         "src/logical_equivalence_check.py",
                         str(log_path),
                         str(ground_truth_filepath),
@@ -160,28 +175,41 @@ def process_file(
                             )
                     _append_subprocess_output(logical_equiv_log_path, logical_equiv_GT_result)
 
-    # Copy log
-    run_log_path = output_dir / log_filename
-    if not _safe_replace(log_path, run_log_path):
-        _ensure_file(run_log_path)
-        with run_log_path.open("a", encoding="utf-8") as f:
-            f.write(
-                "\n\n[run_experiments] WARNING: expected specgen log file was not found at "
-                f"{log_path}.\n"
-            )
-        _append_subprocess_output(run_log_path, specgen_result)
+    # log is already in output_dir; specgen mirrors log content to stdout,
+    # so only append stderr to avoid duplicating the whole log.
+    # If we had to create a fallback log (specgen crashed early), stderr is already included.
+    if not wrote_fallback_log:
+        _append_subprocess_stderr(log_path, specgen_result)
 
-def worker(exp_name, thread_idx, files_chunk, output_dir: Path, annotated_index: dict[str, Path]):
-    for filepath in files_chunk:
+def worker(
+    exp_name: str,
+    thread_idx: int,
+    jobs: "queue.Queue[tuple[int, Path]]",
+    annotated_index: dict[str, Path],
+):
+    # Unique per-process+experiment+thread temp dir to avoid collisions even
+    # if multiple experiment runners are launched concurrently.
+    thread_tmp_root = Path("tmp") / f"runexp_{exp_name}_p{os.getpid()}_t{thread_idx}"
+    thread_tmp_root.mkdir(parents=True, exist_ok=True)
+
+    while True:
+        try:
+            run_idx, filepath = jobs.get_nowait()
+        except queue.Empty:
+            return
+
         filepath = Path(filepath)
         classname = filepath.stem
-        tmp_dir = Path("tmp")
-        tmp_dir.mkdir(parents=True, exist_ok=True)
-        tmp_name = tmp_dir / f"{classname}_{thread_idx}_tmp.java"
+        # Per-job temp dir (prevents any chance of OpenJML considering multiple
+        # unrelated .java files sitting side-by-side).
+        job_tmp_dir = thread_tmp_root / f"{classname}_r{run_idx}"
+        job_tmp_dir.mkdir(parents=True, exist_ok=True)
         try:
-            process_file(exp_name, filepath, output_dir, tmp_name, annotated_index)
+            process_file(exp_name, run_idx, thread_idx, filepath, job_tmp_dir, annotated_index)
         except Exception as e:
-            print(f"[Thread {thread_idx}] Error processing {filepath}: {e}")
+            print(f"[Thread {thread_idx}] Error processing {filepath} (run {run_idx}): {e}")
+        finally:
+            jobs.task_done()
 
 def get_experiment_settings(exp):
     if exp == "E1":
@@ -246,33 +274,34 @@ if __name__ == "__main__":
     annotated_root = Path("dataset_v1_annotated")
     annotated_index = _build_annotated_index(annotated_root)
 
-    num_threads = min(NUM_THREADS, len(dataset))
+    total_jobs = NUM_RUNS * len(dataset)
+    print(f"Scheduling {total_jobs} jobs ({NUM_RUNS} runs x {len(dataset)} files)")
 
-    chunks = split_dataset_n_chunks(dataset, num_threads)
-
-    for i in range(0, NUM_RUNS):
-
-        print(f'run {i}')
-        run_dir = Path(f"results_{exp_name}") / f"run_{i}"
+    # Pre-create run directories
+    for run_idx in range(NUM_RUNS):
+        run_dir = Path(f"results_{exp_name}") / f"run_{run_idx}"
         run_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create N threads
-        # Each thread will have a chunk
-        # Each thread will process all files in the chunk
-        # After processing all files from the run, wait until all threads finish
-        # Then proceed to next run (outer loop)
-        threads = []
-        for idx, chunk in enumerate(chunks):
-            t = threading.Thread(
-                target=worker,
-                args=(exp_name, idx, chunk, run_dir, annotated_index),
-                name=f"worker-{i}-{idx}",
-            )
-            t.start()
-            threads.append(t)
+    jobs: "queue.Queue[tuple[int, Path]]" = queue.Queue()
+    for run_idx in range(NUM_RUNS):
+        for filepath in dataset:
+            jobs.put((run_idx, Path(filepath)))
 
-        # After processing all files from the run, wait until all threads finish
-        for t in threads:
-            t.join()
+    num_threads = min(NUM_THREADS, total_jobs)
+    threads: list[threading.Thread] = []
+    for thread_idx in range(num_threads):
+        t = threading.Thread(
+            target=worker,
+            args=(exp_name, thread_idx, jobs, annotated_index),
+            name=f"worker-{thread_idx}",
+            daemon=False,
+        )
+        t.start()
+        threads.append(t)
+
+    # Wait for all jobs to finish
+    jobs.join()
+    for t in threads:
+        t.join()
 
     print(f"Finished experiment")

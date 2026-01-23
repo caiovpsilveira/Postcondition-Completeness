@@ -147,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument("-no_check_null", action="store_true", default=False, help="Enable --nonnull-by-default (will assume that references are always valid)")
     parser.add_argument("-no_check_arith", action="store_true", default=False, help="Disable arithmetic failure")
 
-    parser.add_argument("--to_file", help="The filepath which will be created to run OpenJML on")
+    parser.add_argument("--to_file", help="The filepath which will be created to run OpenJML on", required=True)
 
     args = parser.parse_args()
 

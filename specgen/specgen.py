@@ -28,9 +28,10 @@ def extract_lineno_from_err_info(err_info):
         lineno_list.append(int(err[0].split(":")[1]))
     return lineno_list
 
-def validate_openjml(openjml_command, code_with_spec, classname):
-    tmp_filename = os.path.abspath(".") + "/tmp/{filename}.java".format(filename=classname)
-    with open(tmp_filename, "w") as tmp_file:
+def validate_openjml(openjml_command, code_with_spec, classname, tmp_dir: str):
+    os.makedirs(tmp_dir, exist_ok=True)
+    tmp_filename = os.path.join(tmp_dir, "{filename}.java".format(filename=classname))
+    with open(tmp_filename, "w", encoding="utf-8") as tmp_file:
         tmp_file.write(code_with_spec)
 
     # openjml_command is a string with args; split is OK because we don't use shell quoting here
@@ -49,17 +50,18 @@ def validate_openjml(openjml_command, code_with_spec, classname):
     # OpenJML reports verification feedback via stdout/stderr depending on version/config.
     return (proc.stdout or "") + (proc.stderr or "")
 
-def validate_openjml_completeness(completeness_flags, code_with_spec, classname):
-    tmp_filename_code = os.path.abspath(".") + "/tmp/{filename}.java".format(filename=classname)
-    with open(tmp_filename_code, 'w') as tmp_file:
+def validate_openjml_completeness(completeness_flags, code_with_spec, classname, tmp_dir: str):
+    os.makedirs(tmp_dir, exist_ok=True)
+    tmp_filename_code = os.path.join(tmp_dir, "{filename}.java".format(filename=classname))
+    with open(tmp_filename_code, 'w', encoding="utf-8") as tmp_file:
         tmp_file.write(code_with_spec)
 
-    tmp_filename_compl_test = os.path.abspath(".") + "/tmp/{filename}_Test_Compl.java".format(filename=classname)
+    tmp_filename_compl_test = os.path.join(tmp_dir, "{filename}_Test_Compl.java".format(filename=classname))
 
     try:
         compl_result = subprocess.run(
             [
-                "python3",
+                sys.executable,
                 "src/completeness_check.py",
                 tmp_filename_code,
                 *completeness_flags.split(),
@@ -244,8 +246,20 @@ def simple_tokenize_java(src: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str)
+    parser.add_argument("--input", type=str, required=True)
     parser.add_argument("--key_file", type=str, default="api_key.txt")
+    parser.add_argument(
+        "--log_file",
+        type=str,
+        default=None,
+        help="Optional log file path. Defaults to ./logs/log_<Classname>.txt",
+    )
+    parser.add_argument(
+        "--tmp_dir",
+        type=str,
+        default=None,
+        help="Optional temp directory for OpenJML/completeness intermediate files. Defaults to ./tmp",
+    )
     parser.add_argument("--max_gen_iterations", type=int, default=10)
     parser.add_argument("--model", choices=["gpt-3.5-turbo", "gpt-4.1-mini", "gpt-5-mini"], required=True)
     parser.add_argument("--prompt_type", choices=["original", "strict"], required=True)
@@ -256,9 +270,17 @@ def main():
 
     classname = args.input.split('/')[-1].split('.')[0]
 
-    logs_dir = os.path.join(os.path.abspath("."), "logs")
-    os.makedirs(logs_dir, exist_ok=True)
-    f_log = open(os.path.join(logs_dir, "log_{name}.txt".format(name=classname)), "w")
+    if args.log_file is None:
+        logs_dir = os.path.join(os.path.abspath("."), "logs")
+        os.makedirs(logs_dir, exist_ok=True)
+        log_path = os.path.join(logs_dir, "log_{name}.txt".format(name=classname))
+    else:
+        log_path = os.path.abspath(args.log_file)
+        log_dir = os.path.dirname(log_path)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+
+    f_log = open(log_path, "w", encoding="utf-8")
 
     if args.model == "gpt-3.5-turbo":
         model = "gpt-3.5-turbo-1106"
@@ -295,7 +317,7 @@ def main():
     original_code_tokens = simple_tokenize_java(input_code)
 
     # required for creating files to check with OpenJML
-    tmp_dir = os.path.join(os.path.abspath("."), "tmp")
+    tmp_dir = os.path.abspath(args.tmp_dir) if args.tmp_dir is not None else os.path.join(os.path.abspath("."), "tmp")
     os.makedirs(tmp_dir, exist_ok=True)
 
     if args.use_nonnull_and_no_ovf_asm: # the setup from Ma et al. evaluation
@@ -412,13 +434,13 @@ def main():
             err_types = []
 
         if err_info == "":
-            err_info = validate_openjml(openjml_command, current_code, classname)
+            err_info = validate_openjml(openjml_command, current_code, classname, tmp_dir)
             num_verify = num_verify + 1
             err_types = extract_err_type(err_info)
 
         if err_info == "" and args.embedded_compl:
             # Valid code. Check if it is also 'complete'
-            err_info = validate_openjml_completeness(completeness_flags, current_code, classname)
+            err_info = validate_openjml_completeness(completeness_flags, current_code, classname, tmp_dir)
             err_types = []
             num_verify = num_verify + 1
 
@@ -473,7 +495,7 @@ def main():
             for line in current_code_list:
                 current_code = current_code + line + "\n"
             print_and_log(f"{current_code}", f_log)
-            err_info = validate_openjml(openjml_command, current_code, classname)
+            err_info = validate_openjml(openjml_command, current_code, classname, tmp_dir)
             num_verify = num_verify + 1
             print_and_log(f"\n== Mut Iteration finished with err_info ==\n{err_info}\n{42*'='}\n", f_log)
 

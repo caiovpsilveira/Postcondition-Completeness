@@ -9,7 +9,7 @@ def check_java_compiler(dataset_annotated_path, dataset_no_annotations_path):
     java_files = list(dataset_annotated_path.glob('**/*.java')) + list(dataset_no_annotations_path.glob('**/*.java'))
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        for java_file in tqdm.tqdm(java_files, desc="Compiling Java files"):
+        for java_file in tqdm.tqdm(java_files, desc="Checking Java compiler"):
             result = subprocess.run(
                 ["javac", "-d", tmpdir, str(java_file)],
                 capture_output=True,
