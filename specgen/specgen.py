@@ -41,7 +41,7 @@ def validate_openjml(openjml_command, code_with_spec, classname, tmp_dir: str):
             cmd,
             capture_output=True,
             text=True,
-            timeout=200,
+            timeout=250, # a bit more than the 200s in openjml_command
             check=False,
         )
     except subprocess.TimeoutExpired:
@@ -58,23 +58,19 @@ def validate_openjml_completeness(completeness_flags, code_with_spec, classname,
 
     tmp_filename_compl_test = os.path.join(tmp_dir, "{filename}_Test_Compl.java".format(filename=classname))
 
-    try:
-        compl_result = subprocess.run(
-            [
-                sys.executable,
-                "src/completeness_check.py",
-                tmp_filename_code,
-                *completeness_flags.split(),
-                "--to_file",
-                tmp_filename_compl_test,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=600, # seconds. Give more time than validate_openjml() as we check more methods
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return "Timeout"
+    compl_result = subprocess.run(
+        [
+            sys.executable,
+            "src/completeness_check.py",
+            tmp_filename_code,
+            *completeness_flags.split(),
+            "--to_file",
+            tmp_filename_compl_test,
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
     return "" if compl_result.returncode == 0 else WEAK_SPEC_ERR
 

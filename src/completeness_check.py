@@ -128,8 +128,27 @@ def check_completeness(source_file_filepath: str, check_null: bool, check_arith:
 
     null_switch = "--nullable-by-default" if check_null else "--nonnull-by-default"
     arith_switch = "--arithmetic-failure=hard" if check_arith else "--arithmetic-failure=quiet"
-    result = subprocess.run(f"openjml --esc --esc-max-warnings 1 {null_switch} {arith_switch} --timeout 600 --progress {to_file}",
-                            shell=True, capture_output=True, text=True)
+
+    cmd = [
+        "openjml",
+        "--esc",
+        "--esc-max-warnings",
+        "1",
+        null_switch,
+        arith_switch,
+        "--timeout",
+        "600",
+        "--progress",
+        to_file,
+    ]
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=700) # a bit more time than OpenJML timeout
+    except subprocess.TimeoutExpired:
+        print("Stdout:", "")
+        print("Stderr:", "OpenJML exceeded external timeout")
+        print("Return Code:", -1)
+        return -1
 
     print("Stdout:", result.stdout)
     print("Stderr:", result.stderr)
