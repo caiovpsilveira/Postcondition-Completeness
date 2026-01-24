@@ -87,16 +87,3 @@ def append_failed_code_with_prompt(msg_list, prompt_type, current_code, err_info
     }
     msg_request['content'] += gen_extra_guidance(err_info)
     msg_list.append(msg_request)
-
-def create_specialized_patcher_prompt_config(config, original_config_length, prompt_type, current_code, err_info):
-    messages = []
-
-    prompt_list = extract_err_type(err_info)
-    for dirname in prompt_list:
-        messages.extend(read_refine_as_msg(dirname))
-
-    append_failed_code_with_prompt(messages, prompt_type, current_code, err_info)
-
-    assert original_config_length != 0
-    config['messages'] = config['messages'][0:original_config_length]
-    config['messages'].extend(messages)

@@ -16,9 +16,9 @@ The following Java code is instrumented with JML specifications:
 {code}
 ```
 Verifier failed to verify the specifications given above, with error information as follows:
-```
+<error_info>
 {info}
-```
+</error_info>
 Please refine the specifications, so that it can pass the verification.
 Note that:
 + You SHOULD NOT modify any content other than the specifications inserted into the code.
@@ -47,9 +47,9 @@ The following Java code is instrumented with JML specifications:
 {code}
 ```
 Verifier failed to verify the specifications given above, with the following error information:
-```
+<error_info>
 {info}
-```
+</error_info>
 Please strengthen or correct the wrong specifications.
 Rules (apply all, exactly as written):
 - Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
@@ -78,8 +78,8 @@ In other words, the specification must be equivalent to itself.
 
 FORMAT_REFINE_PROMPT = """
 Your specification got the following error information:
-```
+<error_info>
 {err_info}
-```
+</error_info>
 Please generate again.
 """

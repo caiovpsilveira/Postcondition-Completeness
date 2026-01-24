@@ -11,7 +11,7 @@ from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_ERR
 from util import file2str, parse_code_from_reply
 
 from generation_prompt import create_generation_prompt_config
-from refinement_prompt import create_specialized_patcher_prompt_config, gen_extra_guidance, extract_err_type, append_failed_code_with_prompt
+from refinement_prompt import extract_err_type, append_failed_code_with_prompt
 
 def extract_lineno_from_err_info(err_info):
     temp_list = []
@@ -257,6 +257,7 @@ def main():
         help="Optional temp directory for OpenJML/completeness intermediate files. Defaults to ./tmp",
     )
     parser.add_argument("--max_gen_iterations", type=int, default=10)
+    parser.add_argument("--max_mut_iterations", type=int, default=1000)
     parser.add_argument("--model", choices=["gpt-3.5-turbo", "gpt-4.1-mini", "gpt-5-mini"], required=True)
     parser.add_argument("--prompt_type", choices=["original", "strict"], required=True)
     parser.add_argument("--mutation", action='store_true', default=False)
@@ -291,15 +292,13 @@ def main():
         print(f'Invalid model: {args.model}')
         exit(-1)
 
-    # Note: this header was added after I'd run almost all experiments
-    # I added when cleaning up the code and creating the documentation
-    # That's why it's not in the (majority) of logs
     print_and_log(f'--input {args.input}\n'
                   f'--max_gen_iterations {args.max_gen_iterations}\n'
                   f'--model {model}\n'
                   f'--temperature {temperature}\n'
                   f'--prompt_type {args.prompt_type}\n'
                   f'--mutation {args.mutation}\n'
+                  f'--max_mut_iterations {args.max_mut_iterations}\n'
                   f'--embedded_compl {args.embedded_compl}\n'
                   f'--use_nonnull_and_no_ovf_asm {args.use_nonnull_and_no_ovf_asm}\n', f_log)
 
@@ -337,14 +336,14 @@ def main():
     current_code = input_code.strip()
     err_info = ""
     err_types = []
-    first_generation_message_length = 0
+    base_system_message = None
     for i in range(1, args.max_gen_iterations+1):
         if i == 1:
             # First gen: gets the prompt, few shots and task description. Appends LLM's return as the last message
             print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
             config = create_generation_prompt_config(model, temperature, args.prompt_type, input_code, classname)
-            # in each attempt, we want to keep those and change the remaining
-            first_generation_message_length = len(config['messages']) -1 #-1 : remove raw code
+            # Save the base system message so we can rebuild minimal retry prompts without few-shot examples.
+            base_system_message = config['messages'][0]
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
             print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
@@ -357,10 +356,11 @@ def main():
         else:
             err_types = extract_err_type(err_info)
             if len(err_types) != 0:
-                # Failed gen, and we have guided feedback (examples regarding this specific failure).
-                # Add feedback. Replace last attempt by (feedback + current failed code)
+                # Failed gen. Rebuild prompt WITHOUT few-shot examples.
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                create_specialized_patcher_prompt_config(config, first_generation_message_length, args.prompt_type, current_code, err_info)
+                assert base_system_message is not None
+                config['messages'] = [base_system_message]
+                append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)
                 print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
@@ -371,10 +371,10 @@ def main():
                     break
                 current_code = str(parsed).strip()
             elif not args.mutation or err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1:
-                # Failed gen, we do not have guided feedback, and it does not have mutation candidates (or mutation is disabled)
-                # Replace last attempt by (fix instruction + current failed code)
+                # Failed gen (no mutation short-circuit). Rebuild prompt WITHOUT few-shot examples.
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                config['messages'] = config['messages'][0:first_generation_message_length]
+                assert base_system_message is not None
+                config['messages'] = [base_system_message]
                 append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
                 
                 print_and_log_config(config, f_log)
@@ -426,7 +426,7 @@ def main():
         current_code_tokens = simple_tokenize_java(current_code)
         if original_code_tokens != current_code_tokens:
             err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.\n"
-            err_info += f"The original source code is\n```\n{input_code}\n```\n"
+            err_info += f"The original source code is\n```java\n{input_code}\n```\n"
             err_types = []
 
         if err_info == "":
@@ -459,7 +459,7 @@ def main():
                 for mutated_spec in spec_mutator_heuristic(current_code_list[index]):
                     mutated_spec_list.append({"content": mutated_spec, "index": index})
         i = 1
-        while True: # exaustive: try ALL candidates
+        while i <= args.max_mut_iterations:
             if err_info == "":
                 break
 
