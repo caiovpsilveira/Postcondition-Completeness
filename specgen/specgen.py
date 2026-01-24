@@ -12,7 +12,7 @@ from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_ERR
 from util import file2str, parse_code_from_reply
 
 from generation_prompt import create_generation_prompt_config
-from refinement_prompt import extract_err_type, append_failed_code_with_prompt
+from refinement_prompt import extract_err_type, read_refine_as_msg, append_failed_code_with_prompt
 
 
 _OPENJML_FILE_LOC_RE = re.compile(
@@ -383,10 +383,12 @@ def main():
         else:
             err_types = extract_err_type(err_info)
             if len(err_types) != 0:
-                # Failed gen. Rebuild prompt WITHOUT few-shot examples.
+                # Failed gen. Rebuild prompt WITHOUT few-shot examples and with refine info.
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
                 assert base_system_message is not None
                 config['messages'] = [base_system_message]
+                for dirname in err_types:
+                    config['messages'].extend(read_refine_as_msg(dirname))
                 append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)

@@ -54,12 +54,10 @@ def extract_err_type(err_info):
         "ArithmeticOperationRange negation": "overflow_negation",
         "overflow sum": "overflow_sum",
         "overflow difference": "overflow_sub",
-        "overflow multiply": "overflow_mul",
         "overflow divide": "overflow_div",
         "underflow sum": "underflow_sum",
         "underflow difference": "underflow_sub",
-        "underflow multiply": "underflow_mul",
-        #"underflow divide": "underflow_div",
+        "multiply out of range": "mul_out_of_range",
     }
     for key in keyword_dict:
         keyword_list = key.split(' ')
