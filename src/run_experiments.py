@@ -5,6 +5,7 @@ import threading
 import argparse
 import queue
 import sys
+import shutil
 
 NUM_RUNS = 10
 
@@ -259,6 +260,19 @@ def get_completeness_check_flags(exp):
     else:
         return ""
 
+
+def _cleanup_tmp_dirs(exp_name: str, pid: int) -> None:
+    tmp_root = Path("tmp")
+    if not tmp_root.exists():
+        return
+
+    # Only delete the directories created by this runner (same exp + pid).
+    # Pattern matches the thread-specific roots created in worker().
+    pattern = f"runexp_{exp_name}_p{pid}_t*"
+    for p in tmp_root.glob(pattern):
+        if p.is_dir():
+            shutil.rmtree(p, ignore_errors=True)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp",
@@ -303,5 +317,7 @@ if __name__ == "__main__":
     jobs.join()
     for t in threads:
         t.join()
+
+    _cleanup_tmp_dirs(exp_name, os.getpid())
 
     print(f"Finished experiment")
