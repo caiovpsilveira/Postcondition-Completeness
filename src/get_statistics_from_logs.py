@@ -30,7 +30,7 @@ def tail(path, n):
         return ""
 
 
-_RETURN_CODE_FOOTER_RE = re.compile(r"Return Code: (\d+)\n\n\n\n\Z")
+_RETURN_CODE_FOOTER_RE = re.compile(r"Return Code: (-?\d+)\n\n\n\n\Z")
 
 
 def get_return_code_if_valid_footer(path: str, *, read_bytes: int = 4096) -> int | None:
