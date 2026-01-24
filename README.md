@@ -45,7 +45,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-[OpenJML](https://github.com/OpenJML/OpenJML) version [21-0-17](https://github.com/OpenJML/OpenJML/releases/tag/21-0.17).
+[OpenJML](https://github.com/OpenJML/OpenJML) version [21-0.21](https://github.com/OpenJML/OpenJML/releases/tag/21-0.21).
 You will need to add the `openjml` binary path to your `PATH` environment variable.
 
 > If desired, configure your editor to use the new virtual environment at `.venv` to avoid unresolved dependency errors.
@@ -57,6 +57,8 @@ You will need to create a file named `api_key.txt` in the repository root with y
 
 > We used a virtual machine with Ubuntu 22.04 LTS, with 8 dedicated virtualized cores and 16 GB of RAM.
 > Consider reducing the parallelism in `src/run_experiments.py` if you have less RAM or cores available. 
+> These experiments are not particularly memory hungry. With 16 GB of RAM, you should be able to run even more than 8 threads, depending on how many cores you have.
+> If you have 8 GB of total RAM, consider reducing the number of threads to 6 or less.
 
 ---
 
@@ -83,11 +85,13 @@ The `results_EXP` directory contains the log files of all individual tests.
 - `log_TEST_compl.txt`: the log of the external `completeness check`, to classify proven results as Valid vs (Complete/CompleteGT). This is produced for correct results that finished the generation.
 - `log_TEST_logical_equiv_GT.txt`: the log of the logical equivalence check against the GT version, to classify complete results as Complete vs Complete GT. This is produced for correct and complete results.
 
-> When running, a `tmp` and `logs` directory and some additional files will be created to the root of the repository.
+> When running, a `tmp` directory where additional files will be created.
 > Do not remove these files until the execution finishes.
 > These are moved at the end of the execution for a given test to the `results_EXP` directory.
-> To see what tests are running, see the `logs` directory.
-> (Some _SpecGen_ runs can take a while, as they can have 600+ mutation candidates).
+> TIP: To see which tests are running or remaining, you can use `src/get_statistics_from_logs.py`. This will tell which files are missing.
+
+> (Some _SpecGen_ runs can take a while, as they can have 1000+ mutation candidates). By default, it's capped at 1000 mutation iterations, but these tests can take up to 2 hours to run. *Infeasible* in practice, but we were generous with the mutation phase.
+> The SpecGen experiments (E1, E3, E8 and E13) might take a while to run, up to ~6 or more hours. The other experiments are quicker, and should finish in around 1h. If desired, reduce the number of max_mutation_iterarions to make the SpecGen experiments quicker, but be aware that this might increase the failure rate.
 
 > If the embedded completeness check is used, `log_TEST_compl.txt` might not exist even if the result is correct.
 > This is because the run does not end until a *complete* spec is generated.
