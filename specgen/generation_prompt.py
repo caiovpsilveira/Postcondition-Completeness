@@ -10,7 +10,6 @@ def read_oracle_as_msg(classname, prompt_type):
 
     fmt = FORMAT_ORIGINAL_GENERATION_PROMPT if prompt_type == "original" else FORMAT_STRICT_GENERATION_PROMPT
     content_user = fmt.format(src_code=file2str(filename_clean))
-    content_assistant = fmt.format(src_code=file2str(filename_oracle))
 
     msg_request = {
         'role': 'user',
@@ -18,7 +17,7 @@ def read_oracle_as_msg(classname, prompt_type):
     }
     msg_reply = {
         'role': 'assistant',
-        'content': content_assistant
+        'content': '```java\n{code}\n```'.format(code=file2str(filename_oracle))
     }
     return [msg_request, msg_reply]
 
