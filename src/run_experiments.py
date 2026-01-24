@@ -9,7 +9,7 @@ import shutil
 
 NUM_RUNS = 10
 
-NUM_THREADS = 12
+NUM_THREADS = 8
 
 
 def _split_flags(flags: str) -> list[str]:

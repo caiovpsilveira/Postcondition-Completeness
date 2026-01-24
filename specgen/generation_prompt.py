@@ -34,7 +34,7 @@ def manually_select_prompt():
 def create_generation_prompt_config(model, temperature, prompt_type, input_code, class_name):
     msg_base = {
         'role': 'system',
-        'content': 'You are an JML specification generator for java programs.'
+        'content': 'You are a JML specification generator for java programs.'
     }
     messages = [msg_base]
 
