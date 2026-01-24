@@ -4,17 +4,21 @@ from chatgpt_wrapper import create_chatgpt_config
 from prompt_format import FORMAT_ORIGINAL_GENERATION_PROMPT, FORMAT_STRICT_GENERATION_PROMPT
 from util import file2str
 
-def read_oracle_as_msg(classname):
+def read_oracle_as_msg(classname, prompt_type):
     filename_oracle = "./dataset_v1_annotated/" + classname + ".java"
     filename_clean = "./dataset_v1_no_annotations/" + classname + ".java"
 
+    fmt = FORMAT_ORIGINAL_GENERATION_PROMPT if prompt_type == "original" else FORMAT_STRICT_GENERATION_PROMPT
+    content_user = fmt.format(src_code=file2str(filename_clean))
+    content_assistant = fmt.format(src_code=file2str(filename_oracle))
+
     msg_request = {
         'role': 'user',
-        'content': '```java\n{code}\n```'.format(code=file2str(filename_clean))
+        'content': content_user
     }
     msg_reply = {
         'role': 'assistant',
-        'content': '```java\n{code}\n```'.format(code=file2str(filename_oracle))
+        'content': content_assistant
     }
     return [msg_request, msg_reply]
 
@@ -72,7 +76,7 @@ def create_generation_prompt_config(model, temperature, prompt_type, input_code,
     #prompt_list = randomly_select_prompt(list(few_shot_examples), 3, class_name)
     # prompt_list = manually_select_prompt()
     for oracle in few_shot_examples:
-        messages.extend(read_oracle_as_msg(oracle))
+        messages.extend(read_oracle_as_msg(oracle, prompt_type))
 
     if prompt_type == "original":
         prompt = FORMAT_ORIGINAL_GENERATION_PROMPT

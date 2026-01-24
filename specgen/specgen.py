@@ -5,6 +5,7 @@ import time
 import signal
 import sys
 import subprocess
+import re
 
 from chatgpt_wrapper import request_chatgpt_engine
 from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_ERR
@@ -12,6 +13,31 @@ from util import file2str, parse_code_from_reply
 
 from generation_prompt import create_generation_prompt_config
 from refinement_prompt import extract_err_type, append_failed_code_with_prompt
+
+
+_OPENJML_FILE_LOC_RE = re.compile(
+    r"(?P<path>(?:[A-Za-z]:)?/[^:\s]+(?:/[^:\s]+)*)/(?P<file>[^/\s:]+\.(?:java|jml)):(?P<line>\d+):"
+)
+
+
+def strip_openjml_path_prefix(err_info: str, known_file_path: str | None = None) -> str:
+    """Normalize OpenJML diagnostics by stripping absolute path prefixes.
+
+    Example:
+      /abs/path/Max.java:14: error: ...  ->  Max.java:14: error: ...
+    """
+    if not err_info:
+        return err_info
+
+    basename = os.path.basename(known_file_path) if known_file_path else None
+    out_lines: list[str] = []
+    for line in err_info.splitlines():
+        if basename and known_file_path:
+            line = line.replace(known_file_path, basename)
+
+        line = _OPENJML_FILE_LOC_RE.sub(lambda m: f"{m.group('file')}:{m.group('line')}:", line)
+        out_lines.append(line)
+    return "\n".join(out_lines)
 
 def extract_lineno_from_err_info(err_info):
     temp_list = []
@@ -48,7 +74,8 @@ def validate_openjml(openjml_command, code_with_spec, classname, tmp_dir: str):
         return "Timeout"
 
     # OpenJML reports verification feedback via stdout/stderr depending on version/config.
-    return (proc.stdout or "") + (proc.stderr or "")
+    err_info = (proc.stdout or "") + (proc.stderr or "")
+    return strip_openjml_path_prefix(err_info, known_file_path=tmp_filename)
 
 def validate_openjml_completeness(completeness_flags, code_with_spec, classname, tmp_dir: str):
     os.makedirs(tmp_dir, exist_ok=True)
