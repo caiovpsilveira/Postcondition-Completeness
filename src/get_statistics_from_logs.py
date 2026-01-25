@@ -107,6 +107,21 @@ def extract_stats(results_dirs):
 
     difficulty_map = get_reverse_classification_map()
 
+    # The checking mechanism:
+    # First, we look at the last line of the main log file to see if it's "Success" or "Failure"
+    # If it says "Sucess":
+    #   Then, we expect a completeness log file to be present.
+    #   We check the return code of the completeness log.
+    #   If the return code is != 0 (fail), then this is a VALID result.
+    #   Else, if the return code == 0, then we expect a logical_equiv_GT log file to be present.
+    #       We check the return code of the logical_equiv_GT log.
+    #       If the return code == 0, then this is a COMPLETE_GT result.
+    #       Else, if the return code != 0, then this is a COMPLETE result
+    # Else (it says "Failure"):
+    #   We check the existance of the 'too weak' message in the log file. (only happens with embedded completeness check)
+    #   If this message is present, then this is a VALID result.
+    #   Else, this is a FAILURE result.
+
     for exp_dir in results_dirs:
         log_files = set(list_all_files_os_walk(exp_dir))
 
@@ -115,12 +130,6 @@ def extract_stats(results_dirs):
 
             for i in range(0, NUM_RUNS): # assumes NUM_RUNS runs exists
                 #print(f'Processing {classname}, run {i}')
-
-                # Check existence of log files.
-                # If only log_{classname}.txt exists, it can be either a true failure or a 'valid' with embedded completeness,
-                # that failed to prove complete. Need to check if "too weak" message exists
-                # If log_{classname}_compl.txt exists, it is valid
-                # If log_{classname}_logical_equiv_GT.txt exists, it suceed completeness check
 
                 base = os.path.join(exp_dir, f'run_{i}')
 
@@ -209,9 +218,9 @@ def extract_stats(results_dirs):
 
                 # Cross-file consistency checks
                 ended_success = ('Success' in last_log_line)
-                if at_least_valid:
+                if ended_success:
                     if log_compl not in log_files:
-                        reason = 'ended with Success' if ended_success else 'had "too weak" message'
+                        reason = 'ended with Success'
                         print(
                             "Warning: missing completeness log (rule violation) for "
                             f"{exp_dir}/run_{i} {classname}: {reason}; expected {log_compl}"

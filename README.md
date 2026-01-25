@@ -88,10 +88,14 @@ The `results_EXP` directory contains the log files of all individual tests.
 > When running, a `tmp` directory where additional files will be created.
 > Do not remove these files until the execution finishes.
 > These are moved at the end of the execution for a given test to the `results_EXP` directory.
-> TIP: To see which tests are running or remaining, you can use `src/get_statistics_from_logs.py`. This will tell which files are missing.
+> **TIP**: To see which tests are running or remaining, you can use `src/get_statistics_from_logs.py`. This will tell which files are missing.
 
 > (Some _SpecGen_ runs can take a while, as they can have 1000+ mutation candidates). By default, it's capped at 1000 mutation iterations, but these tests can take up to 2 hours to run. *Infeasible* in practice, but we were generous with the mutation phase.
 > The SpecGen experiments (E1, E3, E8 and E13) might take a while to run, up to ~6 or more hours. The other experiments are quicker, and should finish in around 1h. If desired, reduce the number of max_mutation_iterarions to make the SpecGen experiments quicker, but be aware that this might increase the failure rate.
+
+> The time limits are also *overly conservative*. Each OpenJML call has a time limit of 200s, with the completeness and logical equivalence checks having a time limit of 600s. It's important that the completeness and logical checks have a higher time limit, as they have additional methods to be verified.
+> Each test in the dataset is able to be verified with a time limit of 30s of each OpenJML call. 
+> Because of that, if some tests appears to be 'stuck', it might be because it's requiring multiple completeness_check invocations. You can check the logs, which should be updated at least once every _completeness_timeout_ seconds.
 
 > If the embedded completeness check is used, `log_TEST_compl.txt` might not exist even if the result is correct.
 > This is because the run does not end until a *complete* spec is generated.

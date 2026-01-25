@@ -119,9 +119,11 @@ def process_file(
         wrote_fallback_log = True
 
     if specgen_result.returncode == 0:
-        # Passed generation phase.
-        # This experiment has the equiv NOT embedded. Lets see if just asking the LLM to generate a complete code is enough.
-        # NOTE: must be the LOG path (which contains the LLM generated code at the end...), the equiv test parses the log for the last
+        # Generated a valid result.
+        # If embedded completeness is enabled, 0 means that it's also complete
+        # NOTE: if the embedded completeness is enabled, a rc != 0 might mean that it's a true failure, or that it generated a valid, but not complete.
+        # We need to check in the logs to see if it was a 'too weak' message. In this case, it was valid (but not complete).
+        # get_statistics_from_logs.py handles that. (extract_stats function)
         equiv_cmd = [
             sys.executable,
             "src/completeness_check.py",

@@ -1,0 +1,1654 @@
+--input dataset_v1_no_annotations/easy/DigitToString.java
+--max_gen_iterations 10
+--model gpt-3.5-turbo-1106
+--temperature 0.4
+--prompt_type original
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl True
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DigitToString {
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i < 10; \result.equals(digitToString(i)) <==> i == digit);
+    //@ ensures \result.equals("zero") <==> digit == 0;
+    //@ ensures \result.equals("one") <==> digit == 1;
+    //@ ensures \result.equals("two") <==> digit == 2;
+    //@ ensures \result.equals("three") <==> digit == 3;
+    //@ ensures \result.equals("four") <==> digit == 4;
+    //@ ensures \result.equals("five") <==> digit == 5;
+    //@ ensures \result.equals("six") <==> digit == 6;
+    //@ ensures \result.equals("seven") <==> digit == 7;
+    //@ ensures \result.equals("eight") <==> digit == 8;
+    //@ ensures \result.equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i < 10; \result.equals(digitToString(i)) <==> i == digit);
+                                                                         ^
+1 error
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i < 10; \result.equals(digitToString(i)) <==> i == digit);
+    //@ ensures \result.equals("zero") <==> digit == 0;
+    //@ ensures \result.equals("one") <==> digit == 1;
+    //@ ensures \result.equals("two") <==> digit == 2;
+    //@ ensures \result.equals("three") <==> digit == 3;
+    //@ ensures \result.equals("four") <==> digit == 4;
+    //@ ensures \result.equals("five") <==> digit == 5;
+    //@ ensures \result.equals("six") <==> digit == 6;
+    //@ ensures \result.equals("seven") <==> digit == 7;
+    //@ ensures \result.equals("eight") <==> digit == 8;
+    //@ ensures \result.equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i < 10; \result.equals(digitToString(i)) <==> i == digit);
+                                                                         ^
+1 error
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+To avoid errors related to non-pure methods, you can add "pure" specifications to the methods that doesn't modify any class members.
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                          ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                  ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                          ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                  ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+To avoid errors related to non-pure methods, you can add "pure" specifications to the methods that doesn't modify any class members.
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ pure
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ pure
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ pure
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ pure
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ pure
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ pure
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ pure
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ pure
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ pure
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ pure
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:7: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:9: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:11: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:13: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:15: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:17: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:19: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:21: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:23: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+DigitToString.java:25: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+11 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+1 error
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ pure
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: No modifiers are allowed prior to a lightweight specification case
+    //@ pure
+        ^
+1 error
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    //@ pure
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                               ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                       ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    //@ pure
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                               ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                       ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+To avoid errors related to non-pure methods, you can add "pure" specifications to the methods that doesn't modify any class members.
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    //@ pure
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                               ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                       ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+==============================================
+--------------- Iteration 10 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    //@ pure
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                               ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                       ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+To avoid errors related to non-pure methods, you can add "pure" specifications to the methods that doesn't modify any class members.
+
+assistant: ```java
+public class DigitToString {
+    //@ requires 0 <= digit && digit <= 9;
+    //@ assigns \nothing;
+    //@ ensures \result != null;
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+    //@ pure
+    public static String digitToString(int digit) {
+        switch (digit) {
+            case 0: return "zero";
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            case 4: return "four";
+            case 5: return "five";
+            case 6: return "six";
+            case 7: return "seven";
+            case 8: return "eight";
+            case 9: return "nine";
+            default: return null;
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                               ^
+DigitToString.java:5: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures (\forall int i; 0 <= i && i < 10; digitToString(i).equals(digitToString(i)) <==> i == digit);
+                                                                                       ^
+DigitToString.java:6: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(0).equals("zero") <==> digit == 0;
+                             ^
+DigitToString.java:7: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(1).equals("one") <==> digit == 1;
+                             ^
+DigitToString.java:8: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(2).equals("two") <==> digit == 2;
+                             ^
+DigitToString.java:9: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(3).equals("three") <==> digit == 3;
+                             ^
+DigitToString.java:10: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(4).equals("four") <==> digit == 4;
+                             ^
+DigitToString.java:11: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(5).equals("five") <==> digit == 5;
+                             ^
+DigitToString.java:12: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(6).equals("six") <==> digit == 6;
+                             ^
+DigitToString.java:13: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(7).equals("seven") <==> digit == 7;
+                             ^
+DigitToString.java:14: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(8).equals("eight") <==> digit == 8;
+                             ^
+DigitToString.java:15: error: A non-pure method is being called where it is not permitted: DigitToString.digitToString(int)
+    //@ ensures digitToString(9).equals("nine") <==> digit == 9;
+                             ^
+12 errors
+==============================================
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 42 seconds ---
+Failure
