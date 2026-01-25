@@ -1,0 +1,1714 @@
+--input dataset_v1_no_annotations/easy/IsRectangleOverlap.java
+--max_gen_iterations 10
+--model gpt-3.5-turbo-1106
+--temperature 0.4
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl True
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class IsRectangleOverlap {
+    //@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+    //@ assigns \nothing;
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ pure
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==== Gen Iteration finished with err_info ====
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                            ^
+  symbol:   variable bottom2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                      ^
+  symbol:   variable top1
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                              ^
+  symbol:   variable top2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                     ^
+  symbol:   variable bottom1
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                ^
+  symbol:   variable left2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                        ^
+  symbol:   variable right1
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                                  ^
+  symbol:   variable right2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                                           ^
+  symbol:   variable left1
+  location: class IsRectangleOverlap
+8 errors
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsRectangleOverlap {
+    //@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+    //@ assigns \nothing;
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ pure
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                            ^
+  symbol:   variable bottom2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                      ^
+  symbol:   variable top1
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                              ^
+  symbol:   variable top2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                     ^
+  symbol:   variable bottom1
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                ^
+  symbol:   variable left2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                        ^
+  symbol:   variable right1
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                                  ^
+  symbol:   variable right2
+  location: class IsRectangleOverlap
+IsRectangleOverlap.java:4: error: cannot find symbol
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+                                                                                           ^
+  symbol:   variable left1
+  location: class IsRectangleOverlap
+8 errors
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+    //@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+    //@ assigns \nothing;
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ pure
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+    //@ assigns \nothing;
+    //@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ pure
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining true;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining true;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining true;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining true;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+--------------- Iteration 10 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+//@ requires rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+//@ assigns \nothing;
+//@ ensures \result == (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+//@ pure
+//@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+//@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+//@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+//@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+//@ maintaining i >= 0 && i < 4;
+//@ decreasing 4;
+public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+    int left1   = rec1[0];
+    int bottom1 = rec1[1];
+    int right1  = rec1[2];
+    int top1    = rec1[3];
+
+    int left2   = rec2[0];
+    int bottom2 = rec2[1];
+    int right2  = rec2[2];
+    int top2    = rec2[3];
+
+    //@ maintaining i >= 0 && i < 4;
+    //@ decreasing 4;
+    for (int i = 0; i < 4; i++) {
+        //@ assert i >= 0 && i < 4;
+        //@ assert rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4;
+        //@ assert left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3];
+        //@ assert left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3];
+    }
+
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+    //@ ensures \result <==> (bottom2 < top1 && top2 > bottom1 && left2 < right1 && right2 > left1);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures \result ==> (left1 < right1 && bottom1 < top1 && left2 < right2 && bottom2 < top2);
+    //@ ensures !\result ==> (left1 >= right1 || bottom1 >= top1 || left2 >= right2 || bottom2 >= top2);
+    //@ ensures \result ==> (rec1 != null && rec2 != null && rec1.length == 4 && rec2.length == 4);
+    //@ ensures \result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures \result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3]);
+    //@ ensures !\result ==> (left1 == rec1[0] && bottom1 == rec1[1] && right1 == rec1[2] && top1 == rec1[3]);
+    //@ ensures !\result ==> (left2 == rec2[0] && bottom2 == rec2[1] && right2 == rec2[2] && top2 == rec2[3);
+
+    return !(bottom2 >= top1 || top2 <= bottom1 || left2 >= right1 || right2 <= left1);
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.
+The original source code is
+```java
+public class IsRectangleOverlap {
+    public static boolean isRectangleOverlap(int[] rec1, int[] rec2) {
+        int left1   = rec1[0];
+        int bottom1 = rec1[1];
+        int right1  = rec1[2];
+        int top1    = rec1[3];
+
+        int left2   = rec2[0];
+        int bottom2 = rec2[1];
+        int right2  = rec2[2];
+        int top2    = rec2[3];
+
+        return !(bottom2 >= top1 ||
+                 top2 <= bottom1 ||
+                 left2 >= right1 ||
+                 right2 <= left1);
+    }
+}
+
+```
+
+==============================================
+
+Finished. Verifier invoked 1 times
+--- Elapsed time: 61 seconds ---
+Failure
