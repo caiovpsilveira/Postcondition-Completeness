@@ -5,21 +5,21 @@ from util import file2str
 
 def gen_extra_guidance(err_info):
     if err_info.find('visibility') != -1:
-        return "To avoid errors related to visibility, you can add \"spec_public\" specifications to all the members (especially private ones) within the class."
+        return "<tip>To avoid errors related to visibility, you can add \"spec_public\" specifications to all the members (especially private ones) within the class.</tip>"
     elif err_info.find('non-pure') != -1:
-        return "To avoid errors related to non-pure methods, you can add \"pure\" specifications to the methods that doesn't modify any class members."
+        return "<tip>To avoid errors related to non-pure methods, you can add \"pure\" specifications to the methods that doesn't modify any class members.</tip>"
     elif err_info.find('NegativeIndex') != -1:
-        return "The \"PossiblyNegativeIndex\" error indicates that the loop invariant is not restricting the possibility of a negative index in the array access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications."
+        return "<tip>The \"PossiblyNegativeIndex\" error indicates that the loop invariant is not restricting the possibility of a negative index in the array access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications.</tip>"
     elif err_info.find('TooLargeIndex') != -1:
-        return "The \"PossiblyTooLargeIndex\" error indicates that the loop invariant is allowing an outside of bounds access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications."
+        return "<tip>The \"PossiblyTooLargeIndex\" error indicates that the loop invariant is allowing an outside of bounds access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications.</tip>"
     elif err_info.find('ArithmeticOperationRange') != -1 and err_info.find('negation') != -1:
-        return "To avoid integer overflow in integer negation operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)."
+        return "<tip>To avoid integer overflow in integer negation operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value).</tip>"
     elif err_info.find('overflow') != -1:
-        return "To avoid integer overflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)."
+        return "<tip>To avoid integer overflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value).</tip>"
     elif err_info.find('underflow') != -1:
-        return "To avoid integer underflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)."
+        return "<tip>To avoid integer underflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value).</tip>"
     elif err_info.find('LoopInvariantBeforeLoop') != -1:
-        return "The \"LoopInvariantBeforeLoop\" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications."
+        return "<tip>The \"LoopInvariantBeforeLoop\" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications.</tip>"
     else:
         return ""
 
@@ -37,11 +37,11 @@ def read_refine_as_msg(dirname):
         'role': 'user',
         'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
     }
+    msg_err['content'] += gen_extra_guidance(err_info)
     msg_reply = {
         'role': 'assistant',
         'content': '```java\n{code}\n```\n'.format(code=refined_code)
     }
-    msg_request['content'] += gen_extra_guidance(err_info)
     return [msg_request, msg_err, msg_reply]
 
 def extract_err_type(err_info):

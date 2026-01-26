@@ -437,15 +437,15 @@ def main():
             err_types = []
 
         if 'assume' in current_code:
-            err_info += "Error: you must NOT use assumptions. Please review your loop invariants or forbid all exception-causing states via preconditions ('requires' clause).\n"
+            err_info += "Error: you MUST NOT use assumptions ('assume' clause). Please review your loop invariants or forbid all exception-causing states via preconditions ('requires' clause).\n"
             err_types = []
 
         if "ensures" not in current_code:
-            err_info += "Error: You MUST add at least one postcondition (ensures). Consider adding more postconditions to strengthen your specification.\n"
+            err_info += "Error: You MUST add at least one postcondition ('ensures' clause). Consider adding more postconditions to strengthen your specification.\n"
             err_types = []
 
         if "assigns" not in current_code and "assignable" not in current_code:
-            err_info += "Error: You MUST add a frame condition (assigns). If no memory location is modified as a side effect, add \"assigns \\nothing;\".\n"
+            err_info += "Error: You MUST add a frame condition ('assigns' clause). If no memory location is modified as a side effect, add \"assigns \\nothing;\".\n"
             err_types = []
 
         if "signals" in current_code:
@@ -455,7 +455,7 @@ def main():
         current_code_tokens = simple_tokenize_java(current_code)
         if original_code_tokens != current_code_tokens:
             err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.\n"
-            err_info += f"The original source code is\n```java\n{input_code}\n```\n"
+            err_info += f"<original_code>\n{input_code}\n</original_code>\n"
             err_types = []
 
         if err_info == "":

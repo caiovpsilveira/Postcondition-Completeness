@@ -6,6 +6,7 @@ import argparse
 import queue
 import sys
 import shutil
+import time
 
 NUM_RUNS = 10
 
@@ -276,6 +277,8 @@ def _cleanup_tmp_dirs(exp_name: str, pid: int) -> None:
             shutil.rmtree(p, ignore_errors=True)
 
 if __name__ == "__main__":
+    start_time = time.perf_counter()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp",
                         choices=["E1", "E2", "E3", "E4", "E5", "E6", "E7",
@@ -322,4 +325,7 @@ if __name__ == "__main__":
 
     _cleanup_tmp_dirs(exp_name, os.getpid())
 
-    print(f"Finished experiment")
+    end_time = time.perf_counter()
+    elapsed = int(end_time - start_time)
+
+    print(f"Finished experiment. Elapsed time: {elapsed} seconds.")
