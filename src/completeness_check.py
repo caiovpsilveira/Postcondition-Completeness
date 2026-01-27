@@ -82,8 +82,10 @@ def generate_openjml_completeness_test(classname, source_methods: list[MethodSpe
         arg_types_by_name = get_arg_type_from_name_map(method.args_decl)
 
         for location in method.assigned_locations:
-            if "\\nothing" in location or "\\everything" in location: # skip assigns nothing or everything
+            if "\\nothing" in location: # skip assigns nothing
                 continue
+            elif "\\everything" in location: # we cannot handle everything
+                return NO_ASSIGNS_LOCATIONS
             arg_name = location.split("[", 1)[0].strip() # We only want the name of the arg.
             modified_locations.add(arg_name)
 

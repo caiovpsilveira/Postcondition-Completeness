@@ -448,6 +448,10 @@ def main():
             err_info += "Error: You MUST add a frame condition ('assigns' clause). If no memory location is modified as a side effect, add \"assigns \\nothing;\".\n"
             err_types = []
 
+        if "assigns \\everything" in current_code or "assignable \\everything" in current_code:
+            err_info += "Error: You MUST NOT use \"assigns \\everything\". Please specify the exact frame condition or use \"assigns \\nothing;\" if no memory location is modified.\n"
+            err_types = []
+
         if "signals" in current_code:
             err_info += "Error: You MUST NOT account for exceptional behavior. Forbid all exception-causing states via preconditions ('requires' clause).\n"
             err_types = []

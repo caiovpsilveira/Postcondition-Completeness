@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import tqdm
+import sys
 
 def check_java_compiler(dataset_annotated_path, dataset_no_annotations_path):
     all_succeed = True
@@ -138,5 +139,7 @@ if __name__ == "__main__":
 
     if all_succeed:
         print("All sanity checks passed!")
+        sys.exit(0)
     else:
         print("Some sanity checks failed. Refer to the stdout for details.")
+        sys.exit(1)
