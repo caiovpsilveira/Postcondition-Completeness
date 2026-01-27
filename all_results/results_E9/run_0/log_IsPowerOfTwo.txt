@@ -1,0 +1,1329 @@
+--input dataset_v1_no_annotations/medium/IsPowerOfTwo.java
+--max_gen_iterations 10
+--model gpt-4.1-mini-2025-04-14
+--temperature 0.4
+--prompt_type original
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+    
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && n * (1 << k) == \old(n));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && n * (1 << k) == \old(n));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:9: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && n * (1 << k) == \old(n));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && n * (1 << k) == \old(n));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && n * (1 << k) == \old(n));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:9: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && n * (1 << k) == \old(n));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && \old(n) == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && \old(n) == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:9: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && \old(n) == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && \old(n) == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && \old(n) == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:9: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && \old(n) == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Refined specifications to fix the verification error:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Correction:
+
+The error is caused by the `maintaining` clause before the loop. The `maintaining` clause must hold before the loop starts, but the existential formula `(\exists int k; k >= 0 && original == n * (1 << k))` may not hold before the loop because at that point `n` is equal to `original`, so the formula reduces to `original == original * (1 << k)`, which is only true if `k == 0` and `(1 << 0) == 1`. So it is true for `k=0`. But the verifier may not be able to infer that.
+
+To help the verifier, change the `maintaining` clause before the loop to explicitly state that `k == 0` is a witness:
+
+```java
+//@ maintaining original == n * 1;
+```
+
+or equivalently:
+
+```java
+//@ maintaining original == n * (1 << 0);
+```
+
+So the fixed code is:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining original == n * (1 << 0);
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+This way, the `maintaining` clause before the loop holds trivially and the loop invariant remains the same. This should allow the verifier to pass.
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Refined specifications:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Wait, the user says "You SHOULD NOT modify any content other than the specifications inserted into the code." So I cannot remove or add code, only modify the JML specifications.
+
+The error is:
+
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+
+This means the "maintaining" clause before the loop is not established before the loop.
+
+The problem is that the maintaining clause before the loop is:
+
+    //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+
+But at that point, n == original, so:
+
+    original == n * (1 << k)  <=> original == original * (1 << k)
+
+which implies (1 << k) == 1, so k == 0.
+
+But the prover may not be able to deduce that.
+
+To fix this, we can replace the maintaining clause before the loop with an assertion that is trivially true at the start, for example:
+
+    //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+
+But this is the same as the loop invariant.
+
+Alternatively, we can remove the "maintaining" clause before the loop, because it is redundant with the loop invariant.
+
+Or we can replace the "maintaining" clause before the loop with an assertion:
+
+    //@ maintaining (\exists int k; k == 0 && original == n * (1 << k));
+
+Since at the start n == original, so original == n * (1 << 0) == n * 1 == n.
+
+Better yet, we can remove the "maintaining" clause before the loop, as it is redundant. The loop invariant is sufficient.
+
+Alternatively, we can replace the "maintaining" clause with:
+
+    //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+
+But the prover still complains.
+
+Alternatively, we can replace the "maintaining" clause with:
+
+    //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k)) && n == original;
+
+But the loop invariant already has n > 0 and the existential.
+
+Alternatively, the "maintaining" clause before the loop is not necessary, so remove it.
+
+In JML, "maintaining" clauses before the loop are loop invariants, so they must hold before the loop.
+
+If the prover cannot prove it, then the loop invariant is not true before the loop.
+
+So we can fix the loop invariant to:
+
+    //@ loop_invariant n > 0;
+    //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+
+But the problem is that original == n * (1 << k) may not hold for k >= 0 at the start.
+
+At the start, n == original, so original == n * (1 << 0) holds.
+
+So the loop invariant is true at the start.
+
+But the prover may not be able to deduce that.
+
+We can help the prover by adding an assertion before the loop:
+
+    //@ assert (\exists int k; k >= 0 && original == n * (1 << k));
+
+Alternatively, we can rewrite the loop invariant as:
+
+    //@ loop_invariant n > 0;
+    //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+
+and remove the "maintaining" clause before the loop.
+
+Because "maintaining" clauses before the loop are redundant with loop invariants.
+
+So the fix is: remove the "maintaining" clause before the loop.
+
+Hence, the refined code is:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+So the only change is to remove the line:
+
+    //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+
+which was before the loop.
+
+Alternatively, if the user wants to keep the "maintaining" clause, replace it with:
+
+    //@ maintaining n > 0;
+
+which is trivial.
+
+So the final answer is: remove the "maintaining" clause before the loop that causes the error.
+
+# Final answer:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Refined specifications:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+The problem is that the "maintaining" clause before the loop is checked before the loop starts, but at that point n == original, so the invariant \exists k; original == n * (1 << k) is equivalent to \exists k; original == original * (1 << k), which is only true if k=0 and (1 << 0) == 1.
+
+Therefore, to fix the verification, the "maintaining" clause before the loop should be changed to:
+
+```java
+//@ maintaining (\exists int k; k >= 0 && original == n * (1 << k)) || n == original;
+```
+
+or better, replace it with the loop invariant itself, but since before the loop n == original, and original == n * 1, the invariant holds with k=0.
+
+Hence, the "maintaining" clause should be:
+
+```java
+//@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+```
+
+But the verifier complains about this.
+
+To fix this, add an explicit assertion before the loop:
+
+```java
+//@ assert (\exists int k; k >= 0 && original == n * (1 << k));
+```
+
+or, more simply, replace the "maintaining" clause before the loop with:
+
+```java
+//@ maintaining n == original;
+//@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+```
+
+But this is redundant.
+
+Alternatively, remove the "maintaining" clause before the loop entirely, and keep only the loop invariants.
+
+Hence, the final refined code is:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+This should pass verification.
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Refined specifications to fix the verification failure:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+**Correction:**
+
+The error is that the `maintaining` clause before the loop is not established initially. The loop invariant must hold before the loop starts. The problem is that the `maintaining` clause is the same as the loop invariant but the variable `n` has not changed yet, so the existential quantification may not hold.
+
+To fix this, replace the `maintaining` clause with an assertion that is trivially true before the loop, or remove the `maintaining` clause (which is optional and redundant here), and keep the loop invariant only.
+
+Hence, the refined code is:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+This should pass verification.
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 10 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Refined specifications:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+Correction: The error indicates the loop invariant is not established before the loop starts. The problem is with the "maintaining" clause before the loop, which must hold immediately after the initialization of 'original' and before entering the loop.
+
+The original code had:
+
+```java
+//@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+```
+
+But at that point, n == original, so:
+
+original == n * (1 << k)  => original == original * (1 << k)
+
+which implies (1 << k) == 1, so k == 0.
+
+Therefore, to help the prover, replace the "maintaining" clause before the loop with:
+
+```java
+//@ maintaining original == n * (1 << 0);
+```
+
+which is:
+
+```java
+//@ maintaining original == n;
+```
+
+So the refined code is:
+
+```java
+public class IsPowerOfTwo {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures \result == (n > 0 && (\exists int k; k >= 0 && n == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ ghost int original = n;
+        //@ maintaining n > 0;
+        //@ maintaining original == n;
+        //@ loop_invariant n > 0;
+        //@ loop_invariant (\exists int k; k >= 0 && original == n * (1 << k));
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+This way, the "maintaining" clause before the loop is weaker and trivially holds before the loop, and the loop invariant is strong enough to be maintained during the loop.
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method isPowerOfTwo
+        //@ maintaining (\exists int k; k >= 0 && original == n * (1 << k));
+            ^
+1 verification failure
+==============================================
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 133 seconds ---
+Failure
