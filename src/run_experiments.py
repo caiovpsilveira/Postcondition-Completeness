@@ -42,7 +42,6 @@ def _append_subprocess_stderr(path: Path, result: subprocess.CompletedProcess[st
     with path.open("a", encoding="utf-8") as f:
         f.write(f"\n\n{result.stderr}\n")
 
-
 def _ground_truth_path_for_input(input_file: Path) -> Path:
     no_annot_root = Path("dataset_v1_no_annotations").resolve()
     annot_root = Path("dataset_v1_annotated").resolve()
@@ -125,7 +124,7 @@ def process_file(
         # NOTE: if the embedded completeness is enabled, a rc != 0 might mean that it's a true failure, or that it generated a valid, but not complete.
         # We need to check in the logs to see if it was a 'too weak' message. In this case, it was valid (but not complete).
         # get_statistics_from_logs.py handles that. (extract_stats function)
-        equiv_cmd = [
+        compl_cmd = [
             sys.executable,
             "src/completeness_check.py",
             str(log_path),
@@ -133,7 +132,7 @@ def process_file(
             str(temporary_filename),
             *_split_flags(completeness_check_flags),
         ]
-        equiv_result = subprocess.run(equiv_cmd, capture_output=True, text=True)
+        compl_result = subprocess.run(compl_cmd, capture_output=True, text=True)
 
         # Copy completeness test and append completeness log
         compl_log_path = output_dir / f"log_{classname}_compl.txt"
@@ -144,11 +143,11 @@ def process_file(
                     "\n\n[run_experiments] WARNING: completeness tmp file was not created. "
                     "See subprocess output below.\n"
                 )
-        _append_subprocess_output(compl_log_path, equiv_result)
+        _append_subprocess_output(compl_log_path, compl_result)
 
-        if equiv_result.returncode == 0: # Passed completeness test
+        if compl_result.returncode == 0: # Passed completeness test
             # check ground truth
-            if equiv_result.returncode == 0:
+            if compl_result.returncode == 0:
                 ground_truth_filepath = _ground_truth_path_for_input(filepath)
                 ground_truth_filepath = annotated_index.get(classname, ground_truth_filepath)
                 if not ground_truth_filepath.exists():

@@ -37,6 +37,24 @@ def generate_openjml_completeness_test(classname, source_methods: list[MethodSpe
     outStr += "import src.completeness.util.CompletenessUtil;\n"
     outStr += "public class " + classname + " {\n"
 
+    def get_arg_type_from_name_map(args_decl: str) -> dict[str, str]:
+        """Return mapping of arg name -> arg type from a MethodSpecification.args_decl string."""
+        mapping: dict[str, str] = {}
+        if not args_decl:
+            return mapping
+        for raw in args_decl.split(','):
+            raw = raw.strip()
+            if not raw:
+                continue
+            parts = raw.split()  # split on any whitespace
+            if len(parts) < 2:
+                continue
+            arg_name = parts[-1]
+            arg_type = " ".join(parts[:-1]).strip()
+            if arg_type and arg_name:
+                mapping[arg_name] = arg_type
+        return mapping
+
     for idx, method in enumerate(source_methods):
         # NOTE: model methods need to be checked? lets ignore those for now.
         if method.is_model:
@@ -61,21 +79,20 @@ def generate_openjml_completeness_test(classname, source_methods: list[MethodSpe
         if len(method.assigned_locations) == 0:
             return NO_ASSIGNS_LOCATIONS
 
+        arg_types_by_name = get_arg_type_from_name_map(method.args_decl)
+
         for location in method.assigned_locations:
-            if "\\nothing" in location: # skip assigns nothing
+            if "\\nothing" in location or "\\everything" in location: # skip assigns nothing or everything
                 continue
             arg_name = location.split("[", 1)[0].strip() # We only want the name of the arg.
             modified_locations.add(arg_name)
 
         for idx, arg_name in enumerate(modified_locations): # replace references with deep clones
-            arg_type = ""
-            # get the type from the parameter list
-            for arg_decl in method.args_decl.split(','):
-                decl_arg_name = arg_decl.strip().split(' ')[1]
-                if decl_arg_name == arg_name:
-                    arg_type = arg_decl.strip().split(' ')[0]
-                    break
-            assert arg_type != ""
+            # Currently only handle assigns locations that refer to parameters.
+            arg_type = arg_types_by_name.get(arg_name)
+            if not arg_type:
+                assert 0
+                continue
 
             # need to duplicate to have two independent calls over the same initial state: S1 and S2
             clone_name_s1 = f'{arg_name}_clone1'

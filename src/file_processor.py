@@ -398,7 +398,6 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
     # explicitly specified, or OpenJML errors.
     # One easy way to do this is to enforce that there is at least one "assigns" clause (!= assigns \everything)
     # This might be "behavior" dependent, but we want to account globally
-    method_assigned_locations = [] # we only need to check those in the compl check (+ return value)
     method_body = ""
     brace_count = 0
 
@@ -430,6 +429,8 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
             # Found a method signature
             full_signature = match.group(0)
             method_name, method_args_decl, method_return_type, method_signature = process_method_signature(full_signature)
+            method_assigned_locations: list[str] = []  # locations modified by this method
+
             # Parse behaviors from jml_buffer
             behaviors = []
             current_pre = []
@@ -492,9 +493,9 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
 # The tests are "wrapped" by a Java class.
 # Traverse the file looking for the last Java class body.
 def process_file(filepath: str) -> list[MethodSpecification]:
-    with open(filepath) as f:
+    with open(filepath, encoding="utf-8") as f:
         code = f.read()
-    code.expandtabs(tabsize=4) # replace tab with 4 spaces
+    code = code.expandtabs(tabsize=4) # replace tab with 4 spaces
 
     # Find all class declarations and their positions
     class_positions = []
