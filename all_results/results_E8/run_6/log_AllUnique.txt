@@ -1,0 +1,2743 @@
+--input dataset_v1_no_annotations/hard/AllUnique.java
+--max_gen_iterations 10
+--model gpt-4.1-mini-2025-04-14
+--temperature 0.4
+--prompt_type original
+--mutation True
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```java
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i, j;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:16: error: cannot find symbol
+        //@ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i, j;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with error information as follows:
+<error_info>
+AllUnique.java:16: error: cannot find symbol
+        //@ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+</error_info>
+Please refine the specifications, so that it can pass the verification.
+Note that:
++ You SHOULD NOT modify any content other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```java
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i <= arr.length - 1;
+            ^
+1 verification failure
+==============================================
+=============== Mutation Phase ===============
+--------------- Mutation Iteration 1 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 < i < arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 < i < arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 2 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 < i <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 < i <= arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 3 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 < i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 < i - 1 <= arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 4 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i < arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i < arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 5 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i <= arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 6 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i - 1 <= arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 7 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i < arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 - 1 <= i < arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 8 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:14: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 - 1 <= i <= arr.length - 1;  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 9 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 10 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 < x < y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 < x < y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 11 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 < x < y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 < x < y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 12 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 < x <= y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 < x <= y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 13 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 < x <= y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 < x <= y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 14 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 15 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x < y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 16 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x <= y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x <= y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 17 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 <= x <= y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x <= y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 18 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 - 1 <= x < y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 - 1 <= x < y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 19 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 - 1 <= x < y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \forall int x, y; 0 - 1 <= x < y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 20 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 - 1 <= x <= y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 - 1 <= x <= y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 21 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \forall int x, y; 0 - 1 <= x <= y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \forall int x, y; 0 - 1 <= x <= y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 22 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 < x < y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 < x < y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 23 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 < x < y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 < x < y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 24 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 < x <= y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 < x <= y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 25 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 < x <= y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 < x <= y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 26 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 <= x < y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 <= x < y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 27 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 <= x < y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 <= x < y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 28 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 <= x <= y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 <= x <= y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 29 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 <= x <= y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 <= x <= y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 30 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 - 1 <= x < y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 - 1 <= x < y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 31 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 - 1 <= x < y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 - 1 <= x < y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 32 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 - 1 <= x <= y < i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 - 1 <= x <= y < i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 33 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+        //@ maintaining \exists int x, y; 0 - 1 <= x <= y <= i; arr[x] != arr[y];  
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining \exists int x, y; 0 - 1 <= x <= y <= i; arr[x] != arr[y];  
+            ^
+1 verification failure
+==========================================
+--------------- Mutation Iteration 34 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 35 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 < i < j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 < i < j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 36 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 < i < j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:25: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+                    return false;
+                    ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:25:
+    //@  ensures \result == (\forall int i, j; 0 < i < j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 37 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 < i <= j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 < i <= j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 38 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 < i <= j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 < i <= j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 39 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 40 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i < j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 <= i < j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 41 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i <= j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 <= i <= j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 42 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 <= i <= j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 <= i <= j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 43 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i < j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i < j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 44 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i < j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i < j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 45 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i <= j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i <= j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 46 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i <= j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\forall int i, j; 0 - 1 <= i <= j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 47 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 < i < j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 < i < j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 48 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 < i < j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 < i < j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 49 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 < i <= j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 < i <= j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 50 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 < i <= j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 < i <= j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 51 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 52 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 <= i < j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 <= i < j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 53 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 <= i <= j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 <= i <= j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 54 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 <= i <= j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:29: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+        return true;
+        ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:29:
+    //@  ensures \result == (\exists int i, j; 0 <= i <= j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 55 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i < j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:25: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+                    return false;
+                    ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:25:
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i < j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 56 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i < j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:25: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+                    return false;
+                    ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:25:
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i < j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 57 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i <= j < arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:25: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+                    return false;
+                    ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:25:
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i <= j < arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 58 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i <= j <= arr.length; arr[i] != arr[j]);  
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+AllUnique.java:25: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:8:) in method allUnique
+                    return false;
+                    ^
+AllUnique.java:8: verify: Associated declaration: AllUnique.java:25:
+    //@  ensures \result == (\exists int i, j; 0 - 1 <= i <= j <= arr.length; arr[i] != arr[j]);  
+         ^
+2 verification failures
+==========================================
+--------------- Mutation Iteration 59 ---------------
+public class AllUnique {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures \result == true;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns \nothing;
+ 
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 - 1 <= i - 1 <= arr.length - 1;  
+ 
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int k; i + 1 <= k < j; arr[i] != arr[k];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+== Mut Iteration finished with err_info ==
+
+==========================================
+
+Finished. Verifier invoked 61 times
+--- Elapsed time: 270 seconds ---
+Success

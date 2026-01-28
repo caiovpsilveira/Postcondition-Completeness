@@ -401,6 +401,33 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
     method_body = ""
     brace_count = 0
 
+    def _parse_assigned_locations(annotation: str, keyword: str) -> list[str]:
+        """Extract comma-separated locations from an assigns/assignable clause.
+
+        Strips any trailing Java inline comment (// ...) and any content after the first
+        clause terminator ';' so explanatory comments don't become "locations".
+        """
+        rhs = annotation.split(keyword, 1)[1].strip()
+        # Drop trailing Java inline comments.
+        rhs = rhs.split("//", 1)[0].strip()
+        # Drop any inline block comments.
+        rhs = re.sub(r"/\*.*?\*/", "", rhs).strip()
+        # Keep only the clause content before the first ';'.
+        if ";" in rhs:
+            rhs = rhs.split(";", 1)[0].strip()
+
+        parts = [p.strip() for p in rhs.split(",")]
+        parts = [p for p in parts if p]
+
+        # Deduplicate while preserving order.
+        seen: set[str] = set()
+        out: list[str] = []
+        for p in parts:
+            if p not in seen:
+                seen.add(p)
+                out.append(p)
+        return out
+
     # Regex that Will Match a Java Method Declaration
     # https://stackoverflow.com/questions/68633/regex-that-will-match-a-java-method-declaration
     method_sig_pattern = re.compile(
@@ -449,14 +476,9 @@ def extract_annotations(java_code: str) -> list[MethodSpecification]:
                     current_post.append(annotation)
                     if "assigns" in annotation or "assignable" in annotation:
                         if "assigns" in annotation:
-                            rhs = annotation.split("assigns", 1)[1].strip()
+                            method_assigned_locations.extend(_parse_assigned_locations(annotation, "assigns"))
                         else:
-                            rhs = annotation.split("assignable", 1)[1].strip()
-                        if rhs.endswith(";"):
-                            rhs = rhs[:-1].strip()
-                        parts = [p.strip() for p in rhs.split(",")]
-                        parts = [p for p in parts if p] # remove empties if any
-                        method_assigned_locations.extend(parts)
+                            method_assigned_locations.extend(_parse_assigned_locations(annotation, "assignable"))
                 elif 'pure' in annotation or 'behaviors disjoint' in annotation or 'behaviors complete' in annotation:
                     extra_qualifiers.append(annotation)
             if current_pre or current_post:
