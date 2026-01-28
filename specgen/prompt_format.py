@@ -61,20 +61,27 @@ Rules (apply all, exactly as written):
 - Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
 """
 
-WEAK_SPEC_ERR = """
-The specification generated is valid, but incomplete (too weak).
-Strengthen postconditions to capture all intended behavior.
-Add explicit clauses for each semantic guarantee you intend:
-- Existence / returned value characterization
-- Minimality / first occurrence or uniqueness
-- Bounds (index/value ranges, size relations)
-- Ordering / sorting / monotonicity
-- Preservation / permutation of elements
-The specification must contain enough detail to reconstruct the original code unambiguously.
-In other words, the specification must be equivalent to itself.
+WEAK_SPEC_PROMPT = """
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```java
+{code}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or “not found” conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use \\fresh(\\result) and specify non-aliasing relationships when the code returns new allocations.
+
+Output only the updated specifications. Do not change Java code.
 """
-
-
 
 FORMAT_REFINE_PROMPT = """
 Your specification got the following error information:

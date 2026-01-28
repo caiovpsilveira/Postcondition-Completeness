@@ -8,7 +8,7 @@ import subprocess
 import re
 
 from chatgpt_wrapper import request_chatgpt_engine
-from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_ERR
+from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_PROMPT
 from util import file2str, parse_code_from_reply
 
 from generation_prompt import create_generation_prompt_config
@@ -99,7 +99,7 @@ def validate_openjml_completeness(completeness_flags, code_with_spec, classname,
         check=False,
     )
 
-    return "" if compl_result.returncode == 0 else WEAK_SPEC_ERR
+    return compl_result.returncode == 0
 
 def mutate_token_list_random(token_list, has_forall, dont_mutate_logical):
     res_list = []
@@ -363,6 +363,7 @@ def main():
     current_code = input_code.strip()
     err_info = ""
     err_types = []
+    is_weak_spec = False
     base_system_message = None
     for i in range(1, args.max_gen_iterations+1):
         if i == 1:
@@ -371,6 +372,25 @@ def main():
             config = create_generation_prompt_config(model, temperature, args.prompt_type, input_code, classname)
             # Save the base system message so we can rebuild minimal retry prompts without few-shot examples.
             base_system_message = config['messages'][0]
+            print_and_log_config(config, f_log)
+            ret = request_chatgpt_engine(config)
+            print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
+            parsed = parse_code_from_reply(ret.choices[0].message.content)
+            if parsed is None:
+                print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
+                err_info = "Gave up"
+                break
+            current_code = str(parsed).strip()
+        elif is_weak_spec:
+            # Spec is valid but incomplete. Use dedicated weak spec prompt.
+            print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
+            assert base_system_message is not None
+            config['messages'] = [base_system_message]
+            msg_request = {
+                'role': 'user',
+                'content': WEAK_SPEC_PROMPT.format(code=current_code)
+            }
+            config['messages'].append(msg_request)
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
             print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
@@ -467,13 +487,15 @@ def main():
             num_verify = num_verify + 1
             err_types = extract_err_type(err_info)
 
+        is_weak_spec = False # only modified if args.embedded_compl
         if err_info == "" and args.embedded_compl:
             # Valid code. Check if it is also 'complete'
-            err_info = validate_openjml_completeness(completeness_flags, current_code, classname, tmp_dir)
-            err_types = []
+            is_complete = validate_openjml_completeness(completeness_flags, current_code, classname, tmp_dir)
+            is_weak_spec = not is_complete
+            err_info = "The specification generated is valid, but incomplete (too weak)." if is_weak_spec else ""
             num_verify = num_verify + 1
 
-        if err_info == "" or done_flag:
+        if (err_info == "" and not is_weak_spec) or done_flag:
             break
 
         print_and_log(f"\n==== Gen Iteration finished with err_info ====\n{err_info}\n{46*'='}\n", f_log)
