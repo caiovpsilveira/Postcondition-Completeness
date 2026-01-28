@@ -19,6 +19,62 @@ COMBINED_RESULTS_COLUMNS = [
     'had_embedded_compl_check',
 ]
 
+PRELIMINARY_DATASET = {
+    "easy/Abs1.java",
+    "easy/Abs2.java",
+    "easy/Avg1.java",
+    "easy/Avg2.java",
+    "easy/Calculator1.java",
+    "easy/Calculator2.java",
+    "easy/Clamp.java",
+    "easy/ConvertTemperature.java",
+    "easy/IsCommonFactor.java",
+    "easy/IsCommonMultiple.java",
+    "easy/LeapYear.java",
+    "easy/SumSaturated.java",  # was SafeSum.java
+    "easy/Swap1.java",
+    "easy/Swap2.java",
+    "medium/Add.java",
+    "medium/AllDigits.java",
+    "medium/ArrayAppend.java",
+    "medium/CompareArray.java",
+    "medium/CopyArray.java",
+    "medium/DivArrayByTwo.java",
+    "medium/DoubleArrayElements.java",
+    "medium/Find.java",
+    "medium/IsPalindrome.java",
+    "medium/IsPrefix.java",
+    "medium/IsReverseArray.java",
+    "medium/IsStrictlyDecreasing.java",
+    "medium/IsStrictlyMonotonic.java",
+    "medium/Max.java",
+    "medium/Min.java",
+    "medium/ReverseArray.java",
+    "hard/Mul.java",
+    "hard/TwoSum.java",
+}
+
+
+def get_preliminary_classnames() -> set:
+    """Extract classnames from PRELIMINARY_DATASET paths."""
+    classnames = set()
+    for path in PRELIMINARY_DATASET:
+        # Extract classname from path like "easy/Abs1.java" -> "Abs1"
+        filename = os.path.basename(path)
+        classname = os.path.splitext(filename)[0]
+        classnames.add(classname)
+    return classnames
+
+
+def filter_preliminary_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filter dataframe to only include rows where 'classname' is in the PRELIMINARY_DATASET.
+    """
+    if 'classname' not in df.columns:
+        raise KeyError("DataFrame must have a 'classname' column to filter by preliminary dataset")
+
+    preliminary_classnames = get_preliminary_classnames()
+    return df[df['classname'].isin(preliminary_classnames)].reset_index(drop=True)
 
 def _sorted_results_dirs(all_results_dir: str) -> List[str]:
     """Return absolute paths of results_E* directories under all_results_dir."""
@@ -468,14 +524,38 @@ if __name__ == '__main__':
         action="store_true",
         help="Append to output CSVs if they already exist (otherwise overwrite).",
     )
+    parser.add_argument(
+        "--preliminary",
+        action="store_true",
+        default=False,
+        help="Filter results to only include samples from the PRELIMINARY_DATASET (32 samples).",
+    )
+    parser.add_argument(
+        "--overall_csv",
+        default=None,
+        help="Output path for overall_results.csv (default: <all_results>/overall_results.csv)",
+    )
+    parser.add_argument(
+        "--mutation_csv",
+        default=None,
+        help="Output path for mutation.csv (default: <all_results>/mutation.csv)",
+    )
+    parser.add_argument(
+        "--completeness_csv",
+        default=None,
+        help="Output path for completeness.csv (default: <all_results>/completeness.csv)",
+    )
     args = parser.parse_args()
 
     combined_csv = args.combined_csv or os.path.join(args.all_results, 'combined_results.csv')
     grouped_csv = args.grouped_csv or os.path.join(args.all_results, 'grouped_data_classification_only.csv')
+    overall_csv = args.overall_csv or os.path.join(args.all_results, 'overall_results.csv')
+    mutation_csv = args.mutation_csv or os.path.join(args.all_results, 'mutation.csv')
+    completeness_csv = args.completeness_csv or os.path.join(args.all_results, 'completeness.csv')
 
     # If not appending, clear outputs once per run.
     if not args.append:
-        for p in [combined_csv, grouped_csv]:
+        for p in [combined_csv, grouped_csv, overall_csv, mutation_csv, completeness_csv]:
             try:
                 if os.path.exists(p):
                     os.remove(p)
@@ -495,11 +575,34 @@ if __name__ == '__main__':
 
         df = pd.read_csv(results_csv_path)
 
+        # Extract experiment name from directory (e.g., "results_E1")
+        exp_name = os.path.basename(results_dir)
+
+        # Filter to preliminary dataset if requested
+        if args.preliminary:
+            df = filter_preliminary_dataset(df)
+            print(f"[{exp_name}] Filtered to preliminary dataset: {len(df)} rows")
+
         # Keep stdout printing behavior (same tables as before) for each directory.
         categories = ['failure', 'valid', 'complete', 'complete_gt']
         counts = df['result'].value_counts().reindex(categories, fill_value=0)
-        counts_df = counts.rename_axis('result').reset_index(name='count')
-        print(counts_df.to_csv(sep=',', index=False))
+
+        # Write overall results to CSV
+        overall_row = pd.DataFrame([{
+            'experiment': exp_name,
+            'failure': counts.get('failure', 0),
+            'valid': counts.get('valid', 0),
+            'complete': counts.get('complete', 0),
+            'complete_gt': counts.get('complete_gt', 0),
+        }])
+        print(f"[{exp_name}] Overall results:")
+        print(overall_row.to_csv(sep=',', index=False))
+        _append_csv(
+            overall_row,
+            overall_csv,
+            ['experiment', 'failure', 'valid', 'complete', 'complete_gt'],
+            append=True,
+        )
 
         grouped_df = group_results_categories(df)
         print('Grouped by difficulty')
@@ -508,10 +611,22 @@ if __name__ == '__main__':
         grouped_impacted_by_mutation = group_impacted_by_mutation(df)
         print('Grouped impacted by mutation')
         print(grouped_impacted_by_mutation.to_csv(sep=',', index=False))
+        _append_csv(
+            grouped_impacted_by_mutation,
+            mutation_csv,
+            ['experiment', 'difficulty', 'nums_failure_with_mutation', 'nums_valid_with_mutation', 'nums_complete_with_mutation', 'nums_complete_gt_with_mutation'],
+            append=True,
+        )
 
         impacted_by_embedded_compl = see_impact_of_embedded_compl(df)
         print('Impacted by embedded completeness')
         print(impacted_by_embedded_compl.to_csv(sep=',', index=False))
+        _append_csv(
+            impacted_by_embedded_compl,
+            completeness_csv,
+            ['experiment', 'difficulty', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl'],
+            append=True,
+        )
 
         # Append combined raw rows
         combined_df = _ensure_columns(df, COMBINED_RESULTS_COLUMNS)[COMBINED_RESULTS_COLUMNS]
