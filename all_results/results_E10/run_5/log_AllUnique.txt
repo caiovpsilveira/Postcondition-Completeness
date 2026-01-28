@@ -1,0 +1,1279 @@
+--input dataset_v1_no_annotations/hard/AllUnique.java
+--max_gen_iterations 10
+--model gpt-4.1-mini-2025-04-14
+--temperature 0.4
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class AllUnique {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int x; i < x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:11: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires true;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j <= arr.length;
+            //@ maintaining \forall int x; i < x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:11: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+            ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+Add the following specifications only (do NOT modify or remove existing comments or code):
+
+```java
+    //@ requires arr == null || arr.length >= 0;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining i == 0 || (\forall int x, y; 0 <= x < y < i; arr[x] != arr[y]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+```
+
+Explanation:
+- The original invariant `\forall int x, y; 0 <= x < y < i; arr[x] != arr[y]` does not hold before the first iteration (i=0), because the range is empty and the prover may not accept it as true.
+- Strengthen the invariant to say it holds for i==0 (empty range) or for i>0 the uniqueness holds for all pairs in [0, i).
+- This fixes the "LoopInvariantBeforeLoop" error by making the invariant true before entering the loop.
+- No other changes or deletions are made as per instructions.
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:10: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+            ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1 || i == 0;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Explanation:
+
+- The original invariant `0 <= i && i <= arr.length - 1` fails before entering the loop because `i` is initialized to 0 and the loop condition is `i < arr.length - 1`. When `arr.length` is 0 or 1, `arr.length - 1` is -1 or 0, so `i <= arr.length - 1` is false at the start.
+- To fix this, I have strengthened the invariant to allow `i == 0` as well, so `0 <= i && (i <= arr.length - 1 || i == 0)`. This covers the initial state before the loop.
+- The rest of the invariants remain unchanged.
+- Added a trivial requires clause to clarify no exceptions occur, although it's redundant here.
+- The ensures clauses remain unchanged and strong enough.
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:27: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:27:
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1 || i == 0;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:27: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:27:
+    //@ ensures arr != null ==> \result == (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]);
+        ^
+2 verification failures
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1 || i == 0;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:28: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:28:
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1 || i == 0;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:28: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:28:
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+        ^
+2 verification failures
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1 || i == 0;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Explanation:  
+- Added two additional postconditions to explicitly state the equivalences between the result and the uniqueness property, split into implications for clarity and to help the prover.  
+- This strengthens the specification so the prover can infer the correctness of the return value relative to the uniqueness property.  
+- No other changes were made as per instructions.
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1 || i == 0;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x; i < x && x < j; arr[i] != arr[x];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:15: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+Add the following specification annotations only (do not modify existing code or comments):
+
+```java
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+```
+
+and
+
+```java
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+```
+
+Explanation:
+
+- The outer loop invariant `0 <= i && i <= arr.length` is too weak at loop entry because the inner loop invariant requires `i <= arr.length - 1` (since the inner loop starts at `i+1` and runs while `j < arr.length`).
+- Changing the outer loop invariant to `0 <= i && i <= arr.length - 1` ensures that at the start of the inner loop, `i` is within valid bounds.
+- Also, adjust the decreases clause accordingly to `arr.length - 1 - i`.
+- This strengthens the loop invariant so the prover can verify the inner loop invariant that depends on `i` being less than `arr.length - 1`.
+- No other changes are needed.
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+==============================================
+--------------- Iteration 10 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+<tip>The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.</tip>
+
+assistant: ```java
+public class AllUnique {
+    //@ requires arr == null || arr.length >= 0;
+    //@ requires arr != null ==> (\forall int i; 0 <= i && i < arr.length; true); // to exclude exceptions, no extra condition needed here actually
+    //@ assigns \nothing;
+    //@ ensures arr == null ==> \result == true;
+    //@ ensures arr != null ==> (\result == true <==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ ensures arr != null && \result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]);
+    //@ ensures arr != null ==> (\result == false ==> (\exists int i, j; 0 <= i < j < arr.length; arr[i] == arr[j]));
+    //@ ensures arr != null ==> (\result == true ==> (\forall int i, j; 0 <= i < j < arr.length; arr[i] != arr[j]));
+    //@ pure
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+Add the following specifications (only add, do not remove or modify existing code or comments):
+
+```java
+        //@ maintaining 0 <= j && j <= arr.length;
+        //@ maintaining i < arr.length - 1;
+        //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+        //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+        //@ loop_writes j;
+        //@ decreases arr.length - j;
+```
+
+Place these inside the inner for-loop, before it starts, to fix the loop invariant before loop error:
+
+```java
+            //@ maintaining 0 <= j && j <= arr.length;
+```
+
+Explanation:
+
+The error is that the invariant
+
+```java
+//@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+```
+
+is not established before the inner loop starts, i.e., for j = i+1.
+
+Adding the invariant
+
+```java
+//@ maintaining 0 <= j && j <= arr.length;
+```
+
+helps the prover understand the bounds of j.
+
+Also, adding
+
+```java
+//@ maintaining i < arr.length - 1;
+```
+
+makes clear that i is in the valid range.
+
+Together, these strengthen the loop invariants so that the prover can verify the correctness.
+
+Final full added invariants for inner loop:
+
+```java
+            //@ maintaining 0 <= j && j <= arr.length;
+            //@ maintaining i < arr.length - 1;
+            //@ maintaining \forall int x, y; 0 <= x < y < i; arr[x] != arr[y];
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method allUnique
+            //@ maintaining \forall int x; 0 <= x < i; (\forall int y; i <= y < j; arr[x] != arr[y]);
+                ^
+1 verification failure
+==============================================
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 129 seconds ---
+Failure

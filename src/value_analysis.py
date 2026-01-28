@@ -576,7 +576,7 @@ if __name__ == '__main__':
         df = pd.read_csv(results_csv_path)
 
         # Extract experiment name from directory (e.g., "results_E1")
-        exp_name = os.path.basename(results_dir)
+        exp_name = os.path.basename(os.path.normpath(results_dir))
 
         # Filter to preliminary dataset if requested
         if args.preliminary:

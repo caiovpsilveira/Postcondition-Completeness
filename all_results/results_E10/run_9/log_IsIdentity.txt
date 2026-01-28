@@ -1,0 +1,563 @@
+--input dataset_v1_no_annotations/hard/IsIdentity.java
+--max_gen_iterations 10
+--model gpt-4.1-mini-2025-04-14
+--temperature 0.4
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+assistant: ```java
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```java
+public class IsIdentity {
+    public static boolean isIdentity(int[][] a) {
+        if (a == null || a.length == 0) return false;
+
+        int n = a.length;
+
+        for (int i = 0; i < n; i++) {
+            if (a[i] == null || a[i].length != n) return false;
+
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    if (a[i][j] != 1) return false;
+                } else {
+                    if (a[i][j] != 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class IsIdentity {
+    //@ requires a != null;
+    //@ requires a.length > 0;
+    //@ requires (\forall int i; 0 <= i < a.length; a[i] != null && a[i].length == a.length);
+    //@ assigns \nothing;
+    //@ ensures \result == (
+    //@   \forall int i; 0 <= i < a.length;
+    //@     \forall int j; 0 <= j < a.length;
+    //@       (i == j ? a[i][j] == 1 : a[i][j] == 0)
+    //@ );
+    //@ also
+    //@ requires a == null || a.length == 0 || (\exists int i; 0 <= i < a.length; a[i] == null || a[i].length != a.length);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean isIdentity(int[][] a) {
+        if (a == null || a.length == 0) return false;
+
+        int n = a.length;
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int x; 0 <= x < i; a[x] != null && a[x].length == n;
+        //@ loop_invariant i <= n;
+        //@ loop_writes i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            if (a[i] == null || a[i].length != n) return false;
+
+            //@ maintaining 0 <= j <= n;
+            //@ maintaining \forall int y; 0 <= y < j; ((i == y) ? a[i][y] == 1 : a[i][y] == 0);
+            //@ loop_invariant j <= n;
+            //@ loop_writes j;
+            //@ decreases n - j;
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    if (a[i][j] != 1) return false;
+                } else {
+                    if (a[i][j] != 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsIdentity.java:43: verify: The prover cannot establish an assertion (Postcondition: IsIdentity.java:6:) in method isIdentity
+        return true;
+        ^
+IsIdentity.java:6: verify: Associated declaration: IsIdentity.java:43:
+    //@ ensures \result == (
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsIdentity {
+    //@ requires a != null;
+    //@ requires a.length > 0;
+    //@ requires (\forall int i; 0 <= i < a.length; a[i] != null && a[i].length == a.length);
+    //@ assigns \nothing;
+    //@ ensures \result == (
+    //@   \forall int i; 0 <= i < a.length;
+    //@     \forall int j; 0 <= j < a.length;
+    //@       (i == j ? a[i][j] == 1 : a[i][j] == 0)
+    //@ );
+    //@ also
+    //@ requires a == null || a.length == 0 || (\exists int i; 0 <= i < a.length; a[i] == null || a[i].length != a.length);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean isIdentity(int[][] a) {
+        if (a == null || a.length == 0) return false;
+
+        int n = a.length;
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int x; 0 <= x < i; a[x] != null && a[x].length == n;
+        //@ loop_invariant i <= n;
+        //@ loop_writes i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            if (a[i] == null || a[i].length != n) return false;
+
+            //@ maintaining 0 <= j <= n;
+            //@ maintaining \forall int y; 0 <= y < j; ((i == y) ? a[i][y] == 1 : a[i][y] == 0);
+            //@ loop_invariant j <= n;
+            //@ loop_writes j;
+            //@ decreases n - j;
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    if (a[i][j] != 1) return false;
+                } else {
+                    if (a[i][j] != 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+IsIdentity.java:43: verify: The prover cannot establish an assertion (Postcondition: IsIdentity.java:6:) in method isIdentity
+        return true;
+        ^
+IsIdentity.java:6: verify: Associated declaration: IsIdentity.java:43:
+    //@ ensures \result == (
+        ^
+2 verification failures
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class IsIdentity {
+    //@ requires true; // allow all inputs, including null or empty or malformed arrays
+    //@ ensures \result == (
+    //@   a != null && a.length > 0 &&
+    //@   (\forall int i; 0 <= i < a.length; a[i] != null && a[i].length == a.length) &&
+    //@   (\forall int i; 0 <= i < a.length; \forall int j; 0 <= j < a.length; (i == j ? a[i][j] == 1 : a[i][j] == 0))
+    //@ );
+    //@ also
+    //@ requires true;
+    //@ ensures \result == false;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean isIdentity(int[][] a) {
+        if (a == null || a.length == 0) return false;
+
+        int n = a.length;
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int x; 0 <= x < i; a[x] != null && a[x].length == n;
+        //@ loop_invariant i <= n;
+        //@ loop_writes i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            if (a[i] == null || a[i].length != n) return false;
+
+            //@ maintaining 0 <= j <= n;
+            //@ maintaining \forall int y; 0 <= y < j; ((i == y) ? a[i][y] == 1 : a[i][y] == 0);
+            //@ loop_invariant j <= n;
+            //@ loop_writes j;
+            //@ decreases n - j;
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    if (a[i][j] != 1) return false;
+                } else {
+                    if (a[i][j] != 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+Explanation of added specifications:
+
+- The original specification split the behavior into two disjoint cases, but the prover failed to verify the postcondition after returning true.
+
+- The key issue is that the ensures clause for the true result only applies when the input is non-null, non-empty, all rows non-null and of correct length, and the matrix is identity.
+
+- The false result covers all other cases.
+
+- The prover apparently cannot conclude the ensures clause after the loops because the loops only check the conditions incrementally.
+
+- To help the prover, I combined the two behaviors into one ensures clause that states that the result is true if and only if the input is non-null, non-empty, all rows non-null and of correct length, and the matrix is identity; otherwise false.
+
+- This is expressed as a single ensures clause with a logical equivalence.
+
+- The requires clause is true (no restrictions) because the method handles null and empty arrays by returning false.
+
+- The behaviors disjoint and complete clauses remain for clarity.
+
+- No other changes were made to code or existing comments.
+
+- Loop invariants remain unchanged as they are sufficient.
+
+This strengthened specification should allow the verifier to prove the postcondition at the return true statement.
+
+==== Gen Iteration finished with err_info ====
+Error: You MUST add a frame condition ('assigns' clause). If no memory location is modified as a side effect, add "assigns \nothing;".
+
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```java
+public class IsIdentity {
+    //@ requires true; // allow all inputs, including null or empty or malformed arrays
+    //@ ensures \result == (
+    //@   a != null && a.length > 0 &&
+    //@   (\forall int i; 0 <= i < a.length; a[i] != null && a[i].length == a.length) &&
+    //@   (\forall int i; 0 <= i < a.length; \forall int j; 0 <= j < a.length; (i == j ? a[i][j] == 1 : a[i][j] == 0))
+    //@ );
+    //@ also
+    //@ requires true;
+    //@ ensures \result == false;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static boolean isIdentity(int[][] a) {
+        if (a == null || a.length == 0) return false;
+
+        int n = a.length;
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int x; 0 <= x < i; a[x] != null && a[x].length == n;
+        //@ loop_invariant i <= n;
+        //@ loop_writes i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            if (a[i] == null || a[i].length != n) return false;
+
+            //@ maintaining 0 <= j <= n;
+            //@ maintaining \forall int y; 0 <= y < j; ((i == y) ? a[i][y] == 1 : a[i][y] == 0);
+            //@ loop_invariant j <= n;
+            //@ loop_writes j;
+            //@ decreases n - j;
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    if (a[i][j] != 1) return false;
+                } else {
+                    if (a[i][j] != 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+<error_info>
+Error: You MUST add a frame condition ('assigns' clause). If no memory location is modified as a side effect, add "assigns \nothing;".
+
+</error_info>
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- Add specifications only. DO NOT modify, delete, reorder, or rename existing Java code or its original comments.
+- Every method must have at least one postcondition ('//@ ensures ...;' clause). Add more if needed to strengthen the specification.
+- Every loop must have loop invariants ('//@ maintaining ...;' clauses).
+- Do NOT use assumptions ('//@ assume ...;' clause). If some input or pre-state would trigger an exception (null dereference, OOB access, division by zero, negative sizes, etc.), exclude it with requires clauses.
+- Do NOT specify exceptional behavior ('//@ signals ...;' clause). Exclude all exception-causing states via preconditions ('//@ requires ...;' clause).
+- If the method returns a newly allocated object, use the following specification: '//@ ensures \fresh(\result);'.
+- Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
+
+
+assistant: ```java
+public class IsIdentity {
+    //@ requires a != null && a.length > 0;
+    //@ requires (\forall int i; 0 <= i < a.length; a[i] != null);
+    //@ requires (\forall int i; 0 <= i < a.length; a[i].length == a.length);
+    //@ ensures \result == (
+    //@   (\forall int i; 0 <= i < a.length; \forall int j; 0 <= j < a.length; (i == j ? a[i][j] == 1 : a[i][j] == 0))
+    //@ );
+    //@ also
+    //@ requires true;
+    //@ ensures \result == false;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ assigns \nothing;
+    public static boolean isIdentity(int[][] a) {
+        if (a == null || a.length == 0) return false;
+
+        int n = a.length;
+
+        //@ maintaining 0 <= i <= n;
+        //@ maintaining \forall int x; 0 <= x < i; a[x] != null && a[x].length == n;
+        //@ loop_invariant i <= n;
+        //@ loop_writes i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            if (a[i] == null || a[i].length != n) return false;
+
+            //@ maintaining 0 <= j <= n;
+            //@ maintaining \forall int y; 0 <= y < j; ((i == y) ? a[i][y] == 1 : a[i][y] == 0);
+            //@ loop_invariant j <= n;
+            //@ loop_writes j;
+            //@ decreases n - j;
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    if (a[i][j] != 1) return false;
+                } else {
+                    if (a[i][j] != 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+Finished. Verifier invoked 2 times
+--- Elapsed time: 33 seconds ---
+Success
