@@ -17,7 +17,7 @@ def read_oracle_as_msg(classname, prompt_type):
     }
     msg_reply = {
         'role': 'assistant',
-        'content': '```java\n{code}\n```'.format(code=file2str(filename_oracle))
+        'content': '```\n{code}\n```'.format(code=file2str(filename_oracle))
     }
     return [msg_request, msg_reply]
 

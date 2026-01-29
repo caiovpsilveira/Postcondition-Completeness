@@ -193,7 +193,7 @@ def extract_stats(results_dirs):
                         if gave_up_match:
                             llm_gave_up = True
 
-                        if 'The specification generated is valid, but incomplete (too weak).' in line:
+                        if 'The specification generated is correct and verifiable, but incomplete (too weak).' in line:
                             # Passed 'valid' at least once. Might have "Failure" in the log because of embedded completeness
                             # But since it was proven at least once, it's valid
                             if not at_least_valid:  # Only set on the FIRST occurrence

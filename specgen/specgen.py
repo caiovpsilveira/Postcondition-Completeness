@@ -8,7 +8,7 @@ import subprocess
 import re
 
 from chatgpt_wrapper import request_chatgpt_engine
-from prompt_format import FORMAT_REFINE_PROMPT, FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT, WEAK_SPEC_PROMPT
+from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_PROMPT
 from util import file2str, parse_code_from_reply
 
 from generation_prompt import create_generation_prompt_config
@@ -357,80 +357,91 @@ def main():
     start_time = time.perf_counter()
 
     # Candidate Generation Phase
-    print_and_log("=============== Generation Phase ===============\n", f_log)
+    print_and_log("=============== Generation Phase ===============", f_log)
     done_flag = False
+    is_weak_spec = False
     config = {}
     current_code = input_code.strip()
     err_info = ""
     err_types = []
-    is_weak_spec = False
-    base_system_message = None
     for i in range(1, args.max_gen_iterations+1):
+        #print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+        # commente/duplicated because skipping mutation breaks
         if i == 1:
-            # First gen: gets the prompt, few shots and task description. Appends LLM's return as the last message
-            print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
+            print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
             config = create_generation_prompt_config(model, temperature, args.prompt_type, input_code, classname)
-            # Save the base system message so we can rebuild minimal retry prompts without few-shot examples.
-            base_system_message = config['messages'][0]
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
-            print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
-            parsed = parse_code_from_reply(ret.choices[0].message.content)
-            if parsed is None:
-                print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
-                err_info = "Gave up"
-                break
-            current_code = str(parsed).strip()
+            print_and_log("assistant: " + ret.choices[0].message.content, f_log, f_log)
+
+            current_code = parse_code_from_reply(ret.choices[0].message.content)
+            current_code = current_code.strip()
+            config['messages'].append(
+                {
+                    'role': 'assistant',
+                    'content': "```\n{code}\n```".format(code=current_code)
+                }
+            )
         elif is_weak_spec:
-            # Spec is valid but incomplete. Use dedicated weak spec prompt.
-            print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-            assert base_system_message is not None
-            config['messages'] = [base_system_message]
-            msg_request = {
+            print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+            assert args.embedded_compl
+
+            weak_spec_msg = {
                 'role': 'user',
                 'content': WEAK_SPEC_PROMPT.format(code=current_code)
             }
-            config['messages'].append(msg_request)
+            config['messages'].append(weak_spec_msg)
+
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
-            print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
+            print_and_log("assistant: " + ret.choices[0].message.content, f_log)
+
             parsed = parse_code_from_reply(ret.choices[0].message.content)
             if parsed is None:
                 print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
                 err_info = "Gave up"
                 break
             current_code = str(parsed).strip()
+            config['messages'].append(
+                {
+                    'role': 'assistant',
+                    'content': "```\n{code}\n```".format(code=current_code)
+                }
+            )
         else:
             err_types = extract_err_type(err_info)
+
             if len(err_types) != 0:
-                # Failed gen with known error type. Use specialized patcher prompt with few-shot examples.
-                print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                config = create_specialized_patcher_prompt_config(current_code, err_info, args.prompt_type)
-                print_and_log_config(config, f_log)
-                ret = request_chatgpt_engine(config)
-                print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
+                print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+                ## NOTE: this is not appended to the 'main' conversation
+                # This is a separate request done. Only after the config is updated with the new code
+                # A bit confusing...
+                tmp_config = create_specialized_patcher_prompt_config(current_code, err_info, args.prompt_type)
+                print_and_log_config(tmp_config, f_log)
+                ret = request_chatgpt_engine(tmp_config)
+                print_and_log("assistant: " + ret.choices[0].message.content, f_log)
+
                 parsed = parse_code_from_reply(ret.choices[0].message.content)
                 if parsed is None:
                     print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
                     err_info = "Gave up"
                     break
                 current_code = str(parsed).strip()
-            elif not args.mutation or err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1:
-                # Failed gen (no mutation short-circuit). Use generic refinement prompt.
-                print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                fmt_refinement_prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT if args.prompt_type == 'original' else FORMAT_STRICT_REFINEMENT_PROMPT
-                assert base_system_message is not None
-                config['messages'] = [base_system_message]
+
+                config['messages'][-1]['content'] = "```\n{code}\n```".format(code=current_code)
+
+            elif not args.mutation or (err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1):
+                print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
                 refine_msg = {
                     'role': 'user',
-                    'content': fmt_refinement_prompt.format(code=current_code, info=err_info)
+                    'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
                 }
                 refine_msg['content'] += gen_extra_guidance(err_info)
                 config['messages'].append(refine_msg)
                 
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)
-                print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
+                print_and_log("assistant: " + ret.choices[0].message.content, f_log)
 
                 parsed = parse_code_from_reply(ret.choices[0].message.content)
                 if parsed is None:
@@ -438,25 +449,21 @@ def main():
                     err_info = "Gave up"
                     break
                 current_code = str(parsed).strip()
+
+                config['messages'].append(
+                    {
+                        'role': 'assistant',
+                        'content': "```\n{code}\n```".format(code=current_code)
+                    }
+                )
             else:
-                # Correct gen OR
-                # Failed gen, we do not have guided feedback, and we do have mutation candidates (mutation is enabled)
                 assert args.mutation
                 done_flag = True # Skip to mutation phase/end
                 break
 
-        # handle other invalid generations:
+
+        # handle other invalid generation rules violations:
         err_info = ""
-
-        # gpt 3.5 turbo sometimes generates 'ensures \nothing' for behaviors that does not return or modify the input
-        # For OpenJML 21-0-16, this causes a crash https://github.com/OpenJML/OpenJML/issues/899
-        if 'ensures \\nothing' in current_code:
-            err_info += "Error: \"ensures \\nothing\" is not valid grammar. If the behavior has no postconditions, you can leave it without an 'ensures' clause or do \"ensures true\"\n"
-            err_types = []
-
-        if 'requires \\nothing' in current_code:
-            err_info += "Error: \"requires \\nothing\" is not valid grammar. If the behavior has no preconditions, you can leave it without an 'requires' clause or do \"requires true\"\n"
-            err_types = []
 
         if 'assume' in current_code:
             err_info += "Error: you MUST NOT use assumptions ('assume' clause). Please review your loop invariants or forbid all exception-causing states via preconditions ('requires' clause).\n"
@@ -481,7 +488,7 @@ def main():
         current_code_tokens = simple_tokenize_java(current_code)
         if original_code_tokens != current_code_tokens:
             err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.\n"
-            err_info += f"<original_code>\n{input_code}\n</original_code>\n"
+            err_info += f"The original code provided was:\n```\n{input_code}\n```\n"
             err_types = []
 
         if err_info == "":
@@ -494,13 +501,16 @@ def main():
             # Valid code. Check if it is also 'complete'
             is_complete = validate_openjml_completeness(completeness_flags, current_code, classname, tmp_dir)
             is_weak_spec = not is_complete
-            err_info = "The specification generated is valid, but incomplete (too weak)." if is_weak_spec else ""
+            err_info = "The specification generated is correct and verifiable, but incomplete (too weak)." if is_weak_spec else ""
             num_verify = num_verify + 1
 
         if (err_info == "" and not is_weak_spec) or done_flag:
             break
 
         print_and_log(f"\n==== Gen Iteration finished with err_info ====\n{err_info}\n{46*'='}\n", f_log)
+
+
+
 
     # Gen phase is interrupted if it gets an error in postcondition or loop invariants
     # Mutation phase tries to fix these errors
