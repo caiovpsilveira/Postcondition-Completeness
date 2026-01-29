@@ -147,36 +147,35 @@ def process_file(
 
         if compl_result.returncode == 0: # Passed completeness test
             # check ground truth
-            if compl_result.returncode == 0:
-                ground_truth_filepath = _ground_truth_path_for_input(filepath)
-                ground_truth_filepath = annotated_index.get(classname, ground_truth_filepath)
-                if not ground_truth_filepath.exists():
-                    print(
-                        f"[run_experiments] Missing ground truth for {classname}: {ground_truth_filepath}"
-                    )
-                else:
-                    logical_equiv_cmd = [
-                        sys.executable,
-                        "src/logical_equivalence_check.py",
-                        str(log_path),
-                        str(ground_truth_filepath),
-                        "--to_file",
-                        str(temporary_filename),
-                        *_split_flags(completeness_check_flags),
-                    ]
-                    logical_equiv_GT_result = subprocess.run(
-                        logical_equiv_cmd, capture_output=True, text=True
-                    )
+            ground_truth_filepath = _ground_truth_path_for_input(filepath)
+            ground_truth_filepath = annotated_index.get(classname, ground_truth_filepath)
+            if not ground_truth_filepath.exists():
+                print(
+                    f"[run_experiments] Missing ground truth for {classname}: {ground_truth_filepath}"
+                )
+            else:
+                logical_equiv_cmd = [
+                    sys.executable,
+                    "src/logical_equivalence_check.py",
+                    str(log_path),
+                    str(ground_truth_filepath),
+                    "--to_file",
+                    str(temporary_filename),
+                    *_split_flags(completeness_check_flags),
+                ]
+                logical_equiv_GT_result = subprocess.run(
+                    logical_equiv_cmd, capture_output=True, text=True
+                )
 
-                    logical_equiv_log_path = output_dir / f"log_{classname}_logical_equiv_GT.txt"
-                    if not _safe_replace(temporary_filename, logical_equiv_log_path):
-                        _ensure_file(logical_equiv_log_path)
-                        with logical_equiv_log_path.open("a", encoding="utf-8") as f:
-                            f.write(
-                                "\n\n[run_experiments] WARNING: logical-equivalence tmp file was not created. "
-                                "See subprocess output below.\n"
-                            )
-                    _append_subprocess_output(logical_equiv_log_path, logical_equiv_GT_result)
+                logical_equiv_log_path = output_dir / f"log_{classname}_logical_equiv_GT.txt"
+                if not _safe_replace(temporary_filename, logical_equiv_log_path):
+                    _ensure_file(logical_equiv_log_path)
+                    with logical_equiv_log_path.open("a", encoding="utf-8") as f:
+                        f.write(
+                            "\n\n[run_experiments] WARNING: logical-equivalence tmp file was not created. "
+                            "See subprocess output below.\n"
+                        )
+                _append_subprocess_output(logical_equiv_log_path, logical_equiv_GT_result)
 
     # log is already in output_dir; specgen mirrors log content to stdout,
     # so only append stderr to avoid duplicating the whole log.

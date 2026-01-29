@@ -196,7 +196,8 @@ def extract_stats(results_dirs):
                         if 'The specification generated is valid, but incomplete (too weak).' in line:
                             # Passed 'valid' at least once. Might have "Failure" in the log because of embedded completeness
                             # But since it was proven at least once, it's valid
-                            iterations_to_first_valid = total_gen_iterations
+                            if not at_least_valid:  # Only set on the FIRST occurrence
+                                iterations_to_first_valid = total_gen_iterations
                             at_least_valid = True
                             had_embedded_compl_check = True
 
@@ -262,7 +263,9 @@ def extract_stats(results_dirs):
                 #    print(f'{exp_dir}: run_{i} {classname}')
 
                 difficulty = difficulty_map[classname]
-                run_records.append([exp_dir, f'run_{i}', difficulty, classname, result, time, iterations_to_first_valid, total_gen_iterations, total_mut_iterations, llm_gave_up, had_embedded_compl_check])
+                # Normalize experiment name by removing trailing slashes for consistency
+                exp_name = exp_dir.rstrip('/')
+                run_records.append([exp_name, f'run_{i}', difficulty, classname, result, time, iterations_to_first_valid, total_gen_iterations, total_mut_iterations, llm_gave_up, had_embedded_compl_check])
 
     df = pd.DataFrame(run_records, columns=['experiment','run','difficulty','classname','result','time','number_of_iterations_before_first_valid','number_of_gen_iterations', 'number_of_mut_iterations', 'llm_gave_up', 'had_embedded_compl_check'])
     return df
