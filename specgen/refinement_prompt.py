@@ -68,7 +68,7 @@ def extract_err_type(err_info):
             prompt_list.append(keyword_dict[key])
     return prompt_list
 
-def create_specialized_patcher_prompt_config(original_code, err_info, prompt_type):
+def create_specialized_patcher_prompt_config(original_code, err_info, prompt_type, model, temperature):
     msg_base = {
         'role': 'system',
         'content': 'You are an JML specification generator for java programs.'
@@ -87,4 +87,4 @@ def create_specialized_patcher_prompt_config(original_code, err_info, prompt_typ
     }
     msg_request['content'] += gen_extra_guidance(err_info)
     messages.append(msg_request)
-    return create_chatgpt_config(messages)
+    return create_chatgpt_config(messages, model, temperature)

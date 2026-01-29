@@ -51,7 +51,12 @@ def extract_lineno_from_err_info(err_info):
             temp_list.append(line)
     lineno_list = []
     for err in err_list:
-        lineno_list.append(int(err[0].split(":")[1]))
+        try:
+            lineno_list.append(int(err[0].split(":")[1]))
+        except (IndexError, ValueError):
+            # LLM does not see that:
+            print_and_log(f"Warning: could not extract line number from error info line: {err[0]}\n", sys.stderr)
+            return []
     return lineno_list
 
 def validate_openjml(openjml_command, code_with_spec, classname, tmp_dir: str):
@@ -75,7 +80,16 @@ def validate_openjml(openjml_command, code_with_spec, classname, tmp_dir: str):
 
     # OpenJML reports verification feedback via stdout/stderr depending on version/config.
     err_info = (proc.stdout or "") + (proc.stderr or "")
-    return strip_openjml_path_prefix(err_info, known_file_path=tmp_filename)
+    err_info = strip_openjml_path_prefix(err_info, known_file_path=tmp_filename)
+
+    # Truncate if output is too long. We do have esc-max-warnings 1, but sometimes it shows more/or crashes OpenJML
+    lines = err_info.splitlines()
+    truncate_limit = 40
+    if len(lines) > truncate_limit:
+        half = truncate_limit // 2
+        err_info = "\n".join(lines[:half] + ["[TRUNCATED]"] + lines[-half:])
+
+    return err_info
 
 def validate_openjml_completeness(completeness_flags, code_with_spec, classname, tmp_dir: str):
     os.makedirs(tmp_dir, exist_ok=True)
@@ -357,7 +371,7 @@ def main():
     start_time = time.perf_counter()
 
     # Candidate Generation Phase
-    print_and_log("=============== Generation Phase ===============", f_log)
+    print_and_log("=============== Generation Phase ===============\n", f_log)
     done_flag = False
     is_weak_spec = False
     config = {}
@@ -368,11 +382,11 @@ def main():
         #print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
         # commente/duplicated because skipping mutation breaks
         if i == 1:
-            print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+            print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
             config = create_generation_prompt_config(model, temperature, args.prompt_type, input_code, classname)
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
-            print_and_log("assistant: " + ret.choices[0].message.content, f_log, f_log)
+            print_and_log("assistant: " + ret.choices[0].message.content, f_log)
 
             current_code = parse_code_from_reply(ret.choices[0].message.content)
             current_code = current_code.strip()
@@ -383,7 +397,7 @@ def main():
                 }
             )
         elif is_weak_spec:
-            print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+            print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
             assert args.embedded_compl
 
             weak_spec_msg = {
@@ -412,11 +426,11 @@ def main():
             err_types = extract_err_type(err_info)
 
             if len(err_types) != 0:
-                print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+                print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
                 ## NOTE: this is not appended to the 'main' conversation
                 # This is a separate request done. Only after the config is updated with the new code
                 # A bit confusing...
-                tmp_config = create_specialized_patcher_prompt_config(current_code, err_info, args.prompt_type)
+                tmp_config = create_specialized_patcher_prompt_config(current_code, err_info, args.prompt_type, model, temperature)
                 print_and_log_config(tmp_config, f_log)
                 ret = request_chatgpt_engine(tmp_config)
                 print_and_log("assistant: " + ret.choices[0].message.content, f_log)
@@ -431,7 +445,7 @@ def main():
                 config['messages'][-1]['content'] = "```\n{code}\n```".format(code=current_code)
 
             elif not args.mutation or (err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1):
-                print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+                print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
                 refine_msg = {
                     'role': 'user',
                     'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
@@ -466,7 +480,7 @@ def main():
         err_info = ""
 
         if 'assume' in current_code:
-            err_info += "Error: you MUST NOT use assumptions ('assume' clause). Please review your loop invariants or forbid all exception-causing states via preconditions ('requires' clause).\n"
+            err_info += "Error: you MUST NOT use assumptions ('assume' clause). Please review your loop invariants or forbid all invalid inputs via preconditions ('requires' clause).\n"
             err_types = []
 
         if "ensures" not in current_code:
@@ -474,7 +488,7 @@ def main():
             err_types = []
 
         if "assigns" not in current_code and "assignable" not in current_code:
-            err_info += "Error: You MUST add a frame condition ('assigns' clause). If no memory location is modified as a side effect, add \"assigns \\nothing;\".\n"
+            err_info += "Error: You MUST add a frame condition ('assigns' clause). Please specify the exact frame condition or use \"assigns \\nothing;\" if no memory location is modified.\n"
             err_types = []
 
         if "assigns \\everything" in current_code or "assignable \\everything" in current_code:
@@ -482,12 +496,12 @@ def main():
             err_types = []
 
         if "signals" in current_code:
-            err_info += "Error: You MUST NOT account for exceptional behavior. Forbid all exception-causing states via preconditions ('requires' clause).\n"
+            err_info += "Error: You MUST NOT account for exceptional behavior ('signals' clause). Forbid all exception-causing states via preconditions ('requires' clause).\n"
             err_types = []
 
         current_code_tokens = simple_tokenize_java(current_code)
         if original_code_tokens != current_code_tokens:
-            err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify the JML specifications.\n"
+            err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify JML specifications.\n"
             err_info += f"The original code provided was:\n```\n{input_code}\n```\n"
             err_types = []
 
