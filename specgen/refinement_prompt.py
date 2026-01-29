@@ -1,48 +1,46 @@
 import string
 
-from prompt_format import FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT, FORMAT_REFINE_PROMPT
+from prompt_format import FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT
+from chatgpt_wrapper import create_chatgpt_config
 from util import file2str
 
 def gen_extra_guidance(err_info):
     if err_info.find('visibility') != -1:
-        return "<tip>To avoid errors related to visibility, you can add \"spec_public\" specifications to all the members (especially private ones) within the class.</tip>"
+        return "To avoid errors related to visibility, you can add \"spec_public\" specifications to all the members (especially private ones) within the class."
     elif err_info.find('non-pure') != -1:
-        return "<tip>To avoid errors related to non-pure methods, you can add \"pure\" specifications to the methods that doesn't modify any class members.</tip>"
+        return "To avoid errors related to non-pure methods, you can add \"pure\" specifications to the methods that doesn't modify any class members."
     elif err_info.find('NegativeIndex') != -1:
-        return "<tip>The \"PossiblyNegativeIndex\" error indicates that the loop invariant is not restricting the possibility of a negative index in the array access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications.</tip>"
+        return "The \"PossiblyNegativeIndex\" error indicates that the loop invariant is not restricting the possibility of a negative index in the array access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications."
     elif err_info.find('TooLargeIndex') != -1:
-        return "<tip>The \"PossiblyTooLargeIndex\" error indicates that the loop invariant is allowing an outside of bounds access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications.</tip>"
+        return "The \"PossiblyTooLargeIndex\" error indicates that the loop invariant is allowing an outside of bounds access. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications."
     elif err_info.find('ArithmeticOperationRange') != -1 and err_info.find('negation') != -1:
-        return "<tip>To avoid integer overflow in integer negation operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value).</tip>"
+        return "To avoid integer overflow in integer negation operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)"
     elif err_info.find('overflow') != -1:
-        return "<tip>To avoid integer overflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value).</tip>"
+        return "To avoid integer overflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)"
     elif err_info.find('underflow') != -1:
-        return "<tip>To avoid integer underflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value).</tip>"
+        return "To avoid integer underflow in arithmetic operation, you can add a precondition (\"requires\") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)"
     elif err_info.find('LoopInvariantBeforeLoop') != -1:
-        return "<tip>The \"LoopInvariantBeforeLoop\" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications.</tip>"
+        return "The \"LoopInvariantBeforeLoop\" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding \"loop_invariant\" or \"maintaining\" specifications."
     else:
         return ""
 
-def read_refine_as_msg(dirname):
+def read_refine_as_msg(dirname, prompt_type):
     dirpath = "specgen/prompts/refine/" + dirname + "/"
     original_code = file2str(dirpath + "original")
     err_info = file2str(dirpath + "err_info")
     refined_code = file2str(dirpath + "refined")
 
+    fmt_refinement_prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT if prompt_type == 'original' else FORMAT_STRICT_REFINEMENT_PROMPT
     msg_request = {
-        'role': 'assistant',
-        'content': '```java\n{code}\n```\n'.format(code=original_code)
-    }
-    msg_err = {
         'role': 'user',
-        'content': FORMAT_REFINE_PROMPT.format(err_info=err_info)
+        'content': fmt_refinement_prompt.format(code=original_code, info=err_info)
     }
-    msg_err['content'] += gen_extra_guidance(err_info)
     msg_reply = {
         'role': 'assistant',
-        'content': '```java\n{code}\n```\n'.format(code=refined_code)
+        'content': '```\n{code}\n```'.format(code=refined_code)
     }
-    return [msg_request, msg_err, msg_reply]
+    msg_request['content'] += gen_extra_guidance(err_info)
+    return [msg_request, msg_reply]
 
 def extract_err_type(err_info):
     prompt_list = []
@@ -70,18 +68,23 @@ def extract_err_type(err_info):
             prompt_list.append(keyword_dict[key])
     return prompt_list
 
-def append_failed_code_with_prompt(msg_list, prompt_type, current_code, err_info):
-    if prompt_type == "original":
-        prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT
-    elif prompt_type == "strict":
-        prompt = FORMAT_STRICT_REFINEMENT_PROMPT
-    else:
-        assert 0
-        prompt = ""
+def create_specialized_patcher_prompt_config(original_code, err_info, prompt_type):
+    msg_base = {
+        'role': 'system',
+        'content': 'You are an JML specification generator for java programs.'
+    }
+    messages = [msg_base]
+
+    prompt_list = extract_err_type(err_info)
+    for dirname in prompt_list:
+        messages.extend(read_refine_as_msg(dirname, prompt_type))
+
+    fmt_refinement_prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT if prompt_type == 'original' else FORMAT_STRICT_REFINEMENT_PROMPT
 
     msg_request = {
         'role': 'user',
-        'content': prompt.format(code=current_code, info=err_info)
+        'content': fmt_refinement_prompt.format(code=original_code, info=err_info)
     }
     msg_request['content'] += gen_extra_guidance(err_info)
-    msg_list.append(msg_request)
+    messages.append(msg_request)
+    return create_chatgpt_config(messages)

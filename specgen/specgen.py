@@ -8,11 +8,11 @@ import subprocess
 import re
 
 from chatgpt_wrapper import request_chatgpt_engine
-from prompt_format import FORMAT_REFINE_PROMPT, WEAK_SPEC_PROMPT
+from prompt_format import FORMAT_REFINE_PROMPT, FORMAT_ORIGINAL_REFINEMENT_PROMPT, FORMAT_STRICT_REFINEMENT_PROMPT, WEAK_SPEC_PROMPT
 from util import file2str, parse_code_from_reply
 
 from generation_prompt import create_generation_prompt_config
-from refinement_prompt import extract_err_type, read_refine_as_msg, append_failed_code_with_prompt
+from refinement_prompt import extract_err_type, create_specialized_patcher_prompt_config, gen_extra_guidance
 
 
 _OPENJML_FILE_LOC_RE = re.compile(
@@ -403,13 +403,9 @@ def main():
         else:
             err_types = extract_err_type(err_info)
             if len(err_types) != 0:
-                # Failed gen. Rebuild prompt WITHOUT few-shot examples and with refine info.
+                # Failed gen with known error type. Use specialized patcher prompt with few-shot examples.
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
-                assert base_system_message is not None
-                config['messages'] = [base_system_message]
-                for dirname in err_types:
-                    config['messages'].extend(read_refine_as_msg(dirname))
-                append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
+                config = create_specialized_patcher_prompt_config(current_code, err_info, args.prompt_type)
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)
                 print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
@@ -420,11 +416,17 @@ def main():
                     break
                 current_code = str(parsed).strip()
             elif not args.mutation or err_info.find("LoopInvariant") == -1 and err_info.find("Postcondition") == -1:
-                # Failed gen (no mutation short-circuit). Rebuild prompt WITHOUT few-shot examples.
+                # Failed gen (no mutation short-circuit). Use generic refinement prompt.
                 print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
+                fmt_refinement_prompt = FORMAT_ORIGINAL_REFINEMENT_PROMPT if args.prompt_type == 'original' else FORMAT_STRICT_REFINEMENT_PROMPT
                 assert base_system_message is not None
                 config['messages'] = [base_system_message]
-                append_failed_code_with_prompt(config['messages'], args.prompt_type, current_code, err_info)
+                refine_msg = {
+                    'role': 'user',
+                    'content': fmt_refinement_prompt.format(code=current_code, info=err_info)
+                }
+                refine_msg['content'] += gen_extra_guidance(err_info)
+                config['messages'].append(refine_msg)
                 
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)

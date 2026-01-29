@@ -329,11 +329,8 @@ def group_impacted_by_mutation(df):
 
 def see_impact_of_embedded_compl(df):
     """
-    This looks at how many results had the 'had_embedded_compl_check' True, grouped by result category.
-    If embedded completeness was triggered, the spec was at least valid at some point (even if later
-    marked as failure during postprocessing due to empty postcondition, etc.).
-    Outputs a table with columns 'experiment', 'difficulty', 'num_failure_with_embedded_compl',
-    'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl' and 'num_complete_gt_with_embedded_compl'
+    This looks at how many 'valid', 'complete' and 'complete_gt' results had the 'had_embedded_compl_check' True
+    Outputs a table with columns 'experiment', 'difficulty', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl' and 'num_complete_gt_with_embedded_compl'
     """
     required = {'experiment', 'difficulty', 'result', 'had_embedded_compl_check'}
     missing = [c for c in required if c not in df.columns]
@@ -362,9 +359,9 @@ def see_impact_of_embedded_compl(df):
     # Keep all experiment/difficulty pairs
     pairs = tmp[['experiment', 'difficulty']].drop_duplicates()
 
-    # Filter to rows that had embedded completeness check (regardless of final result)
-    all_categories = ['failure', 'valid', 'complete', 'complete_gt']
-    tmp = tmp[tmp['had_embedded_compl_check']]
+    # Filter to successes that had embedded completeness check
+    success_categories = ['valid', 'complete', 'complete_gt']
+    tmp = tmp[(tmp['result'].isin(success_categories)) & (tmp['had_embedded_compl_check'])]
 
     counts = (
         tmp.groupby(['experiment', 'difficulty'])['result']
@@ -373,10 +370,10 @@ def see_impact_of_embedded_compl(df):
     )
 
     # Ensure expected columns
-    for col in all_categories:
+    for col in success_categories:
         if col not in counts.columns:
             counts[col] = 0
-    counts = counts[all_categories]
+    counts = counts[success_categories]
 
     # Include missing exp/difficulty pairs with zeros
     counts = counts.reindex(
@@ -385,14 +382,13 @@ def see_impact_of_embedded_compl(df):
     )
 
     out = counts.reset_index().rename(columns={
-        'failure': 'num_failure_with_embedded_compl',
         'valid': 'num_valid_with_embedded_compl',
         'complete': 'num_complete_with_embedded_compl',
         'complete_gt': 'num_complete_gt_with_embedded_compl'
     })
 
     # Cast to int
-    for c in ['num_failure_with_embedded_compl', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl']:
+    for c in ['num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl']:
         out[c] = out[c].astype(int)
 
     # Sort only by difficulty
@@ -404,7 +400,6 @@ def see_impact_of_embedded_compl(df):
     out = out[
         ['experiment',
          'difficulty',
-         'num_failure_with_embedded_compl',
          'num_valid_with_embedded_compl',
          'num_complete_with_embedded_compl',
          'num_complete_gt_with_embedded_compl']
@@ -629,7 +624,7 @@ if __name__ == '__main__':
         _append_csv(
             impacted_by_embedded_compl,
             completeness_csv,
-            ['experiment', 'difficulty', 'num_failure_with_embedded_compl', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl'],
+            ['experiment', 'difficulty', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl'],
             append=True,
         )
 

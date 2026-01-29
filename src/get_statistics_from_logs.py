@@ -388,7 +388,15 @@ def check_successes_with_signals(df, base_dir):
     return to_return
 
 def mark_as_failure(df: pd.DataFrame, run, classname) -> None:
+    """Mark a run as failure, but only if had_embedded_compl_check is False.
+    
+    If had_embedded_compl_check is True, the spec was verified by OpenJML (the "too weak"
+    message appeared), so it should remain at least 'valid' even if postprocessing
+    detects issues like empty postcondition.
+    """
     mask = (df['run'] == run) & (df['classname'] == classname)
+    # Only mark as failure if had_embedded_compl_check is False
+    mask = mask & (df['had_embedded_compl_check'] == False)
     df.loc[mask, 'result'] = 'failure'
 
 if __name__ == '__main__':

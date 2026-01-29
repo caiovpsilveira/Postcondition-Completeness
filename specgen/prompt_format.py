@@ -1,30 +1,39 @@
 FORMAT_ORIGINAL_GENERATION_PROMPT = """
 Please generate JML specifications for the Java program given below.
-```java
+```
 {src_code}
 ```
 Note that:
 + You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
 + Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
 + You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
-+ You SHOULD output the code in its entirety, without omitting any original content.
++ You SHOULD output the code in its entirety, withou omitting any original content.
 """
 
 FORMAT_ORIGINAL_REFINEMENT_PROMPT = """
 The following Java code is instrumented with JML specifications:
-```java
+```
 {code}
 ```
 Verifier failed to verify the specifications given above, with error information as follows:
-<error_info>
+```
 {info}
-</error_info>
+```
 Please refine the specifications, so that it can pass the verification.
 Note that:
 + You SHOULD NOT modify any content other than the specifications inserted into the code.
-+ You SHOULD output the code in its entirety, without omitting any original content.
++ You SHOULD output the code in its entirety, withou omitting any original content.
 """
 
+FORMAT_REFINE_PROMPT = """
+Your specification got the following error information:
+
+{err_info}
+
+Please generate again.
+"""
+
+#########################
 
 FORMAT_STRICT_GENERATION_PROMPT = """
 Please generate JML specifications for the Java program given below.
@@ -40,6 +49,7 @@ Rules (apply all, exactly as written):
 - If the method returns a newly allocated object, use the following specification: '//@ ensures \\fresh(\\result);'.
 - Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
 """
+
 
 FORMAT_STRICT_REFINEMENT_PROMPT = """
 The following Java code is instrumented with JML specifications:
@@ -61,6 +71,7 @@ Rules (apply all, exactly as written):
 - Provide a STRONG and COMPLETE specification: cover functional behavior, relationships among inputs, state effects, and return value. The specification must contain enough detail to reconstruct the original code unambiguously.
 """
 
+
 WEAK_SPEC_PROMPT = """
 The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
 
@@ -80,13 +91,7 @@ Consider adding or strengthening postconditions for the following aspects (if ap
 - Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
 - Allocation/Aliasing: Use \\fresh(\\result) and specify non-aliasing relationships when the code returns new allocations.
 
-Output only the updated specifications. Do not change Java code.
-"""
-
-FORMAT_REFINE_PROMPT = """
-Your specification got the following error information:
-<error_info>
-{err_info}
-</error_info>
-Please generate again.
+Rules (apply all, exactly as written):
+- You SHOULD NOT modify any content other than the specifications inserted into the code.
+- You SHOULD output the code in its entirety, without omitting any original content.
 """
