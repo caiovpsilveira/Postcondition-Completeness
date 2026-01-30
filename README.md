@@ -348,7 +348,7 @@ This script creates the generation iterations boxplot. It will create one for ea
 ## Copyright
 ### SpecGen sourced files
 The files under the `specgen` directory were directly sourced or modified from the original [SpecGen](https://doi.org/10.1109/ICSE55347.2025.00129) artifact repository:
-* Upstream: https://github.com/Lezhi-Ma/SpecGen-Artifact
+* Upstream: https://github.com/Lezhi-Ma/SpecGen-Artifact (c7e57445a66dd432d1b9605092d0386455ed3df5)
 * Fork (no changes): https://github.com/caiovpsilveira/SpecGen-Artifact
 
 These files are licensed under the MIT License. Copyright Lezhi Ma and contributors.

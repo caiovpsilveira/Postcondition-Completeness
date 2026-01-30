@@ -14,7 +14,6 @@ from util import file2str, parse_code_from_reply
 from generation_prompt import create_generation_prompt_config
 from refinement_prompt import extract_err_type, create_specialized_patcher_prompt_config, gen_extra_guidance
 
-
 _OPENJML_FILE_LOC_RE = re.compile(
     r"(?P<path>(?:[A-Za-z]:)?/[^:\s]+(?:/[^:\s]+)*)/(?P<file>[^/\s:]+\.(?:java|jml)):(?P<line>\d+):"
 )
@@ -379,14 +378,14 @@ def main():
     err_info = ""
     err_types = []
     for i in range(1, args.max_gen_iterations+1):
-        #print_and_log("--------------- Iteration {num} ---------------".format(num=i), f_log)
+        #print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
         # commente/duplicated because skipping mutation breaks
         if i == 1:
             print_and_log("--------------- Iteration {num} ---------------\n".format(num=i), f_log)
             config = create_generation_prompt_config(model, temperature, args.prompt_type, input_code, classname)
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
-            print_and_log("assistant: " + ret.choices[0].message.content, f_log)
+            print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
 
             current_code = parse_code_from_reply(ret.choices[0].message.content)
             current_code = current_code.strip()
@@ -408,11 +407,11 @@ def main():
 
             print_and_log_config(config, f_log)
             ret = request_chatgpt_engine(config)
-            print_and_log("assistant: " + ret.choices[0].message.content, f_log)
+            print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
 
             parsed = parse_code_from_reply(ret.choices[0].message.content)
             if parsed is None:
-                print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
+                print_and_log("LLM gave up or generated incorrectly formatted code\n", f_log)
                 err_info = "Gave up"
                 break
             current_code = str(parsed).strip()
@@ -433,11 +432,11 @@ def main():
                 tmp_config = create_specialized_patcher_prompt_config(current_code, err_info, args.prompt_type, model, temperature)
                 print_and_log_config(tmp_config, f_log)
                 ret = request_chatgpt_engine(tmp_config)
-                print_and_log("assistant: " + ret.choices[0].message.content, f_log)
+                print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
 
                 parsed = parse_code_from_reply(ret.choices[0].message.content)
                 if parsed is None:
-                    print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
+                    print_and_log("LLM gave up or generated incorrectly formatted code\n", f_log)
                     err_info = "Gave up"
                     break
                 current_code = str(parsed).strip()
@@ -452,14 +451,14 @@ def main():
                 }
                 refine_msg['content'] += gen_extra_guidance(err_info)
                 config['messages'].append(refine_msg)
-                
+
                 print_and_log_config(config, f_log)
                 ret = request_chatgpt_engine(config)
-                print_and_log("assistant: " + ret.choices[0].message.content, f_log)
+                print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
 
                 parsed = parse_code_from_reply(ret.choices[0].message.content)
                 if parsed is None:
-                    print_and_log("LLM gave up or generated incorrectly formatted code", f_log)
+                    print_and_log("LLM gave up or generated incorrectly formatted code\n", f_log)
                     err_info = "Gave up"
                     break
                 current_code = str(parsed).strip()
@@ -571,7 +570,7 @@ def main():
             current_code = ""
             for line in current_code_list:
                 current_code = current_code + line + "\n"
-            print_and_log(f"{current_code}", f_log)
+            print_and_log(f"\n{current_code}\n", f_log)
             err_info = validate_openjml(openjml_command, current_code, classname, tmp_dir)
             num_verify = num_verify + 1
             print_and_log(f"\n== Mut Iteration finished with err_info ==\n{err_info}\n{42*'='}\n", f_log)
