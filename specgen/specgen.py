@@ -84,10 +84,10 @@ def validate_openjml(openjml_command, code_with_spec, classname, tmp_dir: str):
 
     # Truncate if output is too long. We do have esc-max-warnings 1, but sometimes it shows more/or crashes OpenJML
     lines = err_info.splitlines()
-    truncate_limit = 40
+    truncate_limit = 30
     if len(lines) > truncate_limit:
         half = truncate_limit // 2
-        err_info = "\n".join(lines[:half] + ["[TRUNCATED]"] + lines[-half:])
+        err_info = "\n".join(lines[:half] + [f"[TRUNCATED {len(lines) - truncate_limit} lines]"] + lines[-half:])
 
     return err_info
 
@@ -480,28 +480,28 @@ def main():
         err_info = ""
 
         if 'assume' in current_code:
-            err_info += "Error: you MUST NOT use assumptions ('assume' clause). Please review your loop invariants or forbid all invalid inputs via preconditions ('requires' clause).\n"
+            err_info += 'Error: you MUST NOT use assumptions ("assume" clause). Please review your loop invariants or forbid all invalid inputs via preconditions ("requires" clause).\n'
             err_types = []
 
         if "ensures" not in current_code:
-            err_info += "Error: You MUST add at least one postcondition ('ensures' clause). Consider adding more postconditions to strengthen your specification.\n"
+            err_info += 'Error: You MUST add at least one postcondition ("ensures" clause). Consider adding more postconditions to strengthen your specification.\n'
             err_types = []
 
         if "assigns" not in current_code and "assignable" not in current_code:
-            err_info += "Error: You MUST add a frame condition ('assigns' clause). Please specify the exact frame condition or use \"assigns \\nothing;\" if no memory location is modified.\n"
+            err_info += 'Error: You MUST add a frame condition ("assigns" clause). Please specify the exact frame condition or use "assigns \\nothing" if no memory location is modified.\n'
             err_types = []
 
         if "assigns \\everything" in current_code or "assignable \\everything" in current_code:
-            err_info += "Error: You MUST NOT use \"assigns \\everything\". Please specify the exact frame condition or use \"assigns \\nothing;\" if no memory location is modified.\n"
+            err_info += 'Error: You MUST NOT use "assigns \\everything". Please specify the exact frame condition or use "assigns \\nothing" if no memory location is modified.\n'
             err_types = []
 
         if "signals" in current_code:
-            err_info += "Error: You MUST NOT account for exceptional behavior ('signals' clause). Forbid all exception-causing states via preconditions ('requires' clause).\n"
+            err_info += 'Error: You MUST NOT account for exceptional behavior ("signals" clause). Forbid all exception-causing states via preconditions ("requires" clause).\n'
             err_types = []
 
         current_code_tokens = simple_tokenize_java(current_code)
         if original_code_tokens != current_code_tokens:
-            err_info += "Error: You MUST NOT change the provided source code. Only add, remove or modify JML specifications.\n"
+            err_info += 'Error: You MUST NOT change the provided source code. Only add, remove or modify JML specifications.\n'
             err_info += f"The original code provided was:\n```\n{input_code}\n```\n"
             err_types = []
 

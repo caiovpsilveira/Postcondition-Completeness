@@ -41,12 +41,13 @@ Please generate JML specifications for the Java program given below.
 {src_code}
 ```
 Rules (apply all, exactly as written):
-- DO NOT modify the original source code. Only the JML specifications are allowed to be modified.
-- Every method must have at least one postcondition ('ensures' clause). Add more if needed to strengthen the specification.
-- Every loop must have loop invariants ('maintaining' clauses).
-- Do NOT use assumptions ('assume' clause).
-- Do NOT specify exceptional behavior ('signals' clauses). Exclude all exception-causing states via preconditions ('requires' clause).
-- If the method returns a newly allocated object, state the freshness with 'ensures \\fresh(\\result);'.
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \\nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \\fresh(\\result);".
 - Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
 """
 
@@ -62,12 +63,13 @@ Verifier failed to verify the specifications given above, with the following err
 
 Please strengthen or correct the wrong specifications.
 Rules (apply all, exactly as written):
-- DO NOT modify the original source code. Only the JML specifications are allowed to be modified.
-- Every method must have at least one postcondition ('ensures' clause). Add more if needed to strengthen the specification.
-- Every loop must have loop invariants ('maintaining' clauses).
-- Do NOT use assumptions ('assume' clause).
-- Do NOT specify exceptional behavior ('signals' clauses). Exclude all exception-causing states via preconditions ('requires' clause).
-- If the method returns a newly allocated object, state the freshness with 'ensures \\fresh(\\result);'.
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \\nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \\fresh(\\result);".
 - Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
 """
 
@@ -87,7 +89,7 @@ Consider adding or strengthening postconditions for the following aspects (if ap
 - Return Value: Define exactly what is returned (not just characteristics like positive/negative).
 - Bounds and Ranges: Specify strict limits on indices, sizes, and values.
 - State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
-- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or “not found” conditions.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
 - Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
-- Allocation/Aliasing: Use \\fresh(\\result) and specify non-aliasing relationships when the code returns new allocations.
+- Allocation/Aliasing: Use "\\fresh(\\result)" and specify non-aliasing relationships when the code returns new allocations.
 """
