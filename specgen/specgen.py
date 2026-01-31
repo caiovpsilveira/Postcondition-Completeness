@@ -38,7 +38,7 @@ def strip_openjml_path_prefix(err_info: str, known_file_path: str | None = None)
         out_lines.append(line)
     return "\n".join(out_lines)
 
-def extract_lineno_from_err_info(err_info):
+def extract_lineno_from_err_info(err_info, f_log):
     temp_list = []
     err_list = []
     err_info_list = err_info.split('\n')
@@ -54,7 +54,7 @@ def extract_lineno_from_err_info(err_info):
             lineno_list.append(int(err[0].split(":")[1]))
         except (IndexError, ValueError):
             # LLM does not see that:
-            print_and_log(f"Warning: could not extract line number from error info line: {err[0]}\n", sys.stderr)
+            print_and_log(f"Warning: could not extract line number from error info line: {err[0]}\n", f_log)
             return []
     return lineno_list
 
@@ -387,8 +387,13 @@ def main():
             ret = request_chatgpt_engine(config)
             print_and_log(f"assistant: {ret.choices[0].message.content}\n", f_log)
 
-            current_code = parse_code_from_reply(ret.choices[0].message.content)
-            current_code = current_code.strip()
+            parsed = parse_code_from_reply(ret.choices[0].message.content)
+            if parsed is None:
+                print_and_log("LLM gave up or generated incorrectly formatted code\n", f_log)
+                err_info = "Gave up"
+                break
+            current_code = str(parsed).strip()
+
             config['messages'].append(
                 {
                     'role': 'assistant',
@@ -547,7 +552,10 @@ def main():
             if not is_invariant_or_postcondition(err_info):
                 print_and_log("Unexpected verification error. Aborted.\n", f_log)
                 break
-            refuted_lineno_list = extract_lineno_from_err_info(err_info)
+            refuted_lineno_list = extract_lineno_from_err_info(err_info, f_log)
+            if not refuted_lineno_list:
+                print_and_log("Could not extract line numbers from error. Aborted.\n", f_log)
+                break
             # replace each error spec with mutated spec
             for lineno in refuted_lineno_list:
                 index = lineno - 1
