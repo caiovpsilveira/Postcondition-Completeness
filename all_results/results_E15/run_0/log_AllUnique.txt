@@ -1,0 +1,4717 @@
+--input dataset_v1_no_annotations/hard/AllUnique.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - The outer-prefix property is preserved for p < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - The outer-prefix property is preserved for p < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Method-level specification: returns true iff the array is null or all elements are pairwise different
+      @ requires true;
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - i is a valid index bound
+          @ // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges over i+1..arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] is different from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:39: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:39:
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - The outer-prefix property is preserved for p < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Method-level specification: returns true iff the array is null or all elements are pairwise different
+      @ requires true;
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - i is a valid index bound
+          @ // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges over i+1..arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] is different from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:39: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:39:
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Two disjoint behaviors: arr == null and arr != null
+      @ also
+      @   requires arr == null;
+      @   assigns \nothing;
+      @   ensures \result == true;
+      @ also
+      @   requires arr != null;
+      @   assigns \nothing;
+      @   ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @   ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - 0 <= i <= arr.length
+          @ // - for every processed index p < i and any later index k, arr[p] != arr[k]
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - i+1 <= j <= arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] differs from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:4: warning: Method allUnique does not override parent class methods and so its specification may not begin with 'also'
+      @ also
+        ^
+1 warning
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - The outer-prefix property is preserved for p < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Method-level specification: returns true iff the array is null or all elements are pairwise different
+      @ requires true;
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - i is a valid index bound
+          @ // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges over i+1..arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] is different from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:39: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:39:
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Two disjoint behaviors: arr == null and arr != null
+      @ also
+      @   requires arr == null;
+      @   assigns \nothing;
+      @   ensures \result == true;
+      @ also
+      @   requires arr != null;
+      @   assigns \nothing;
+      @   ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @   ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - 0 <= i <= arr.length
+          @ // - for every processed index p < i and any later index k, arr[p] != arr[k]
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - i+1 <= j <= arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] differs from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:4: warning: Method allUnique does not override parent class methods and so its specification may not begin with 'also'
+      @ also
+        ^
+1 warning
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      // Case 1: null array -> true
+      requires arr == null;
+      assigns \nothing;
+      ensures \result == true;
+      also
+      // Case 2: non-null array -> result expresses pairwise uniqueness
+      requires arr != null;
+      assigns \nothing;
+      ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      behavior complete;
+      behavior disjoint;
+    @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          // Outer loop invariant:
+          // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          maintaining 0 <= i && i <= arr.length;
+          maintaining (\forall int p; 0 <= p && p < i ==> (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+          loop_writes i;
+          decreases arr.length - i;
+        @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              // Inner loop invariant:
+              // - j ranges between i+1 and arr.length
+              // - the outer-prefix property is preserved for indices < i
+              // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              maintaining i+1 <= j && j <= arr.length;
+              maintaining (\forall int p; 0 <= p && p < i ==> (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+              maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              loop_writes j;
+              decreases arr.length - j;
+            @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:13: error: <identifier> expected
+      behavior complete;
+                       ^
+AllUnique.java:14: error: <identifier> expected
+      behavior disjoint;
+                       ^
+2 errors
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - The outer-prefix property is preserved for p < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Method-level specification: returns true iff the array is null or all elements are pairwise different
+      @ requires true;
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - i is a valid index bound
+          @ // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges over i+1..arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] is different from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:39: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:39:
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Two disjoint behaviors: arr == null and arr != null
+      @ also
+      @   requires arr == null;
+      @   assigns \nothing;
+      @   ensures \result == true;
+      @ also
+      @   requires arr != null;
+      @   assigns \nothing;
+      @   ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @   ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - 0 <= i <= arr.length
+          @ // - for every processed index p < i and any later index k, arr[p] != arr[k]
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - i+1 <= j <= arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] differs from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:4: warning: Method allUnique does not override parent class methods and so its specification may not begin with 'also'
+      @ also
+        ^
+1 warning
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      // Case 1: null array -> true
+      requires arr == null;
+      assigns \nothing;
+      ensures \result == true;
+      also
+      // Case 2: non-null array -> result expresses pairwise uniqueness
+      requires arr != null;
+      assigns \nothing;
+      ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      behavior complete;
+      behavior disjoint;
+    @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          // Outer loop invariant:
+          // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          maintaining 0 <= i && i <= arr.length;
+          maintaining (\forall int p; 0 <= p && p < i ==> (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+          loop_writes i;
+          decreases arr.length - i;
+        @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              // Inner loop invariant:
+              // - j ranges between i+1 and arr.length
+              // - the outer-prefix property is preserved for indices < i
+              // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              maintaining i+1 <= j && j <= arr.length;
+              maintaining (\forall int p; 0 <= p && p < i ==> (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+              maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              loop_writes j;
+              decreases arr.length - j;
+            @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:13: error: <identifier> expected
+      behavior complete;
+                       ^
+AllUnique.java:14: error: <identifier> expected
+      behavior disjoint;
+                       ^
+2 errors
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      requires true;
+      assigns \nothing;
+      ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+    @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ assert arr != null;
+
+        /*@
+          // Outer loop invariant:
+          // - 0 <= i <= arr.length
+          // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          maintaining 0 <= i && i <= arr.length;
+          maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          loop_writes i;
+          decreases arr.length - i;
+        @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              // Inner loop invariant:
+              // - i+1 <= j <= arr.length
+              // - outer-prefix uniqueness is preserved for indices < i
+              // - arr[i] differs from all arr[k] for k in [i+1, j-1]
+              maintaining i+1 <= j && j <= arr.length;
+              maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              loop_writes j;
+              decreases arr.length - j;
+            @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+AllUnique.java:18: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          ^
+1 verification failure
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class AllUnique {
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // Case: null array -> true (method handles null)
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (
+      @     \forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]
+      @ );
+      @ // equivalently, false iff there exists a duplicate pair
+      @ ensures (\result == false) <==> (
+      @     \exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]
+      @ );
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop over i: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i, j;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop over j: so far arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:28: error: cannot find symbol
+          @ loop_writes i, j;
+                           ^
+  symbol:   variable j
+  location: class AllUnique
+1 error
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@ 
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@ 
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] is different from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Case 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Case 2: non-null array -> true iff all elements pairwise different
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @ ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop: processed prefix [0..i-1] contains no duplicates
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop: arr[i] differs from arr[k] for k in [i+1..j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:22: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // If arr is null the method returns true
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ also
+      @ assigns \nothing;
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - The outer-prefix property is preserved for p < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < i && p < q && q < arr.length ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:7: verify: The prover cannot establish an assertion (DisjointPreconditions: AllUnique.java:4:) in method allUnique
+      @ assigns \nothing;
+        ^
+AllUnique.java:4: verify: Associated declaration: AllUnique.java:7:
+      @ assigns \nothing;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Method-level specification: returns true iff the array is null or all elements are pairwise different
+      @ requires true;
+      @ assigns \nothing;
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      @ ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - i is a valid index bound
+          @ // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges over i+1..arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] is different from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:39: verify: The prover cannot establish an assertion (Postcondition: AllUnique.java:6:) in method allUnique
+        return true;
+        ^
+AllUnique.java:6: verify: Associated declaration: AllUnique.java:39:
+      @ ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Two disjoint behaviors: arr == null and arr != null
+      @ also
+      @   requires arr == null;
+      @   assigns \nothing;
+      @   ensures \result == true;
+      @ also
+      @   requires arr != null;
+      @   assigns \nothing;
+      @   ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      @   ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // - 0 <= i <= arr.length
+          @ // - for every processed index p < i and any later index k, arr[p] != arr[k]
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - i+1 <= j <= arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] differs from all arr[k] for k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p,k; 0 <= p && p < i && p < k && k < arr.length ==> arr[p] != arr[k]);
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:4: warning: Method allUnique does not override parent class methods and so its specification may not begin with 'also'
+      @ also
+        ^
+1 warning
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      // Case 1: null array -> true
+      requires arr == null;
+      assigns \nothing;
+      ensures \result == true;
+      also
+      // Case 2: non-null array -> result expresses pairwise uniqueness
+      requires arr != null;
+      assigns \nothing;
+      ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]);
+      ensures (\result == false) <==> (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]);
+      behavior complete;
+      behavior disjoint;
+    @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          // Outer loop invariant:
+          // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          maintaining 0 <= i && i <= arr.length;
+          maintaining (\forall int p; 0 <= p && p < i ==> (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+          loop_writes i;
+          decreases arr.length - i;
+        @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              // Inner loop invariant:
+              // - j ranges between i+1 and arr.length
+              // - the outer-prefix property is preserved for indices < i
+              // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              maintaining i+1 <= j && j <= arr.length;
+              maintaining (\forall int p; 0 <= p && p < i ==> (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+              maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              loop_writes j;
+              decreases arr.length - j;
+            @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:13: error: <identifier> expected
+      behavior complete;
+                       ^
+AllUnique.java:14: error: <identifier> expected
+      behavior disjoint;
+                       ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class AllUnique {
+    /*@
+      requires true;
+      assigns \nothing;
+      ensures \result == (arr == null || (\forall int p,q; 0 <= p && p < q && q < arr.length ==> arr[p] != arr[q]));
+      ensures (\result == false) <==> (arr != null && (\exists int p,q; 0 <= p && p < q && q < arr.length && arr[p] == arr[q]));
+    @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        //@ assert arr != null;
+
+        /*@
+          // Outer loop invariant:
+          // - 0 <= i <= arr.length
+          // - all pairs (p,q) with 0 <= p < q < i are already known to be different
+          maintaining 0 <= i && i <= arr.length;
+          maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          loop_writes i;
+          decreases arr.length - i;
+        @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              // Inner loop invariant:
+              // - i+1 <= j <= arr.length
+              // - outer-prefix uniqueness is preserved for indices < i
+              // - arr[i] differs from all arr[k] for k in [i+1, j-1]
+              maintaining i+1 <= j && j <= arr.length;
+              maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+              maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              loop_writes j;
+              decreases arr.length - j;
+            @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+AllUnique.java:18: verify: The prover cannot establish an assertion (LoopInvariant) in method allUnique
+          maintaining (\forall int p,q; 0 <= p && p < q && q < i ==> arr[p] != arr[q]);
+          ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class AllUnique {
+    /*@
+      @ // Behavior 1: null array -> true
+      @ requires arr == null;
+      @ assigns \nothing;
+      @ ensures \result == true;
+      @ also
+      @ // Behavior 2: non-null array -> result expresses pairwise uniqueness
+      @ requires arr != null;
+      @ assigns \nothing;
+      @ ensures \result == (\forall int p; 0 <= p && p < arr.length; (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+      @*/
+    public static boolean allUnique(int[] arr) {
+        if (arr == null) return true;
+
+        /*@
+          @ // Outer loop invariant:
+          @ // For every processed index p < i, p is different from every later element q (p < q < arr.length).
+          @ maintaining 0 <= i && i <= arr.length;
+          @ maintaining (\forall int p; 0 <= p && p < i; (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+          @ loop_writes i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length - 1; i++) {
+            /*@
+              @ // Inner loop invariant:
+              @ // - j ranges between i+1 and arr.length
+              @ // - the outer-prefix property is preserved for indices < i
+              @ // - arr[i] has been checked unequal to all indices k in [i+1, j-1]
+              @ maintaining i+1 <= j && j <= arr.length;
+              @ maintaining (\forall int p; 0 <= p && p < i; (\forall int q; p < q && q < arr.length ==> arr[p] != arr[q]));
+              @ maintaining (\forall int k; i+1 <= k && k < j ==> arr[i] != arr[k]);
+              @ loop_writes j;
+              @ decreases arr.length - j;
+              @*/
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+Finished. Verifier invoked 9 times
+--- Elapsed time: 398 seconds ---
+Success

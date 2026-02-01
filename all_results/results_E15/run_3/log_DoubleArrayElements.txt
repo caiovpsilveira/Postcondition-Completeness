@@ -1,0 +1,2930 @@
+--input dataset_v1_no_annotations/medium/DoubleArrayElements.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DoubleArrayElements {
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:21: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 verification failure
+==============================================
+--------------- Iteration 2 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Mul {
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Mul.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Mul: int multiply out of range
+        return x * y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Mul {
+    //@ requires Integer.MIN_VALUE <= x * y <= Integer.MAX_VALUE;
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class DoubleArrayElements {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+DoubleArrayElements.java:21: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      The method may be called only on a null array or on an array whose
+      elements are all in the range where doubling cannot overflow an int.
+      This top-level precondition makes the two "also" behaviors complete.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i < arr.length;
+    //@           Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        /* ensure the element we are about to double stays within the safe
+           half-range so the multiplication 2 * arr[i] can be proved not to overflow */
+        //@ maintaining \forall int k; i <= k < arr.length;
+        //@           Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:29: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method doubleElements
+        //@ maintaining \forall int k; i <= k < arr.length;
+            ^
+1 verification failure
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DoubleArrayElements {
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      The method may be called only on a null array or on an array whose
+      elements are all in the range where doubling cannot overflow an int.
+      This top-level precondition makes the two "also" behaviors complete.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i < arr.length;
+    //@           Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        /* ensure the element we are about to double stays within the safe
+           half-range so the multiplication 2 * arr[i] can be proved not to overflow */
+        //@ maintaining \forall int k; i <= k < arr.length;
+        //@           Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:29: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method doubleElements
+        //@ maintaining \forall int k; i <= k < arr.length;
+            ^
+1 verification failure
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:7: warning: Method doubleElements does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+DoubleArrayElements.java:28: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 warning
+1 verification failure
+==============================================
+--------------- Iteration 4 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Mul {
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Mul.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Mul: int multiply out of range
+        return x * y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Mul {
+    //@ requires Integer.MIN_VALUE <= x * y <= Integer.MAX_VALUE;
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+DoubleArrayElements.java:7: warning: Method doubleElements does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+DoubleArrayElements.java:28: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 warning
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: Corrected specification (only JML changed):
+
+```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                 arr[i] <= Integer.MAX_VALUE/2 && arr[i] >= Integer.MIN_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+What changed and why:
+- Removed the initial mistaken "also" (top-level spec must not start with "also").
+- Strengthened the non-null behavior's precondition to guarantee no integer overflow when doubling: for every element arr[i] we require Integer.MIN_VALUE/2 <= arr[i] <= Integer.MAX_VALUE/2. This lets the verifier prove the multiplication 2 * arr[i] is within int range.
+- Kept the frame conditions, postconditions, and loop invariants so the specification is complete and reconstructs the code's behavior.
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:16: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DoubleArrayElements {
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      The method may be called only on a null array or on an array whose
+      elements are all in the range where doubling cannot overflow an int.
+      This top-level precondition makes the two "also" behaviors complete.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i < arr.length;
+    //@           Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        /* ensure the element we are about to double stays within the safe
+           half-range so the multiplication 2 * arr[i] can be proved not to overflow */
+        //@ maintaining \forall int k; i <= k < arr.length;
+        //@           Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:29: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method doubleElements
+        //@ maintaining \forall int k; i <= k < arr.length;
+            ^
+1 verification failure
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                 arr[i] <= Integer.MAX_VALUE/2 && arr[i] >= Integer.MIN_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:16: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Top-level precondition: either arr is null, or arr is non-null and every
+      element is within the safe half-range so doubling does not overflow.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:10: verify: The prover cannot establish an assertion (DisjointPreconditions: DoubleArrayElements.java:6:) in method doubleElements
+    //@   requires arr == null;
+          ^
+DoubleArrayElements.java:6: verify: Associated declaration: DoubleArrayElements.java:10:
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DoubleArrayElements {
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      The method may be called only on a null array or on an array whose
+      elements are all in the range where doubling cannot overflow an int.
+      This top-level precondition makes the two "also" behaviors complete.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i < arr.length;
+    //@           Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        /* ensure the element we are about to double stays within the safe
+           half-range so the multiplication 2 * arr[i] can be proved not to overflow */
+        //@ maintaining \forall int k; i <= k < arr.length;
+        //@           Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:29: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method doubleElements
+        //@ maintaining \forall int k; i <= k < arr.length;
+            ^
+1 verification failure
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                 arr[i] <= Integer.MAX_VALUE/2 && arr[i] >= Integer.MIN_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:16: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Top-level precondition: either arr is null, or arr is non-null and every
+      element is within the safe half-range so doubling does not overflow.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:10: verify: The prover cannot establish an assertion (DisjointPreconditions: DoubleArrayElements.java:6:) in method doubleElements
+    //@   requires arr == null;
+          ^
+DoubleArrayElements.java:6: verify: Associated declaration: DoubleArrayElements.java:10:
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that are disjoint and complete:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:7: warning: Method doubleElements does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+DoubleArrayElements.java:28: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 warning
+1 verification failure
+==============================================
+--------------- Iteration 7 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Mul {
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Mul.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Mul: int multiply out of range
+        return x * y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Mul {
+    //@ requires Integer.MIN_VALUE <= x * y <= Integer.MAX_VALUE;
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that are disjoint and complete:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+DoubleArrayElements.java:7: warning: Method doubleElements does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+DoubleArrayElements.java:28: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 warning
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that are disjoint and complete:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   // Prevent integer overflow when doubling each element:
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                                -1073741824 <= arr[i] && arr[i] <= 1073741823);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:17: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DoubleArrayElements {
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      The method may be called only on a null array or on an array whose
+      elements are all in the range where doubling cannot overflow an int.
+      This top-level precondition makes the two "also" behaviors complete.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i < arr.length;
+    //@           Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        /* ensure the element we are about to double stays within the safe
+           half-range so the multiplication 2 * arr[i] can be proved not to overflow */
+        //@ maintaining \forall int k; i <= k < arr.length;
+        //@           Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:29: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method doubleElements
+        //@ maintaining \forall int k; i <= k < arr.length;
+            ^
+1 verification failure
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                 arr[i] <= Integer.MAX_VALUE/2 && arr[i] >= Integer.MIN_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:16: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Top-level precondition: either arr is null, or arr is non-null and every
+      element is within the safe half-range so doubling does not overflow.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:10: verify: The prover cannot establish an assertion (DisjointPreconditions: DoubleArrayElements.java:6:) in method doubleElements
+    //@   requires arr == null;
+          ^
+DoubleArrayElements.java:6: verify: Associated declaration: DoubleArrayElements.java:10:
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that are disjoint and complete:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   // Prevent integer overflow when doubling each element:
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                                -1073741824 <= arr[i] && arr[i] <= 1073741823);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:17: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Top-level precondition: the method is specified only when either
+      - arr == null (method does nothing), or
+      - arr != null and every element is in the safe half-range so doubling
+        cannot overflow: Integer.MIN_VALUE/2 <= arr[i] <= Integer.MAX_VALUE/2.
+      The two "also" behaviors form a partition of the allowed states.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:22: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DoubleArrayElements {
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      The method may be called only on a null array or on an array whose
+      elements are all in the range where doubling cannot overflow an int.
+      This top-level precondition makes the two "also" behaviors complete.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i < arr.length;
+    //@           Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@  ensures arr == null;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        /* ensure the element we are about to double stays within the safe
+           half-range so the multiplication 2 * arr[i] can be proved not to overflow */
+        //@ maintaining \forall int k; i <= k < arr.length;
+        //@           Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:29: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method doubleElements
+        //@ maintaining \forall int k; i <= k < arr.length;
+            ^
+1 verification failure
+
+Please generate again.
+The "LoopInvariantBeforeLoop" error indicates that the loop invariant you stated may be violated before entering the loop. You should consider modifying corresponding "loop_invariant" or "maintaining" specifications.
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                 arr[i] <= Integer.MAX_VALUE/2 && arr[i] >= Integer.MIN_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:16: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Top-level precondition: either arr is null, or arr is non-null and every
+      element is within the safe half-range so doubling does not overflow.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*], i;
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:10: verify: The prover cannot establish an assertion (DisjointPreconditions: DoubleArrayElements.java:6:) in method doubleElements
+    //@   requires arr == null;
+          ^
+DoubleArrayElements.java:6: verify: Associated declaration: DoubleArrayElements.java:10:
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that are disjoint and complete:
+        - If arr == null the method does nothing.
+        - If arr != null the method multiplies each element by 2.
+    */
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   // Prevent integer overflow when doubling each element:
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@                                -1073741824 <= arr[i] && arr[i] <= 1073741823);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:17: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Top-level precondition: the method is specified only when either
+      - arr == null (method does nothing), or
+      - arr != null and every element is in the safe half-range so doubling
+        cannot overflow: Integer.MIN_VALUE/2 <= arr[i] <= Integer.MAX_VALUE/2.
+      The two "also" behaviors form a partition of the allowed states.
+    */
+    //@ requires arr == null || (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null && (\forall int i; 0 <= i && i < arr.length;
+    //@            Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+DoubleArrayElements.java:22: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that together cover all states (complete) and are disjoint:
+        - If arr == null the method does nothing.
+        - If arr != null the method doubles each element.
+    */
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:7: warning: Method doubleElements does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+DoubleArrayElements.java:28: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 warning
+1 verification failure
+==============================================
+--------------- Iteration 10 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Mul {
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Mul.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Mul: int multiply out of range
+        return x * y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Mul {
+    //@ requires Integer.MIN_VALUE <= x * y <= Integer.MAX_VALUE;
+    //@ ensures \result == x * y;
+    public static int Mul(int x, int y) {
+        return x * y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that together cover all states (complete) and are disjoint:
+        - If arr == null the method does nothing.
+        - If arr != null the method doubles each element.
+    */
+    //@ also
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@   requires arr != null;
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+DoubleArrayElements.java:7: warning: Method doubleElements does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+DoubleArrayElements.java:28: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method doubleElements: int multiply out of range
+            arr[i] = 2 * arr[i];
+                       ^
+1 warning
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class DoubleArrayElements {
+    /*
+      Two behaviors that together cover all states (complete) and are disjoint:
+        - If arr == null the method does nothing.
+        - If arr != null the method doubles each element (without overflow).
+    */
+    //@ public normal_behavior
+    //@   requires arr == null;
+    //@   assigns \nothing;
+    //@   ensures arr == null;
+    //@ also
+    //@ public normal_behavior
+    //@   requires arr != null &&
+    //@            (\forall int i; 0 <= i && i < arr.length;
+    //@                Integer.MIN_VALUE/2 <= arr[i] && arr[i] <= Integer.MAX_VALUE/2);
+    //@   assigns arr[*];
+    //@   ensures \forall int i; 0 <= i && i < arr.length; arr[i] == 2 * \old(arr[i]);
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static void doubleElements(int[] arr) {
+        if (arr == null)
+            return;
+
+        /*@ maintaining 0 <= i && i <= arr.length;
+          @ maintaining \forall int j; 0 <= j && j < i; arr[j] == 2 * \old(arr[j]);
+          @ maintaining \forall int k; i <= k && k < arr.length; arr[k] == \old(arr[k]);
+          @ maintaining \forall int k; i <= k && k < arr.length;
+          @            Integer.MIN_VALUE/2 <= arr[k] && arr[k] <= Integer.MAX_VALUE/2;
+          @ loop_writes arr[*];
+          @ decreases arr.length - i;
+          @*/
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = 2 * arr[i];
+        }
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+DoubleArrayElements.java:19: verify: The prover cannot establish an assertion (CompletePreconditions) in method doubleElements
+    //@ behaviors complete;
+        ^
+1 verification failure
+==============================================
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 305 seconds ---
+Failure

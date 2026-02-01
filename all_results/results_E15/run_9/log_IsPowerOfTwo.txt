@@ -1,0 +1,4776 @@
+--input dataset_v1_no_annotations/medium/IsPowerOfTwo.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl False
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:18: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:18:
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:18: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:18:
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@
+      // Three mutually exclusive and complete behaviors cover all inputs.
+      // 1) Non-positive inputs: return false.
+      @*/
+    //@ also
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    /*@
+      // 2) Positive inputs that are a power of two: must return true.
+      // Use the common bitwise test (x & (x-1)) == 0 to characterize powers of two.
+      @*/
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    /*@
+      // 3) Positive inputs that are not a power of two: must return false.
+      @*/
+    //@ requires n > 0 && !((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint, complete;
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Loop invariants:
+          // - n remains positive while looping.
+          // - If the original input was a power of two then the current n is
+          //   also a power of two (so the loop will never hit the odd>1 case).
+          // - The original value is always divisible by the current n (it is
+          //   obtained by multiplying n by a power of two).
+          //
+          // These invariants allow proving both behaviors:
+          //  - For original powers of two: the loop cannot return false and
+          //    eventually n becomes 1 so the method returns true.
+          //  - For originals that are not powers of two: the loop will find an
+          //    odd factor > 1 and return false.
+          @*/
+        //@ maintaining n > 0;
+        //@ maintaining (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0) ==> ((n & (n - 1)) == 0);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:25: error: Incorrectly formed or terminated behaviors statement near here
+    //@ behaviors disjoint, complete;
+                          ^
+1 error
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:18: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:18:
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@
+      // Three mutually exclusive and complete behaviors cover all inputs.
+      // 1) Non-positive inputs: return false.
+      @*/
+    //@ also
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    /*@
+      // 2) Positive inputs that are a power of two: must return true.
+      // Use the common bitwise test (x & (x-1)) == 0 to characterize powers of two.
+      @*/
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    /*@
+      // 3) Positive inputs that are not a power of two: must return false.
+      @*/
+    //@ requires n > 0 && !((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint, complete;
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Loop invariants:
+          // - n remains positive while looping.
+          // - If the original input was a power of two then the current n is
+          //   also a power of two (so the loop will never hit the odd>1 case).
+          // - The original value is always divisible by the current n (it is
+          //   obtained by multiplying n by a power of two).
+          //
+          // These invariants allow proving both behaviors:
+          //  - For original powers of two: the loop cannot return false and
+          //    eventually n becomes 1 so the method returns true.
+          //  - For originals that are not powers of two: the loop will find an
+          //    odd factor > 1 and return false.
+          @*/
+        //@ maintaining n > 0;
+        //@ maintaining (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0) ==> ((n & (n - 1)) == 0);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:25: error: Incorrectly formed or terminated behaviors statement near here
+    //@ behaviors disjoint, complete;
+                          ^
+1 error
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ also
+    //@   requires n <= 0;
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    //@ also
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == true;
+    //@ also
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1<<k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:2: warning: Method isPowerOfTwo does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                   ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                              ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                               ^
+4 errors
+1 warning
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:18: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:18:
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@
+      // Three mutually exclusive and complete behaviors cover all inputs.
+      // 1) Non-positive inputs: return false.
+      @*/
+    //@ also
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    /*@
+      // 2) Positive inputs that are a power of two: must return true.
+      // Use the common bitwise test (x & (x-1)) == 0 to characterize powers of two.
+      @*/
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    /*@
+      // 3) Positive inputs that are not a power of two: must return false.
+      @*/
+    //@ requires n > 0 && !((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint, complete;
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Loop invariants:
+          // - n remains positive while looping.
+          // - If the original input was a power of two then the current n is
+          //   also a power of two (so the loop will never hit the odd>1 case).
+          // - The original value is always divisible by the current n (it is
+          //   obtained by multiplying n by a power of two).
+          //
+          // These invariants allow proving both behaviors:
+          //  - For original powers of two: the loop cannot return false and
+          //    eventually n becomes 1 so the method returns true.
+          //  - For originals that are not powers of two: the loop will find an
+          //    odd factor > 1 and return false.
+          @*/
+        //@ maintaining n > 0;
+        //@ maintaining (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0) ==> ((n & (n - 1)) == 0);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:25: error: Incorrectly formed or terminated behaviors statement near here
+    //@ behaviors disjoint, complete;
+                          ^
+1 error
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ also
+    //@   requires n <= 0;
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    //@ also
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == true;
+    //@ also
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1<<k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:2: warning: Method isPowerOfTwo does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                   ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                              ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                               ^
+4 errors
+1 warning
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) != 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1 << k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:28: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:8:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:8: verify: Associated declaration: IsPowerOfTwo.java:28:
+    //@ ensures \result == true;
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 9 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:18: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:18:
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@
+      // Three mutually exclusive and complete behaviors cover all inputs.
+      // 1) Non-positive inputs: return false.
+      @*/
+    //@ also
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    /*@
+      // 2) Positive inputs that are a power of two: must return true.
+      // Use the common bitwise test (x & (x-1)) == 0 to characterize powers of two.
+      @*/
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    /*@
+      // 3) Positive inputs that are not a power of two: must return false.
+      @*/
+    //@ requires n > 0 && !((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint, complete;
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Loop invariants:
+          // - n remains positive while looping.
+          // - If the original input was a power of two then the current n is
+          //   also a power of two (so the loop will never hit the odd>1 case).
+          // - The original value is always divisible by the current n (it is
+          //   obtained by multiplying n by a power of two).
+          //
+          // These invariants allow proving both behaviors:
+          //  - For original powers of two: the loop cannot return false and
+          //    eventually n becomes 1 so the method returns true.
+          //  - For originals that are not powers of two: the loop will find an
+          //    odd factor > 1 and return false.
+          @*/
+        //@ maintaining n > 0;
+        //@ maintaining (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0) ==> ((n & (n - 1)) == 0);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:25: error: Incorrectly formed or terminated behaviors statement near here
+    //@ behaviors disjoint, complete;
+                          ^
+1 error
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ also
+    //@   requires n <= 0;
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    //@ also
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == true;
+    //@ also
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1<<k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:2: warning: Method isPowerOfTwo does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                   ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                              ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                               ^
+4 errors
+1 warning
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) != 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1 << k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:28: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:8:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:8: verify: Associated declaration: IsPowerOfTwo.java:28:
+    //@ ensures \result == true;
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ public static ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // The original value equals the current n multiplied by 2^k.
+          maintaining orig == n * (1 << k);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:23: error: Local variable is assigned but not present in loop frame clause: k not in //@ loop_writes n, \count;
+            /*@ set k = k + 1; @*/
+                    ^
+1 error
+==============================================
+--------------- Iteration 10 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+    
+public class IsPowerOfTwo {
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        //@ maintaining n > 0;
+        //@ maintaining 1 <= n && n <= \old(n);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:16: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:16:
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Invariant: n stays positive, and the original value is always
+          // an integer multiple of the current n, where the quotient is a power of two.
+          maintaining n > 0;
+          maintaining \old(n) % n == 0;
+          maintaining ((\old(n) / n) & ((\old(n) / n) - 1)) == 0;
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:4: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static boolean isPowerOfTwo(int n) {
+                          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two, then the current n is also a power of two
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                            ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                         ^
+IsPowerOfTwo.java:5: error: non-static variable orig cannot be referenced from a static context
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+                                                 ^
+IsPowerOfTwo.java:7: error: non-static variable orig cannot be referenced from a static context
+        /*@ set orig = n; @*/
+                ^
+IsPowerOfTwo.java:14: error: non-static variable orig cannot be referenced from a static context
+          maintaining orig % n == 0;
+                      ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                       ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:16: error: non-static variable orig cannot be referenced from a static context
+          maintaining (orig > 0 && (orig & (orig - 1)) == 0) ==> ((n & (n - 1)) == 0);
+                                            ^
+8 errors
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining orig > 0;
+          // There exists an exponent k >= 0 such that orig == n * 2^k.
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:13: verify: The prover cannot establish an assertion (LoopInvariant) in method isPowerOfTwo
+          maintaining (\exists int k; k >= 0 && orig == n * (1 << k));
+          ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ assigns \nothing;
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:18: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:3:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:3: verify: Associated declaration: IsPowerOfTwo.java:18:
+    //@ ensures \result == (\old(n) > 0 && (\exists int k; k >= 0 && \old(n) == (1 << k)));
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@
+      // Three mutually exclusive and complete behaviors cover all inputs.
+      // 1) Non-positive inputs: return false.
+      @*/
+    //@ also
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    /*@
+      // 2) Positive inputs that are a power of two: must return true.
+      // Use the common bitwise test (x & (x-1)) == 0 to characterize powers of two.
+      @*/
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    /*@
+      // 3) Positive inputs that are not a power of two: must return false.
+      @*/
+    //@ requires n > 0 && !((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ behaviors disjoint, complete;
+    public static boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+
+        /*@
+          // Loop invariants:
+          // - n remains positive while looping.
+          // - If the original input was a power of two then the current n is
+          //   also a power of two (so the loop will never hit the odd>1 case).
+          // - The original value is always divisible by the current n (it is
+          //   obtained by multiplying n by a power of two).
+          //
+          // These invariants allow proving both behaviors:
+          //  - For original powers of two: the loop cannot return false and
+          //    eventually n becomes 1 so the method returns true.
+          //  - For originals that are not powers of two: the loop will find an
+          //    odd factor > 1 and return false.
+          @*/
+        //@ maintaining n > 0;
+        //@ maintaining (\old(n) > 0 && (\old(n) & (\old(n) - 1)) == 0) ==> ((n & (n - 1)) == 0);
+        //@ maintaining \old(n) % n == 0;
+        //@ loop_writes n;
+        //@ decreases n;
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:25: error: Incorrectly formed or terminated behaviors statement near here
+    //@ behaviors disjoint, complete;
+                          ^
+1 error
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ also
+    //@   requires n <= 0;
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    //@ also
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == true;
+    //@ also
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+    //@   assigns \nothing;
+    //@   ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1<<k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:2: warning: Method isPowerOfTwo does not override parent class methods and so its specification may not begin with 'also'
+    //@ also
+        ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                   ^
+IsPowerOfTwo.java:7: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && ((\old(n) & (\old(n) - 1)) == 0);
+                                              ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                    ^
+IsPowerOfTwo.java:11: error: A \old token with no label may not be present in a requires clause
+    //@   requires n > 0 && !((\old(n) & (\old(n) - 1)) == 0);
+                                               ^
+4 errors
+1 warning
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) != 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // orig equals current n times a power of two (1 << k)
+          maintaining orig == n * (1 << k);
+          loop_writes n, k;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:28: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:8:) in method isPowerOfTwo
+            if (n % 2 != 0) return false;
+                            ^
+IsPowerOfTwo.java:8: verify: Associated declaration: IsPowerOfTwo.java:28:
+    //@ ensures \result == true;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class IsPowerOfTwo {
+    /*@ public static ghost int orig; @*/
+
+    //@ assigns \nothing;
+    //@ ensures \result == (orig > 0 && (orig & (orig - 1)) == 0);
+    public static boolean isPowerOfTwo(int n) {
+        /*@ set orig = n; @*/
+        /*@ ghost int k = 0; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          maintaining k >= 0;
+          // The original value equals the current n multiplied by 2^k.
+          maintaining orig == n * (1 << k);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+            /*@ set k = k + 1; @*/
+        }
+        return true;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IsPowerOfTwo.java:23: error: Local variable is assigned but not present in loop frame clause: k not in //@ loop_writes n, \count;
+            /*@ set k = k + 1; @*/
+                    ^
+1 error
+
+Please generate again.
+
+
+assistant: ```
+public class IsPowerOfTwo {
+    //@ requires n <= 0;
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) == 0);
+    //@ assigns \nothing;
+    //@ ensures \result == true;
+    //@ also
+    //@ requires n > 0 && ((n & (n - 1)) != 0);
+    //@ assigns \nothing;
+    //@ ensures \result == false;
+    public static boolean isPowerOfTwo(int n) {
+        /*@ ghost int orig = n; @*/
+
+        if (n <= 0) return false;
+
+        /*@
+          maintaining n > 0;
+          // orig is always a multiple of the current n while the loop proceeds
+          maintaining orig % n == 0;
+          // if the original number was a power of two then the current n is also a power of two
+          maintaining (orig > 0 && ((orig & (orig - 1)) == 0)) ==> ((n & (n - 1)) == 0);
+          loop_writes n;
+          decreases n;
+        @*/
+        while (n > 1) {
+            if (n % 2 != 0) return false;
+            n /= 2;
+        }
+        return true;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IsPowerOfTwo.java:31: verify: The prover cannot establish an assertion (Postcondition: IsPowerOfTwo.java:12:) in method isPowerOfTwo
+        return true;
+        ^
+IsPowerOfTwo.java:12: verify: Associated declaration: IsPowerOfTwo.java:31:
+    //@ ensures \result == false;
+        ^
+2 verification failures
+==============================================
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 762 seconds ---
+Failure
