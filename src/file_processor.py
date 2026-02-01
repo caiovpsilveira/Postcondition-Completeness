@@ -156,7 +156,8 @@ def preprocess_transform_source_code(source_code: str):
     can parse it without a full JML parser.
 
     What it does:
-    - Converts JML block comments (/*@ ... @*/) into standalone single-line //@ annotations,
+        - Converts JML block comments (/*@ ... @*/), including the split form (/*\n@ ... @*/),
+            into standalone single-line //@ annotations,
       preserving indentation.
     - Extracts inline //@ annotations from code lines and emits them as their own lines,
       removing them from the code line to avoid mixing code and specs.
@@ -195,7 +196,8 @@ def preprocess_transform_source_code(source_code: str):
         s = re.sub(r'\s+', ' ', s)
         return s
 
-    for original_line in splitted:
+    for line_no, original_line in enumerate(splitted):
+        next_physical_line = splitted[line_no + 1] if line_no + 1 < len(splitted) else None
         line = original_line
 
         # Track whether we just emitted code before a JML block on this same physical line
@@ -205,8 +207,36 @@ def preprocess_transform_source_code(source_code: str):
         carry = line
         while carry is not None:
             if not inside_block:
-                idx_block = carry.find("/*@")
                 idx_single = carry.find("//@")
+
+                # JML block comments usually start with "/*@", but OpenJML also accepts
+                # a split marker where '@' appears after whitespace/newline:
+                #   /*
+                #   @
+                #   ...
+                #   */
+                # Treat "/*" as a JML block start only when the next non-whitespace
+                # character is '@' (either on this line or the next physical line).
+                candidates: list[tuple[int, int]] = []  # (start_index, marker_length_to_consume)
+
+                idx_block_at = carry.find("/*@")
+                if idx_block_at != -1:
+                    candidates.append((idx_block_at, 3))
+
+                m_inline_split = re.search(r"/\*\s*@", carry)
+                if m_inline_split is not None:
+                    candidates.append((m_inline_split.start(), m_inline_split.end() - m_inline_split.start()))
+
+                idx_plain_block = carry.find("/*")
+                if idx_plain_block != -1 and next_physical_line is not None:
+                    after = carry[idx_plain_block + 2:]
+                    if re.fullmatch(r"\s*", after or "") and re.match(r"^\s*@", next_physical_line):
+                        candidates.append((idx_plain_block, 2))
+
+                idx_block = -1
+                block_marker_len = 0
+                if candidates:
+                    idx_block, block_marker_len = min(candidates, key=lambda t: t[0])
 
                 # No JML comments in the remaining piece
                 if idx_block == -1 and idx_single == -1:
@@ -247,8 +277,8 @@ def preprocess_transform_source_code(source_code: str):
                     inside_block = True
                     # Prefer whitespace indentation if present, otherwise use the line's leading indent
                     block_indent = indent_for_jml if indent_for_jml != "" else line_leading_indent
-                    # Advance past "/*@"
-                    carry = carry[start + 3:]
+                    # Advance past the block marker ("/*@" or the split variant)
+                    carry = carry[start + block_marker_len:]
             else:
                 # Inside a JML block until "*/"
                 end_idx = carry.find("*/")
