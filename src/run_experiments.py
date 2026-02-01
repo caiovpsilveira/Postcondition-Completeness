@@ -72,12 +72,10 @@ def process_file(
     filepath: Path,
     thread_tmp_dir: Path,
     annotated_index: dict[str, Path],
+    output_dir: Path,
 ):
     print(f"Running {filepath}")
     classname = filepath.stem
-
-    output_dir = Path(f"results_{exp_name}") / f"run_{run_idx}"
-    # Note: directories are pre-created at startup, no mkdir needed here
 
     exp_settings_str = get_experiment_settings(exp_name)
     completeness_check_flags = get_completeness_check_flags(exp_name)
@@ -188,6 +186,7 @@ def worker(
     thread_idx: int,
     jobs: "queue.Queue[tuple[int, Path]]",
     annotated_index: dict[str, Path],
+    output_dir_base: Path
 ):
     # Unique per-process+experiment+thread temp dir to avoid collisions even
     # if multiple experiment runners are launched concurrently.
@@ -207,7 +206,8 @@ def worker(
         job_tmp_dir = thread_tmp_root / f"{classname}_r{run_idx}"
         job_tmp_dir.mkdir(parents=True, exist_ok=True)
         try:
-            process_file(exp_name, run_idx, thread_idx, filepath, job_tmp_dir, annotated_index)
+            output_dir = output_dir_base / Path(f"run_{run_idx}")
+            process_file(exp_name, run_idx, thread_idx, filepath, job_tmp_dir, annotated_index, output_dir)
         except Exception as e:
             print(f"[Thread {thread_idx}] Error processing {filepath} (run {run_idx}): {e}")
         finally:
@@ -282,34 +282,83 @@ if __name__ == "__main__":
                         choices=["E1", "E2", "E3", "E4", "E5", "E6", "E7",
                                  "E8", "E9", "E10", "E11", "E12",
                                  "E13", "E14", "E15", "E16", "E17"], required=True)
+    parser.add_argument("--individual", type=str, default=None,
+                        help="Comma-separated list of files to run individually. "
+                             "Ignores dataset and NUM_RUNS. Each file runs once per occurrence. "
+                             "Example: --individual 'file1.java, file2.java, file1.java'")
     args = parser.parse_args()
     exp_name = args.exp
-
-    dataset_no_annotations_path = Path('dataset_v1_no_annotations')
-    dataset = list(dataset_no_annotations_path.glob('**/*.java'))
 
     annotated_root = Path("dataset_v1_annotated")
     annotated_index = _build_annotated_index(annotated_root)
 
-    total_jobs = NUM_RUNS * len(dataset)
-    print(f"Scheduling {total_jobs} jobs ({NUM_RUNS} runs x {len(dataset)} files)")
+    jobs: "queue.Queue[tuple[int, Path]]" = queue.Queue()
+
+    if args.individual:
+        # Individual mode: group files by occurrence index
+        individual_files = [f.strip() for f in args.individual.split(",")]
+        # Remove empty entries
+        individual_files = [f for f in individual_files if f]
+        # Build a mapping: file -> list of occurrence indices
+        from collections import defaultdict
+        file_occurrences = defaultdict(list)
+        for idx, f in enumerate(individual_files):
+            file_occurrences[f].append(idx)
+
+        # Find the max number of times any file appears (number of runs)
+        num_runs_needed = max((len(v) for v in file_occurrences.values()), default=0)
+
+        # For each run index, collect the files that are the Nth occurrence
+        run_files = [[] for _ in range(num_runs_needed)]
+        file_counters = defaultdict(int)
+        for f in individual_files:
+            count = file_counters[f]
+            if count < num_runs_needed:
+                run_files[count].append(f)
+            file_counters[f] += 1
+
+        # Schedule jobs: for each run_N, add all files for that run
+        valid_jobs = 0
+        dataset_no_annotations_path = Path('dataset_v1_no_annotations').resolve()
+        for run_idx, files_in_run in enumerate(run_files):
+            for filepath_str in files_in_run:
+                filepath = Path(filepath_str).resolve()
+                if not filepath.exists():
+                    print(f"[run_experiments] Warning: File not found, skipping: {filepath}")
+                    continue
+                try:
+                    filepath.relative_to(dataset_no_annotations_path)
+                except ValueError:
+                    print(f"[run_experiments] Error: {filepath} is not inside dataset_v1_no_annotations. Skipping.")
+                    continue
+                jobs.put((run_idx, filepath))
+                valid_jobs += 1
+        total_jobs = valid_jobs
+        print(f"Scheduling {total_jobs} individual jobs in {num_runs_needed} runs (from {len(individual_files)} entries)")
+    else:
+        # Standard mode: run all dataset files NUM_RUNS times
+        dataset_no_annotations_path = Path('dataset_v1_no_annotations')
+        dataset = list(dataset_no_annotations_path.glob('**/*.java'))
+        num_runs_needed = NUM_RUNS
+        total_jobs = NUM_RUNS * len(dataset)
+        print(f"Scheduling {total_jobs} jobs ({NUM_RUNS} runs x {len(dataset)} files)")
+        for run_idx in range(NUM_RUNS):
+            for filepath in dataset:
+                jobs.put((run_idx, Path(filepath)))
+
+    output_dir_base = Path(f"results_{exp_name}") if not args.individual else Path(f"results_{exp_name}_individual")
 
     # Pre-create run directories
-    for run_idx in range(NUM_RUNS):
-        run_dir = Path(f"results_{exp_name}") / f"run_{run_idx}"
+    for run_idx in range(num_runs_needed):
+        run_dir = output_dir_base / f"run_{run_idx}"
         run_dir.mkdir(parents=True, exist_ok=True)
-
-    jobs: "queue.Queue[tuple[int, Path]]" = queue.Queue()
-    for run_idx in range(NUM_RUNS):
-        for filepath in dataset:
-            jobs.put((run_idx, Path(filepath)))
 
     num_threads = min(NUM_THREADS, total_jobs)
     threads: list[threading.Thread] = []
     for thread_idx in range(num_threads):
         t = threading.Thread(
             target=worker,
-            args=(exp_name, thread_idx, jobs, annotated_index),
+            args=(exp_name, thread_idx, jobs, annotated_index, output_dir_base),
             name=f"worker-{thread_idx}",
             daemon=False,
         )
