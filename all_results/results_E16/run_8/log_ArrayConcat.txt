@@ -1,0 +1,3162 @@
+--input dataset_v1_no_annotations/medium/ArrayConcat.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type original
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl True
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ArrayConcat {
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+
+assistant: ```
+public class ArrayConcat {
+    /*@ 
+      @   // Case: invalid inputs or overflow -> return null
+      @   requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      @   assigns \result;
+      @   ensures \result == null;
+      @
+      @ also
+      @
+      @   // Case: valid inputs -> return concatenated array
+      @   requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      @   assigns \result, \result[*];
+      @   ensures \result != null;
+      @   ensures \result.length == a.length + b.length;
+      @   ensures \result != a && \result != b;
+      @   ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      @   ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      @   // inputs are not modified
+      @   ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      @   ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+      @
+      @   behavior complete;
+      @   behavior disjoint;
+      @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be unchanged or already set
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+
+==== Gen Iteration finished with err_info ====
+ArrayConcat.java:22: error: <identifier> expected
+      @   behavior complete;
+                           ^
+ArrayConcat.java:23: error: <identifier> expected
+      @   behavior disjoint;
+                           ^
+2 errors
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ArrayConcat {
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class ArrayConcat {
+    /*@ 
+      @   // Case: invalid inputs or overflow -> return null
+      @   requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      @   assigns \result;
+      @   ensures \result == null;
+      @
+      @ also
+      @
+      @   // Case: valid inputs -> return concatenated array
+      @   requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      @   assigns \result, \result[*];
+      @   ensures \result != null;
+      @   ensures \result.length == a.length + b.length;
+      @   ensures \result != a && \result != b;
+      @   ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      @   ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      @   // inputs are not modified
+      @   ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      @   ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+      @
+      @   behavior complete;
+      @   behavior disjoint;
+      @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be unchanged or already set
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:22: error: <identifier> expected
+      @   behavior complete;
+                           ^
+ArrayConcat.java:23: error: <identifier> expected
+      @   behavior disjoint;
+                           ^
+2 errors
+
+Please generate again.
+
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \result, \result[*];
+      ensures \result != null;
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                  ^
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                           ^
+2 errors
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ArrayConcat {
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class ArrayConcat {
+    /*@ 
+      @   // Case: invalid inputs or overflow -> return null
+      @   requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      @   assigns \result;
+      @   ensures \result == null;
+      @
+      @ also
+      @
+      @   // Case: valid inputs -> return concatenated array
+      @   requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      @   assigns \result, \result[*];
+      @   ensures \result != null;
+      @   ensures \result.length == a.length + b.length;
+      @   ensures \result != a && \result != b;
+      @   ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      @   ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      @   // inputs are not modified
+      @   ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      @   ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+      @
+      @   behavior complete;
+      @   behavior disjoint;
+      @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be unchanged or already set
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:22: error: <identifier> expected
+      @   behavior complete;
+                           ^
+ArrayConcat.java:23: error: <identifier> expected
+      @   behavior disjoint;
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \result, \result[*];
+      ensures \result != null;
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                  ^
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                           ^
+2 errors
+
+Please generate again.
+
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+The specification generated is correct and verifiable, but incomplete (too weak).
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ArrayConcat {
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class ArrayConcat {
+    /*@ 
+      @   // Case: invalid inputs or overflow -> return null
+      @   requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      @   assigns \result;
+      @   ensures \result == null;
+      @
+      @ also
+      @
+      @   // Case: valid inputs -> return concatenated array
+      @   requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      @   assigns \result, \result[*];
+      @   ensures \result != null;
+      @   ensures \result.length == a.length + b.length;
+      @   ensures \result != a && \result != b;
+      @   ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      @   ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      @   // inputs are not modified
+      @   ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      @   ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+      @
+      @   behavior complete;
+      @   behavior disjoint;
+      @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be unchanged or already set
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:22: error: <identifier> expected
+      @   behavior complete;
+                           ^
+ArrayConcat.java:23: error: <identifier> expected
+      @   behavior disjoint;
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \result, \result[*];
+      ensures \result != null;
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                  ^
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Precisely characterize when null is returned
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // When a non-null array is returned, it is exactly the concatenation of a and b,
+      // freshly allocated and not aliased to the inputs. Inputs are not modified.
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not modify any pre-existing memory reachable from the caller.
+      // (All writes performed are to newly allocated memory when \result != null.)
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // entries at positions >= i may still be default or uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+The specification generated is correct and verifiable, but incomplete (too weak).
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ArrayConcat {
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class ArrayConcat {
+    /*@ 
+      @   // Case: invalid inputs or overflow -> return null
+      @   requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      @   assigns \result;
+      @   ensures \result == null;
+      @
+      @ also
+      @
+      @   // Case: valid inputs -> return concatenated array
+      @   requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      @   assigns \result, \result[*];
+      @   ensures \result != null;
+      @   ensures \result.length == a.length + b.length;
+      @   ensures \result != a && \result != b;
+      @   ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      @   ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      @   // inputs are not modified
+      @   ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      @   ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+      @
+      @   behavior complete;
+      @   behavior disjoint;
+      @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be unchanged or already set
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:22: error: <identifier> expected
+      @   behavior complete;
+                           ^
+ArrayConcat.java:23: error: <identifier> expected
+      @   behavior disjoint;
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \result, \result[*];
+      ensures \result != null;
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                  ^
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Precisely characterize when null is returned
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // When a non-null array is returned, it is exactly the concatenation of a and b,
+      // freshly allocated and not aliased to the inputs. Inputs are not modified.
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not modify any pre-existing memory reachable from the caller.
+      // (All writes performed are to newly allocated memory when \result != null.)
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // entries at positions >= i may still be default or uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class ArrayConcat {
+    /*@
+      // Precisely characterize when null is returned
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // When a non-null array is returned, it is exactly the concatenation of a and b,
+      // freshly allocated and not aliased to the inputs. Inputs are not modified.
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not modify any pre-existing memory reachable from the caller.
+      // (All writes performed are to newly allocated memory when \result != null.)
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // entries at positions >= i may still be default or uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Exactly when null is returned: iff an input is null or lengths would overflow
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // If a non-null array is returned then inputs were non-null and lengths fit in an int
+      ensures (\result != null) ==> (a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE);
+
+      // The returned array is freshly allocated, non-aliased to the inputs, and has exact length m+n
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+
+      // Exact contents: first copy a entirely in order, then b entirely in order
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+
+      // Inputs are not modified
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not mutate any pre-existing memory reachable from the caller.
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   // Loop 1: copy a[0..m-1] into ret[0..m-1]
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be default/uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   // Loop 2: copy b[0..n-1] into ret[m..m+n-1]
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+The specification generated is correct and verifiable, but incomplete (too weak).
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class ArrayConcat {
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+
+```
+Note that:
++ You SHOULD generate `ensures` statements for every method, and `maintaining` statements for every loop.
++ Consider adding `/*@ spec_public @*/` specifications to all the members (especially private ones) within the class.
++ You SHOULD only insert the specifications into the source code given to you. You SHOULD NOT modify any content other than the comments inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.
+
+assistant: ```
+public class ArrayConcat {
+    /*@ 
+      @   // Case: invalid inputs or overflow -> return null
+      @   requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      @   assigns \result;
+      @   ensures \result == null;
+      @
+      @ also
+      @
+      @   // Case: valid inputs -> return concatenated array
+      @   requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      @   assigns \result, \result[*];
+      @   ensures \result != null;
+      @   ensures \result.length == a.length + b.length;
+      @   ensures \result != a && \result != b;
+      @   ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      @   ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      @   // inputs are not modified
+      @   ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      @   ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+      @
+      @   behavior complete;
+      @   behavior disjoint;
+      @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be unchanged or already set
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:22: error: <identifier> expected
+      @   behavior complete;
+                           ^
+ArrayConcat.java:23: error: <identifier> expected
+      @   behavior disjoint;
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \result, \result[*];
+      ensures \result != null;
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*], i;
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*], i;
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                  ^
+ArrayConcat.java:10: error: A \result expression may not be in a assignable clause
+      assignable \result, \result[*];
+                           ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class ArrayConcat {
+    /*@
+      // Case: invalid inputs or overflow -> return null
+      requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result == null;
+      also
+      // Case: valid inputs -> return concatenated array
+      requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+      assignable \nothing;
+      ensures \result != null;
+      ensures \fresh(\result);
+      ensures \result.length == a.length + b.length;
+      ensures \result != a && \result != b;
+      ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      // inputs are not modified
+      ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Precisely characterize when null is returned
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // When a non-null array is returned, it is exactly the concatenation of a and b,
+      // freshly allocated and not aliased to the inputs. Inputs are not modified.
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not modify any pre-existing memory reachable from the caller.
+      // (All writes performed are to newly allocated memory when \result != null.)
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // entries at positions >= i may still be default or uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class ArrayConcat {
+    /*@
+      // Precisely characterize when null is returned
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // When a non-null array is returned, it is exactly the concatenation of a and b,
+      // freshly allocated and not aliased to the inputs. Inputs are not modified.
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+                (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not modify any pre-existing memory reachable from the caller.
+      // (All writes performed are to newly allocated memory when \result != null.)
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // entries at positions >= i may still be default or uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Exactly when null is returned: iff an input is null or lengths would overflow
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // If a non-null array is returned then inputs were non-null and lengths fit in an int
+      ensures (\result != null) ==> (a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE);
+
+      // The returned array is freshly allocated, non-aliased to the inputs, and has exact length m+n
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+
+      // Exact contents: first copy a entirely in order, then b entirely in order
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+
+      // Inputs are not modified
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not mutate any pre-existing memory reachable from the caller.
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   // Loop 1: copy a[0..m-1] into ret[0..m-1]
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be default/uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   // Loop 2: copy b[0..n-1] into ret[m..m+n-1]
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class ArrayConcat {
+    /*@
+      // Exactly when null is returned: iff an input is null or lengths would overflow
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // If a non-null array is returned then inputs were non-null and lengths fit in an int
+      ensures (\result != null) ==> (a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE);
+
+      // The returned array is freshly allocated, non-aliased to the inputs, and has exact length m+n
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+
+      // Exact contents: first copy a entirely in order, then b entirely in order
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; \result[i + a.length] == b[i]);
+
+      // Inputs are not modified
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // The method does not mutate any pre-existing memory reachable from the caller.
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   // Loop 1: copy a[0..m-1] into ret[0..m-1]
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   // elements at positions >= i may be default/uninitialized for our purposes
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   // Loop 2: copy b[0..n-1] into ret[m..m+n-1]
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+
+assistant: ```
+public class ArrayConcat {
+    /*@
+      // Exactly when null is returned: iff an input is null or lengths would overflow
+      ensures (\result == null) <==> (a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE);
+
+      // If a non-null array is returned then inputs were non-null and lengths fit in an int
+      ensures (\result != null) ==> (a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE);
+
+      // The returned array is freshly allocated, non-aliased to the inputs, and has exact length m+n
+      ensures (\result != null) ==> \fresh(\result);
+      ensures (\result != null) ==> \result != a && \result != b;
+      ensures (\result != null) ==> \result.length == a.length + b.length;
+
+      // Exact contents: first copy a entirely in order, then b entirely in order.
+      // This fully characterizes the returned array for the non-null case.
+      ensures (\result != null) ==>
+        (\forall int k; 0 <= k && k < \result.length;
+           (k < a.length ? \result[k] == a[k] : \result[k] == b[k - a.length]));
+
+      // Inputs are not modified in the non-null case (and obviously not modified in the null case)
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+      ensures (\result != null) ==>
+               (\forall int i; 0 <= i && i < b.length; b[i] == \old(b[i]));
+
+      // No other memory reachable from the caller is modified by this method.
+      // (Writes performed by the implementation are to the newly allocated result array only,
+      // which is captured by \fresh(\result) above.)
+      assignable \nothing;
+    @*/
+    public static int[] arrayConcat(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        /*@ 
+          @   // Loop 1: copy a[0..m-1] into ret[0..m-1]
+          @   maintaining 0 <= i && i <= m;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j] == a[j]);
+          @   loop_writes ret[*];
+          @   decreases m - i;
+          @*/
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        /*@ 
+          @   // Loop 2: copy b[0..n-1] into ret[m..m+n-1]
+          @   maintaining 0 <= i && i <= n;
+          @   maintaining ret.length == m + n;
+          @   maintaining (\forall int j; 0 <= j && j < m; ret[j] == a[j]);
+          @   maintaining (\forall int j; 0 <= j && j < i; ret[j + m] == b[j]);
+          @   loop_writes ret[*];
+          @   decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+}
+```
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 193 seconds ---
+Success
