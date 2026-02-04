@@ -66,6 +66,15 @@ def generate_openjml_completeness_test(classname, source_methods: list[MethodSpe
 
         outStr += "\n\n"
 
+        # create a duplicated method, with the same spec, signature and body but with a different name
+        # this is CRITICAL because OpenJML has some assumptions about determinism behavior over multiple calls to the same method
+        # it's a design choice: https://github.com/OpenJML/OpenJML/issues/942
+        outStr += method.reconstruct_spec()
+        outStr += method.body.replace(method.name, f"{method.name}_dup")
+        duplicated_name = f"{method.name}_dup"
+
+        outStr += "\n\n"
+
         outStr += method.unify_preconditions()
         outStr += f"//@ model public static void test_completeness_{idx}(" + method.args_decl + ") {\n"
 
@@ -111,12 +120,11 @@ def generate_openjml_completeness_test(classname, source_methods: list[MethodSpe
         # Completeness check on the return value
         if method.return_type != 'void':
             outStr += "//@     " + method.return_type + " ret1 = " + method.name + "(" + s1_arg_names + ");\n"
-            outStr += "//@     " + method.return_type + " ret2 = " + method.name + "(" + s2_arg_names + ");\n"
+            outStr += "//@     " + method.return_type + " ret2 = " + duplicated_name + "(" + s2_arg_names + ");\n"
             outStr += "//@     assert CompletenessUtil.Equals(ret1, ret2);\n"
         else:
             outStr += "//@     " + method.name + "(" + s1_arg_names + ");\n"
-            outStr += "//@     " + method.name + "(" + s2_arg_names + ");\n"
-
+            outStr += "//@     " + duplicated_name + "(" + s2_arg_names + ");\n"
         # If it assigns something (frame condition), we also want to check if the postconditions are complete for those locations
         assert len(args_by_ref_modified_s1) == len(args_by_ref_modified_s2)
         for i in range(len(args_by_ref_modified_s1)):

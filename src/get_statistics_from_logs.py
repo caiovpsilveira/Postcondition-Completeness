@@ -283,6 +283,8 @@ def get_successfull_runs(df):
     return ret
 
 # See which 'successful' runs had no postcondition
+# FIXME: on runs where the last attept it modified the source code, this is getting the original source code.
+# not critical, as this would already be a failure
 def invalid_by_empty_post(df, base_dir):
     successes = get_successfull_runs(df)
 
@@ -325,6 +327,8 @@ def invalid_by_assume(df, base_dir):
     print(f'num_successes_with_assumes: {num_suc_with_assumes}')
     return to_remove
 
+# FIXME: on runs where the last attept it modified the source code, this is getting the original source code.
+# not critical, as this would already be a failure
 def llm_changed_original_code(df, base_dir):
     """
     For the last entry in each log, compare non-comments with the original code.
