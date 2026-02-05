@@ -45,9 +45,48 @@ public class MatrixSum_r6_tmp {
 //@ requires (\forall int i; 0 <= i < a.length; a[i] != null && b[i] != null);
 //@ requires (\forall int i; 0 <= i < a.length; a[i].length == a[0].length && b[i].length == a[0].length); // Ensure every pairwise sum fits into a Java int to avoid overflow/underflow.
 //@ requires (\forall int i, j; 0 <= i < a.length && 0 <= j < a[0].length; Integer.MIN_VALUE <= a[i][j] + b[i][j] && a[i][j] + b[i][j] <= Integer.MAX_VALUE); // The method allocates and returns a fresh array; it does not modify existing // memory reachable before the call, hence assigns \nothing.
+//@ assigns \nothing;
+//@ ensures \fresh(\result);
+//@ ensures \result.length == a.length;
+//@ ensures (\forall int i; 0 <= i < a.length; \fresh(\result[i]) && \result[i].length == a[0].length);
+//@ ensures (\forall int i, j; 0 <= i < a.length && 0 <= j < a[0].length; \result[i][j] == a[i][j] + b[i][j]);
+    public static int[][] matrixSum_dup(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining n == a.length && m == a[0].length;
+        //@ maintaining (\forall int p; 0 <= p < i; (\forall int q; 0 <= q < m; c[p][q] == a[p][q] + b[p][q])); // The global no-overflow property (keeps the precondition available to the prover).
+        //@ maintaining (\forall int p, q; 0 <= p < n && 0 <= q < m; Integer.MIN_VALUE <= a[p][q] + b[p][q] && a[p][q] + b[p][q] <= Integer.MAX_VALUE);
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining n == a.length && m == a[0].length;
+            //@ maintaining (\forall int p; 0 <= p < i; (\forall int q; 0 <= q < m; c[p][q] == a[p][q] + b[p][q]));
+            //@ maintaining (\forall int q; 0 <= q < j; c[i][q] == a[i][q] + b[i][q]); // Keep the no-overflow property available inside the inner loop as well.
+            //@ maintaining (\forall int p, q; 0 <= p < n && 0 <= q < m; Integer.MIN_VALUE <= a[p][q] + b[p][q] && a[p][q] + b[p][q] <= Integer.MAX_VALUE);
+            //@ loop_writes c[*][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+
+//@ requires a != null && b != null;
+//@ requires a.length > 0;
+//@ requires a.length == b.length;
+//@ requires (\forall int i; 0 <= i < a.length; a[i] != null && b[i] != null);
+//@ requires (\forall int i; 0 <= i < a.length; a[i].length == a[0].length && b[i].length == a[0].length); // Ensure every pairwise sum fits into a Java int to avoid overflow/underflow.
+//@ requires (\forall int i, j; 0 <= i < a.length && 0 <= j < a[0].length; Integer.MIN_VALUE <= a[i][j] + b[i][j] && a[i][j] + b[i][j] <= Integer.MAX_VALUE); // The method allocates and returns a fresh array; it does not modify existing // memory reachable before the call, hence assigns \nothing.
 //@ model public static void test_completeness_0(int[][] a,int[][] b) {
 //@     int[][] ret1 = matrixSum(a,b);
-//@     int[][] ret2 = matrixSum(a,b);
+//@     int[][] ret2 = matrixSum_dup(a,b);
 //@     assert CompletenessUtil.Equals(ret1, ret2);
 //@ }
 }
@@ -56,26 +95,29 @@ public class MatrixSum_r6_tmp {
 Stdout: Proving methods in MatrixSum_r6_tmp
 Starting proof of MatrixSum_r6_tmp.MatrixSum_r6_tmp() with prover z3_4_3
 Method assertions are validated [1,03 secs]
-Completed proof of MatrixSum_r6_tmp.MatrixSum_r6_tmp() with prover z3_4_3 - no warnings [1,07 secs]
+Completed proof of MatrixSum_r6_tmp.MatrixSum_r6_tmp() with prover z3_4_3 - no warnings [1,09 secs]
 Starting proof of MatrixSum_r6_tmp.matrixSum(int[][],int[][]) with prover z3_4_3
-Method assertions are validated [1,18 secs]
-Completed proof of MatrixSum_r6_tmp.matrixSum(int[][],int[][]) with prover z3_4_3 - no warnings [1,21 secs]
+Method assertions are validated [1,20 secs]
+Completed proof of MatrixSum_r6_tmp.matrixSum(int[][],int[][]) with prover z3_4_3 - no warnings [1,23 secs]
+Starting proof of MatrixSum_r6_tmp.matrixSum_dup(int[][],int[][]) with prover z3_4_3
+Method assertions are validated [1,14 secs]
+Completed proof of MatrixSum_r6_tmp.matrixSum_dup(int[][],int[][]) with prover z3_4_3 - no warnings [1,16 secs]
 Starting proof of MatrixSum_r6_tmp.test_completeness_0(int[][],int[][]) with prover z3_4_3
-Method assertions are validated [1,08 secs]
-Completed proof of MatrixSum_r6_tmp.test_completeness_0(int[][],int[][]) with prover z3_4_3 - no warnings [1,09 secs]
-Completed proving methods in MatrixSum_r6_tmp [3,38 secs]
+Method assertions are validated [1,06 secs]
+Completed proof of MatrixSum_r6_tmp.test_completeness_0(int[][],int[][]) with prover z3_4_3 - no warnings [1,07 secs]
+Completed proving methods in MatrixSum_r6_tmp [4,57 secs]
 Summary:
-  Valid:        2
+  Valid:        3
   Invalid:      0
   Infeasible:   0
   Timeout:      0
   Error:        0
   Skipped:      0
- TOTAL METHODS: 2
+ TOTAL METHODS: 3
  Classes:       1 proved of 1
  Model Classes: 0
  Model methods: 1 proved of 1
- DURATION:          3,5 secs
+ DURATION:          4,7 secs
 
 
 Stderr: 

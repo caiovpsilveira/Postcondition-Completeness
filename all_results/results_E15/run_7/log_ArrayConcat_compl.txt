@@ -37,11 +37,47 @@ public class ArrayConcat_r7_tmp {
     }
 
 //@ requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
+//@ assigns \nothing;
+//@ ensures \result == null;
+//@ also
+//@ requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
+//@ assigns \nothing;
+//@ ensures \result != null;
+//@ ensures \fresh(\result);
+//@ ensures \result.length == a.length + b.length;
+//@ ensures (\forall int i; 0 <= i && i < a.length; \result[i] == a[i]);
+//@ ensures (\forall int j; 0 <= j && j < b.length; \result[j + a.length] == b[j]); // inputs are not modified
+//@ ensures (\forall int i; 0 <= i && i < a.length; a[i] == \old(a[i]));
+//@ ensures (\forall int j; 0 <= j && j < b.length; b[j] == \old(b[j]));
+    public static int[] arrayConcat_dup(int[] a, int[] b) {
+        if (a == null || b == null || (long) a.length + b.length > Integer.MAX_VALUE)
+            return null;
+        
+        int m = a.length;
+        int n = b.length;
+        int[] ret = new int[m + n];
+
+        //@ // copy a into ret[0..m-1] //@ maintaining 0 <= i && i <= m;
+        //@ //@ maintaining (\forall int k; 0 <= k && k < i; ret[k] == a[k]); //@ loop_writes ret[*], i; //@ decreases m - i;
+        for (int i = 0; i < m; i++) {
+            ret[i] = a[i];
+        }
+
+        //@ // copy b into ret[m..m+n-1] //@ maintaining 0 <= i && i <= n;
+        //@ //@ maintaining (\forall int k; 0 <= k && k < m; ret[k] == a[k]); //@ maintaining (\forall int k; 0 <= k && k < i; ret[k + m] == b[k]); //@ loop_writes ret[*], i; //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            ret[i + m] = b[i];
+        }
+
+        return ret;
+    }
+
+//@ requires a == null || b == null || (long)a.length + b.length > Integer.MAX_VALUE;
 //@ also
 //@ requires a != null && b != null && (long)a.length + b.length <= Integer.MAX_VALUE;
 //@ model public static void test_completeness_0(int[] a,int[] b) {
 //@     int[] ret1 = arrayConcat(a,b);
-//@     int[] ret2 = arrayConcat(a,b);
+//@     int[] ret2 = arrayConcat_dup(a,b);
 //@     assert CompletenessUtil.Equals(ret1, ret2);
 //@ }
 }
@@ -49,35 +85,41 @@ public class ArrayConcat_r7_tmp {
 
 Stdout: Proving methods in ArrayConcat_r7_tmp
 Starting proof of ArrayConcat_r7_tmp.ArrayConcat_r7_tmp() with prover z3_4_3
-Method assertions are validated [1,03 secs]
-Completed proof of ArrayConcat_r7_tmp.ArrayConcat_r7_tmp() with prover z3_4_3 - no warnings [1,06 secs]
+Method assertions are validated [1,04 secs]
+Completed proof of ArrayConcat_r7_tmp.ArrayConcat_r7_tmp() with prover z3_4_3 - no warnings [1,11 secs]
 Starting proof of ArrayConcat_r7_tmp.arrayConcat(int[],int[]) with prover z3_4_3
 ArrayConcat_r7_tmp.arrayConcat Method assertions are INVALID
-tmp/runexp_E15_p144653_t6/ArrayConcat_r7/ArrayConcat_r7_tmp.java:27: verify: The prover cannot establish an assertion (PossiblyNegativeIndex) in method arrayConcat
+tmp/runexp_E15_p589204_t1/ArrayConcat_r7/ArrayConcat_r7_tmp.java:33: verify: The prover cannot establish an assertion (PossiblyNegativeIndex) in method arrayConcat
+            ret[i + m] = b[i];
+               ^
+Completed proof of ArrayConcat_r7_tmp.arrayConcat(int[],int[]) with prover z3_4_3 - with warnings [1,25 secs]
+Starting proof of ArrayConcat_r7_tmp.arrayConcat_dup(int[],int[]) with prover z3_4_3
+ArrayConcat_r7_tmp.arrayConcat_dup Method assertions are INVALID
+tmp/runexp_E15_p589204_t1/ArrayConcat_r7/ArrayConcat_r7_tmp.java:63: verify: The prover cannot establish an assertion (PossiblyNegativeIndex) in method arrayConcat_dup
             ret[i] = a[i];
                ^
-Completed proof of ArrayConcat_r7_tmp.arrayConcat(int[],int[]) with prover z3_4_3 - with warnings [1,12 secs]
+Completed proof of ArrayConcat_r7_tmp.arrayConcat_dup(int[],int[]) with prover z3_4_3 - with warnings [1,15 secs]
 Starting proof of ArrayConcat_r7_tmp.test_completeness_0(int[],int[]) with prover z3_4_3
 ArrayConcat_r7_tmp.test_completeness_0 Method assertions are INVALID
-tmp/runexp_E15_p144653_t6/ArrayConcat_r7/ArrayConcat_r7_tmp.java:45: verify: The prover cannot establish an assertion (Assert) in method test_completeness_0
+tmp/runexp_E15_p589204_t1/ArrayConcat_r7/ArrayConcat_r7_tmp.java:81: verify: The prover cannot establish an assertion (Assert) in method test_completeness_0
 //@     assert CompletenessUtil.Equals(ret1, ret2);
         ^
 Completed proof of ArrayConcat_r7_tmp.test_completeness_0(int[],int[]) with prover z3_4_3 - with warnings [1,07 secs]
-Completed proving methods in ArrayConcat_r7_tmp [3,26 secs]
+Completed proving methods in ArrayConcat_r7_tmp [4,59 secs]
 Summary:
   Valid:        1
-  Invalid:      1
+  Invalid:      2
   Infeasible:   0
   Timeout:      0
   Error:        0
   Skipped:      0
- TOTAL METHODS: 2
+ TOTAL METHODS: 3
  Classes:       0 proved of 1
  Model Classes: 0
  Model methods: 0 proved of 1
- DURATION:          3,3 secs
+ DURATION:          4,7 secs
 
-2 verification failures
+3 verification failures
 
 Stderr: 
 Return Code: 6

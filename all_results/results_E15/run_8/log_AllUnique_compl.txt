@@ -36,11 +36,46 @@ public class AllUnique_r8_tmp {
     }
 
 //@ requires arr == null;
+//@ assigns \nothing;
+//@ ensures \result == true;
+//@ also
+//@ requires arr != null;
+//@ assigns \nothing;
+//@ ensures \result == (\forall int p,q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    public static boolean allUnique_dup(int[] arr) {
+        if (arr == null) return true;
+
+        //@ // We state explicitly that the invariant holds before the loop to help the prover. // Outer loop invariant (to be preserved): indices < i are pairwise distinct and, // more strongly, each such index p is distinct from every later index k (p<k<arr.length).
+        //@ assert 0 <= 0 && 0 <= arr.length;
+        //@ assert (\forall int p,q; 0 <= p && p < q && q < 0; arr[p] != arr[q]); // vacuous
+        //@ maintaining 0 <= i && i <= arr.length;
+        //@ maintaining (\forall int p; 0 <= p && p < i; (\forall int k; p < k && k < arr.length; arr[p] != arr[k]));
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ // Before entering inner loop, the outer invariant holds.
+            //@ assert 0 <= i && i <= arr.length;
+            //@ assert (\forall int p; 0 <= p && p < i; (\forall int k; p < k && k < arr.length; arr[p] != arr[k])); // Inner loop invariant: arr[i] is distinct from elements in [i+1, j)
+            //@ maintaining i+1 <= j && j <= arr.length;
+            //@ maintaining (\forall int k; i+1 <= k && k < j; arr[i] != arr[k]); // preserve outer invariant about earlier indices
+            //@ maintaining (\forall int p; 0 <= p && p < i; (\forall int k; p < k && k < arr.length; arr[p] != arr[k]));
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+//@ requires arr == null;
 //@ also
 //@ requires arr != null;
 //@ model public static void test_completeness_0(int[] arr) {
 //@     boolean ret1 = allUnique(arr);
-//@     boolean ret2 = allUnique(arr);
+//@     boolean ret2 = allUnique_dup(arr);
 //@     assert CompletenessUtil.Equals(ret1, ret2);
 //@ }
 }
@@ -49,26 +84,29 @@ public class AllUnique_r8_tmp {
 Stdout: Proving methods in AllUnique_r8_tmp
 Starting proof of AllUnique_r8_tmp.AllUnique_r8_tmp() with prover z3_4_3
 Method assertions are validated [1,03 secs]
-Completed proof of AllUnique_r8_tmp.AllUnique_r8_tmp() with prover z3_4_3 - no warnings [1,07 secs]
+Completed proof of AllUnique_r8_tmp.AllUnique_r8_tmp() with prover z3_4_3 - no warnings [1,08 secs]
 Starting proof of AllUnique_r8_tmp.allUnique(int[]) with prover z3_4_3
-Method assertions are validated [1,06 secs]
-Completed proof of AllUnique_r8_tmp.allUnique(int[]) with prover z3_4_3 - no warnings [1,07 secs]
+Method assertions are validated [1,10 secs]
+Completed proof of AllUnique_r8_tmp.allUnique(int[]) with prover z3_4_3 - no warnings [1,12 secs]
+Starting proof of AllUnique_r8_tmp.allUnique_dup(int[]) with prover z3_4_3
+Method assertions are validated [1,09 secs]
+Completed proof of AllUnique_r8_tmp.allUnique_dup(int[]) with prover z3_4_3 - no warnings [1,10 secs]
 Starting proof of AllUnique_r8_tmp.test_completeness_0(int[]) with prover z3_4_3
-Method assertions are validated [1,03 secs]
-Completed proof of AllUnique_r8_tmp.test_completeness_0(int[]) with prover z3_4_3 - no warnings [1,03 secs]
-Completed proving methods in AllUnique_r8_tmp [3,18 secs]
+Method assertions are validated [1,04 secs]
+Completed proof of AllUnique_r8_tmp.test_completeness_0(int[]) with prover z3_4_3 - no warnings [1,07 secs]
+Completed proving methods in AllUnique_r8_tmp [4,38 secs]
 Summary:
-  Valid:        2
+  Valid:        3
   Invalid:      0
   Infeasible:   0
   Timeout:      0
   Error:        0
   Skipped:      0
- TOTAL METHODS: 2
+ TOTAL METHODS: 3
  Classes:       1 proved of 1
  Model Classes: 0
  Model methods: 1 proved of 1
- DURATION:          3,2 secs
+ DURATION:          4,5 secs
 
 
 Stderr: 

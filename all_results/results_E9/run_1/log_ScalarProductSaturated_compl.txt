@@ -31,11 +31,41 @@ public class ScalarProductSaturated_r1_tmp {
     }
 
 //@ requires vec != null;
+//@ assigns \nothing;
+//@ ensures \result != null && \result.length == vec.length;
+//@ ensures (\forall int i; 0 <= i < vec.length; ((long)vec[i] * (long)a) > Integer.MAX_VALUE ==> \result[i] == Integer.MAX_VALUE);
+//@ ensures (\forall int i; 0 <= i < vec.length; ((long)vec[i] * (long)a) < Integer.MIN_VALUE ==> \result[i] == Integer.MIN_VALUE);
+//@ ensures (\forall int i; 0 <= i < vec.length; ((long)vec[i] * (long)a) >= Integer.MIN_VALUE && ((long)vec[i] * (long)a) <= Integer.MAX_VALUE ==> \result[i] == (int)((long)vec[i] * (long)a));
+//@ also
+//@ requires vec == null;
+//@ ensures \result == null;
+//@ assigns \nothing;
+    public static int[] scalarProductSaturated_dup(int[] vec, int a) {
+        if (vec == null) return null;
+        int ret[] = new int[vec.length];
+        //@ maintaining 0 <= i <= vec.length;
+        //@ maintaining (\forall int j; 0 <= j < i; (((long)vec[j] * (long)a) > Integer.MAX_VALUE ==> ret[j] == Integer.MAX_VALUE) && (((long)vec[j] * (long)a) < Integer.MIN_VALUE ==> ret[j] == Integer.MIN_VALUE) && (((long)vec[j] * (long)a) >= Integer.MIN_VALUE && ((long)vec[j] * (long)a) <= Integer.MAX_VALUE ==> ret[j] == (int)((long)vec[j] * (long)a)));
+        //@ loop_writes ret[*], i;
+        //@ decreases vec.length - i;
+        for (int i = 0; i < vec.length; i++) {
+            long prod = (long) vec[i] * (long) a;
+            if (prod > Integer.MAX_VALUE) {
+                ret[i] = Integer.MAX_VALUE;
+            } else if (prod < Integer.MIN_VALUE) {
+                ret[i] = Integer.MIN_VALUE;
+            } else {
+                ret[i] = (int) prod;
+            }
+        }
+        return ret;
+    }
+
+//@ requires vec != null;
 //@ also
 //@ requires vec == null;
 //@ model public static void test_completeness_0(int[] vec,int a) {
 //@     int[] ret1 = scalarProductSaturated(vec,a);
-//@     int[] ret2 = scalarProductSaturated(vec,a);
+//@     int[] ret2 = scalarProductSaturated_dup(vec,a);
 //@     assert CompletenessUtil.Equals(ret1, ret2);
 //@ }
 }
@@ -43,27 +73,30 @@ public class ScalarProductSaturated_r1_tmp {
 
 Stdout: Proving methods in ScalarProductSaturated_r1_tmp
 Starting proof of ScalarProductSaturated_r1_tmp.ScalarProductSaturated_r1_tmp() with prover z3_4_3
-Method assertions are validated [1,03 secs]
-Completed proof of ScalarProductSaturated_r1_tmp.ScalarProductSaturated_r1_tmp() with prover z3_4_3 - no warnings [1,07 secs]
+Method assertions are validated [1,06 secs]
+Completed proof of ScalarProductSaturated_r1_tmp.ScalarProductSaturated_r1_tmp() with prover z3_4_3 - no warnings [1,16 secs]
 Starting proof of ScalarProductSaturated_r1_tmp.scalarProductSaturated(int[],int) with prover z3_4_3
-Method assertions are validated [5,57 secs]
-Completed proof of ScalarProductSaturated_r1_tmp.scalarProductSaturated(int[],int) with prover z3_4_3 - no warnings [5,59 secs]
+Method assertions are validated [2,12 secs]
+Completed proof of ScalarProductSaturated_r1_tmp.scalarProductSaturated(int[],int) with prover z3_4_3 - no warnings [2,16 secs]
+Starting proof of ScalarProductSaturated_r1_tmp.scalarProductSaturated_dup(int[],int) with prover z3_4_3
+Method assertions are validated [7,16 secs]
+Completed proof of ScalarProductSaturated_r1_tmp.scalarProductSaturated_dup(int[],int) with prover z3_4_3 - no warnings [7,17 secs]
 Starting proof of ScalarProductSaturated_r1_tmp.test_completeness_0(int[],int) with prover z3_4_3
-Method assertions are validated [1,07 secs]
-Completed proof of ScalarProductSaturated_r1_tmp.test_completeness_0(int[],int) with prover z3_4_3 - no warnings [1,08 secs]
-Completed proving methods in ScalarProductSaturated_r1_tmp [7,75 secs]
+Method assertions are validated [1,05 secs]
+Completed proof of ScalarProductSaturated_r1_tmp.test_completeness_0(int[],int) with prover z3_4_3 - no warnings [1,05 secs]
+Completed proving methods in ScalarProductSaturated_r1_tmp [11,56 secs]
 Summary:
-  Valid:        2
+  Valid:        3
   Invalid:      0
   Infeasible:   0
   Timeout:      0
   Error:        0
   Skipped:      0
- TOTAL METHODS: 2
+ TOTAL METHODS: 3
  Classes:       1 proved of 1
  Model Classes: 0
  Model methods: 1 proved of 1
- DURATION:          7,9 secs
+ DURATION:         11,8 secs
 
 
 Stderr: 
