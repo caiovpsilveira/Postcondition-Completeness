@@ -1,0 +1,3604 @@
+--input dataset_v1_no_annotations/hard/IdxFirstElemWithDuplicate.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl True
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+The specification generated is correct and verifiable, but incomplete (too weak).
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    /* Specification:
+       - If arr == null or arr.length == 0 the method returns -1.
+       - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+         such that there exists j with i < j < arr.length and arr[i] == arr[j].
+         If no such index exists the method returns -1.
+       - The method does not modify the heap (assigns \nothing).
+    */
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IdxFirstElemWithDuplicate.java:16: error: Javadoc comments are not permitted within JML comments
+    //@  /** No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:18: error: Javadoc comments are not permitted within JML comments
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+         ^
+2 errors
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    /* Specification:
+       - If arr == null or arr.length == 0 the method returns -1.
+       - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+         such that there exists j with i < j < arr.length and arr[i] == arr[j].
+         If no such index exists the method returns -1.
+       - The method does not modify the heap (assigns \nothing).
+    */
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:16: error: Javadoc comments are not permitted within JML comments
+    //@  /** No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:18: error: Javadoc comments are not permitted within JML comments
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+The specification generated is correct and verifiable, but incomplete (too weak).
+==============================================
+--------------- Iteration 5 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    /* Specification:
+       - If arr == null or arr.length == 0 the method returns -1.
+       - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+         such that there exists j with i < j < arr.length and arr[i] == arr[j].
+         If no such index exists the method returns -1.
+       - The method does not modify the heap (assigns \nothing).
+    */
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:16: error: Javadoc comments are not permitted within JML comments
+    //@  /** No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:18: error: Javadoc comments are not permitted within JML comments
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Precise specification matching the implementation:
+    // - If arr == null or arr.length <= 1 the method returns -1.
+    // - Otherwise the method returns the minimum index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such i exists the method returns -1.
+    // - The method does not modify any memory (assigns \nothing).
+
+    //@  requires arr == null || arr.length <= 1;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length >= 2;
+    //@  assigns \nothing;
+    //@  /* No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /* If duplicates exist then result is exactly the minimum index having a later duplicate */
+    //@  ensures (\result >= 0) ==> (
+    //@      0 <= \result && \result <= arr.length - 2
+    //@      && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@      && (\forall int i; 0 <= i && i < arr.length - 1;
+    //@             ((\exists int j; i < j && j < arr.length; arr[i] == arr[j]) ==> \result <= i))
+    //@  );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+IdxFirstElemWithDuplicate.java:15: error: Embedded block comment must terminate within the JML line comment
+    //@  /* No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:17: error: Embedded block comment must terminate within the JML line comment
+    //@  /* If duplicates exist then result is exactly the minimum index having a later duplicate */
+         ^
+2 errors
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    /* Specification:
+       - If arr == null or arr.length == 0 the method returns -1.
+       - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+         such that there exists j with i < j < arr.length and arr[i] == arr[j].
+         If no such index exists the method returns -1.
+       - The method does not modify the heap (assigns \nothing).
+    */
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:16: error: Javadoc comments are not permitted within JML comments
+    //@  /** No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:18: error: Javadoc comments are not permitted within JML comments
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Precise specification matching the implementation:
+    // - If arr == null or arr.length <= 1 the method returns -1.
+    // - Otherwise the method returns the minimum index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such i exists the method returns -1.
+    // - The method does not modify any memory (assigns \nothing).
+
+    //@  requires arr == null || arr.length <= 1;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length >= 2;
+    //@  assigns \nothing;
+    //@  /* No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /* If duplicates exist then result is exactly the minimum index having a later duplicate */
+    //@  ensures (\result >= 0) ==> (
+    //@      0 <= \result && \result <= arr.length - 2
+    //@      && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@      && (\forall int i; 0 <= i && i < arr.length - 1;
+    //@             ((\exists int j; i < j && j < arr.length; arr[i] == arr[j]) ==> \result <= i))
+    //@  );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:15: error: Embedded block comment must terminate within the JML line comment
+    //@  /* No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:17: error: Embedded block comment must terminate within the JML line comment
+    //@  /* If duplicates exist then result is exactly the minimum index having a later duplicate */
+         ^
+2 errors
+
+Please generate again.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Precise specification matching the implementation:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@ requires arr == null || arr.length == 0;
+    //@ assigns \nothing;
+    //@ ensures \result == -1;
+    //@ also
+    //@ requires arr != null && arr.length > 0;
+    //@ assigns \nothing;
+    //@ ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@ ensures (\result >= 0) ==> (
+    //@     0 <= \result && \result <= arr.length - 2
+    //@     && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@     && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@ );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+The specification generated is correct and verifiable, but incomplete (too weak).
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IdxFirstElemWithDuplicate {
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** If no duplicates exist then result is -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@  behaviors disjoint;
+    //@  behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:8: error: Javadoc comments are not permitted within JML comments
+    //@  /** If no duplicates exist then result is -1 */
+         ^
+IdxFirstElemWithDuplicate.java:10: error: Javadoc comments are not permitted within JML comments
+    //@  /** Otherwise result is the smallest index i that has some duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result < arr.length - 1
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    /* Specification:
+       - If arr == null or arr.length == 0 the method returns -1.
+       - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+         such that there exists j with i < j < arr.length and arr[i] == arr[j].
+         If no such index exists the method returns -1.
+       - The method does not modify the heap (assigns \nothing).
+    */
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  /** No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:16: error: Javadoc comments are not permitted within JML comments
+    //@  /** No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:18: error: Javadoc comments are not permitted within JML comments
+    //@  /** If a duplicate exists then result is the least index i that has a duplicate later */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    // Specification:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@  requires arr == null || arr.length == 0;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length > 0;
+    //@  assigns \nothing;
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  ensures (\result >= 0) ==> (
+    //@              0 <= \result && \result <= arr.length - 2
+    //@              && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@              && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@          );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Precise specification matching the implementation:
+    // - If arr == null or arr.length <= 1 the method returns -1.
+    // - Otherwise the method returns the minimum index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such i exists the method returns -1.
+    // - The method does not modify any memory (assigns \nothing).
+
+    //@  requires arr == null || arr.length <= 1;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ also
+    //@  requires arr != null && arr.length >= 2;
+    //@  assigns \nothing;
+    //@  /* No duplicates <=> result == -1 */
+    //@  ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@  /* If duplicates exist then result is exactly the minimum index having a later duplicate */
+    //@  ensures (\result >= 0) ==> (
+    //@      0 <= \result && \result <= arr.length - 2
+    //@      && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@      && (\forall int i; 0 <= i && i < arr.length - 1;
+    //@             ((\exists int j; i < j && j < arr.length; arr[i] == arr[j]) ==> \result <= i))
+    //@  );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+IdxFirstElemWithDuplicate.java:15: error: Embedded block comment must terminate within the JML line comment
+    //@  /* No duplicates <=> result == -1 */
+         ^
+IdxFirstElemWithDuplicate.java:17: error: Embedded block comment must terminate within the JML line comment
+    //@  /* If duplicates exist then result is exactly the minimum index having a later duplicate */
+         ^
+2 errors
+
+Please generate again.
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Precise specification matching the implementation:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@ requires arr == null || arr.length == 0;
+    //@ assigns \nothing;
+    //@ ensures \result == -1;
+    //@ also
+    //@ requires arr != null && arr.length > 0;
+    //@ assigns \nothing;
+    //@ ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@ ensures (\result >= 0) ==> (
+    //@     0 <= \result && \result <= arr.length - 2
+    //@     && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@     && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@ );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+user: 
+The following JML specification is correct and verifiable, but it is incomplete. It does not fully capture the program's behavior.
+
+```
+public class IdxFirstElemWithDuplicate {
+    // Precise specification matching the implementation:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - Otherwise the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    //   If no such index exists the method returns -1.
+    // - The method does not modify the heap (assigns \nothing).
+
+    //@ requires arr == null || arr.length == 0;
+    //@ assigns \nothing;
+    //@ ensures \result == -1;
+    //@ also
+    //@ requires arr != null && arr.length > 0;
+    //@ assigns \nothing;
+    //@ ensures (\result == -1) <==> (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@ ensures (\result >= 0) ==> (
+    //@     0 <= \result && \result <= arr.length - 2
+    //@     && (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j])
+    //@     && (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]))
+    //@ );
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Strengthen the spec to precisely match the program's functionality for all valid inputs.
+The goal is a specification strong enough to allow unambiguous reconstruction of the original code.
+
+Consider adding or strengthening postconditions for the following aspects (if applicable):
+
+- Return Value: Define exactly what is returned (not just characteristics like positive/negative).
+- Bounds and Ranges: Specify strict limits on indices, sizes, and values.
+- State Effects/Frame Conditions: Specify which memory locations may be assigned and exactly how.
+- Minimality/Maximality: Specify conditions related to the search (e.g., no earlier index satisfies the predicate) or "not found" conditions.
+- Ordering and Permutation: If the code sorts or reorders, specify preservation of elements (permutation) and the sorting order.
+- Allocation/Aliasing: Use "\fresh(\result)" and specify non-aliasing relationships when the code returns new allocations.
+
+
+assistant: ```
+public class IdxFirstElemWithDuplicate {
+    // Precise, complete specification matching the implementation:
+    // - If arr == null or arr.length == 0 the method returns -1.
+    // - If arr != null && arr.length > 0 and there are no equal pair of indices
+    //   p < q with arr[p] == arr[q], the method returns -1.
+    // - If arr != null && arr.length > 0 and there exists a pair p < q with
+    //   arr[p] == arr[q], the method returns the smallest index i (0 <= i <= arr.length-2)
+    //   such that there exists j with i < j < arr.length and arr[i] == arr[j].
+    // - The method does not modify any memory (assigns \nothing).
+
+    //@ requires arr == null || arr.length == 0;
+    //@ assigns \nothing;
+    //@ ensures \result == -1;
+    //@ also
+    //@ requires arr != null && arr.length > 0 && (\forall int p, q; 0 <= p && p < q && q < arr.length; arr[p] != arr[q]);
+    //@ assigns \nothing;
+    //@ ensures \result == -1;
+    //@ also
+    //@ requires arr != null && arr.length > 0 && (\exists int p, q; 0 <= p && p < q && q < arr.length; arr[p] == arr[q]);
+    //@ assigns \nothing;
+    //@ ensures 0 <= \result && \result <= arr.length - 2;
+    //@ ensures (\exists int j; \result < j && j < arr.length; arr[\result] == arr[j]);
+    //@ ensures (\forall int k; 0 <= k && k < \result; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]));
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    public static int idxFirstElemWithDuplicate(int[] arr) {
+        if (arr == null || arr.length == 0) return -1;
+
+        //@ maintaining 0 <= i && i <= arr.length - 1;
+        //@ maintaining \forall int k; 0 <= k && k < i; (\forall int l; k < l && l < arr.length; arr[k] != arr[l]);
+        //@ loop_writes i;
+        //@ decreases arr.length - 1 - i;
+        for (int i = 0; i < arr.length - 1; i++) {
+            //@ maintaining i + 1 <= j && j <= arr.length;
+            //@ maintaining \forall int m; i + 1 <= m && m < j; arr[i] != arr[m];
+            //@ loop_writes j;
+            //@ decreases arr.length - j;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] == arr[j]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+Finished. Verifier invoked 11 times
+--- Elapsed time: 329 seconds ---
+Success

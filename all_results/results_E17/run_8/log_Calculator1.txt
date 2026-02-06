@@ -1,0 +1,2599 @@
+--input dataset_v1_no_annotations/easy/Calculator1.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl True
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Calculator1 {
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Exclude division/modulo by zero which would raise ArithmeticException
+      @ requires !(operator == '/' || operator == '%') || num2 != 0;
+      @ 
+      @ // Behaviors for each recognized operator
+      @ requires operator == '+';
+      @ assigns \nothing;
+      @ ensures \result == num1 + num2;
+      @ also
+      @ requires operator == '-';
+      @ assigns \nothing;
+      @ ensures \result == num1 - num2;
+      @ also
+      @ requires operator == '*';
+      @ assigns \nothing;
+      @ ensures \result == num1 * num2;
+      @ also
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 / num2;
+      @ also
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 % num2;
+      @ also
+      @ // Default behavior for unrecognized operator
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ assigns \nothing;
+      @ ensures \result == -1;
+      @ 
+      @ // The set of behaviors is complete and disjoint
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:57: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: overflow in int divide
+            output = num1 / num2;
+                          ^
+1 verification failure
+==============================================
+--------------- Iteration 2 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Div {
+    //@ requires y != 0;
+    //@ ensures \result == x / y;
+    public static int Div(int x, int y) {
+        return x / y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Div.java:5: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Div: overflow in int divide
+        return x / y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer overflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Div {
+    //@ requires y != 0;
+    //@ requires Integer.MIN_VALUE <= x / y <= Integer.MAX_VALUE;
+    //@ ensures \result == x / y;
+    public static int Div(int x, int y) {
+        return x / y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Calculator1 {
+    /*@ 
+      @ // Exclude division/modulo by zero which would raise ArithmeticException
+      @ requires !(operator == '/' || operator == '%') || num2 != 0;
+      @ 
+      @ // Behaviors for each recognized operator
+      @ requires operator == '+';
+      @ assigns \nothing;
+      @ ensures \result == num1 + num2;
+      @ also
+      @ requires operator == '-';
+      @ assigns \nothing;
+      @ ensures \result == num1 - num2;
+      @ also
+      @ requires operator == '*';
+      @ assigns \nothing;
+      @ ensures \result == num1 * num2;
+      @ also
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 / num2;
+      @ also
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 % num2;
+      @ also
+      @ // Default behavior for unrecognized operator
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ assigns \nothing;
+      @ ensures \result == -1;
+      @ 
+      @ // The set of behaviors is complete and disjoint
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Calculator1.java:57: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: overflow in int divide
+            output = num1 / num2;
+                          ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer overflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Behaviors for each recognized operator with overflow/zero-safety preconditions
+      @ 
+      @ // Addition: require that the mathematical sum fits into an int
+      @ requires operator == '+';
+      @ requires ((long)num1 + (long)num2) >= Integer.MIN_VALUE && ((long)num1 + (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 + num2;
+      @ also
+      @ // Subtraction: require that the mathematical difference fits into an int
+      @ requires operator == '-';
+      @ requires ((long)num1 - (long)num2) >= Integer.MIN_VALUE && ((long)num1 - (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 - num2;
+      @ also
+      @ // Multiplication: require that the mathematical product fits into an int
+      @ requires operator == '*';
+      @ requires ((long)num1 * (long)num2) >= Integer.MIN_VALUE && ((long)num1 * (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 * num2;
+      @ also
+      @ // Division: exclude division by zero and the INT_MIN / -1 overflow case
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ requires !(num1 == Integer.MIN_VALUE && num2 == -1);
+      @ assigns \nothing;
+      @ ensures \result == num1 / num2;
+      @ also
+      @ // Modulo: exclude modulo by zero (no overflow for Java %)
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 % num2;
+      @ also
+      @ // Default behavior for unrecognized operator
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ assigns \nothing;
+      @ ensures \result == -1;
+      @ 
+      @ // The set of behaviors is complete and disjoint
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:43: verify: The prover cannot establish an assertion (CompletePreconditions) in method calculate
+      @ behaviors complete;
+        ^
+1 verification failure
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Calculator1 {
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Behaviors for each recognized operator with overflow/zero-safety preconditions
+      @ 
+      @ // Addition: require that the mathematical sum fits into an int
+      @ requires operator == '+';
+      @ requires ((long)num1 + (long)num2) >= Integer.MIN_VALUE && ((long)num1 + (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 + num2;
+      @ also
+      @ // Subtraction: require that the mathematical difference fits into an int
+      @ requires operator == '-';
+      @ requires ((long)num1 - (long)num2) >= Integer.MIN_VALUE && ((long)num1 - (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 - num2;
+      @ also
+      @ // Multiplication: require that the mathematical product fits into an int
+      @ requires operator == '*';
+      @ requires ((long)num1 * (long)num2) >= Integer.MIN_VALUE && ((long)num1 * (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 * num2;
+      @ also
+      @ // Division: exclude division by zero and the INT_MIN / -1 overflow case
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ requires !(num1 == Integer.MIN_VALUE && num2 == -1);
+      @ assigns \nothing;
+      @ ensures \result == num1 / num2;
+      @ also
+      @ // Modulo: exclude modulo by zero (no overflow for Java %)
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 % num2;
+      @ also
+      @ // Default behavior for unrecognized operator
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ assigns \nothing;
+      @ ensures \result == -1;
+      @ 
+      @ // The set of behaviors is complete and disjoint
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+Calculator1.java:43: verify: The prover cannot establish an assertion (CompletePreconditions) in method calculate
+      @ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Global precondition: exclude division/modulo by zero (these would throw ArithmeticException)
+      @ requires (operator != '/' && operator != '%') || num2 != 0;
+      @ assigns \nothing;
+      @ 
+      @ // Addition
+      @ also
+      @ requires operator == '+';
+      @ ensures \result == num1 + num2;
+      @ 
+      @ // Subtraction
+      @ also
+      @ requires operator == '-';
+      @ ensures \result == num1 - num2;
+      @ 
+      @ // Multiplication
+      @ also
+      @ requires operator == '*';
+      @ ensures \result == num1 * num2;
+      @ 
+      @ // Division (num2 != 0 ensured by global precondition and repeated here for clarity)
+      @ also
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ ensures \result == num1 / num2;
+      @ 
+      @ // Modulo (num2 != 0 ensured by global precondition and repeated here for clarity)
+      @ also
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ ensures \result == num1 % num2;
+      @ 
+      @ // Default: unrecognized operator
+      @ also
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ ensures \result == -1;
+      @ 
+      @ // The behaviors are disjoint and together cover the allowed inputs
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:24: verify: The prover cannot establish an assertion (DisjointPreconditions: Calculator1.java:4:) in method calculate
+      @ requires operator == '/';
+        ^
+Calculator1.java:4: verify: Associated declaration: Calculator1.java:24:
+      @ requires (operator != '/' && operator != '%') || num2 != 0;
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Calculator1 {
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Behaviors for each recognized operator with overflow/zero-safety preconditions
+      @ 
+      @ // Addition: require that the mathematical sum fits into an int
+      @ requires operator == '+';
+      @ requires ((long)num1 + (long)num2) >= Integer.MIN_VALUE && ((long)num1 + (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 + num2;
+      @ also
+      @ // Subtraction: require that the mathematical difference fits into an int
+      @ requires operator == '-';
+      @ requires ((long)num1 - (long)num2) >= Integer.MIN_VALUE && ((long)num1 - (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 - num2;
+      @ also
+      @ // Multiplication: require that the mathematical product fits into an int
+      @ requires operator == '*';
+      @ requires ((long)num1 * (long)num2) >= Integer.MIN_VALUE && ((long)num1 * (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 * num2;
+      @ also
+      @ // Division: exclude division by zero and the INT_MIN / -1 overflow case
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ requires !(num1 == Integer.MIN_VALUE && num2 == -1);
+      @ assigns \nothing;
+      @ ensures \result == num1 / num2;
+      @ also
+      @ // Modulo: exclude modulo by zero (no overflow for Java %)
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 % num2;
+      @ also
+      @ // Default behavior for unrecognized operator
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ assigns \nothing;
+      @ ensures \result == -1;
+      @ 
+      @ // The set of behaviors is complete and disjoint
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+Calculator1.java:43: verify: The prover cannot establish an assertion (CompletePreconditions) in method calculate
+      @ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Global precondition: exclude division/modulo by zero (these would throw ArithmeticException)
+      @ requires (operator != '/' && operator != '%') || num2 != 0;
+      @ assigns \nothing;
+      @ 
+      @ // Addition
+      @ also
+      @ requires operator == '+';
+      @ ensures \result == num1 + num2;
+      @ 
+      @ // Subtraction
+      @ also
+      @ requires operator == '-';
+      @ ensures \result == num1 - num2;
+      @ 
+      @ // Multiplication
+      @ also
+      @ requires operator == '*';
+      @ ensures \result == num1 * num2;
+      @ 
+      @ // Division (num2 != 0 ensured by global precondition and repeated here for clarity)
+      @ also
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ ensures \result == num1 / num2;
+      @ 
+      @ // Modulo (num2 != 0 ensured by global precondition and repeated here for clarity)
+      @ also
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ ensures \result == num1 % num2;
+      @ 
+      @ // Default: unrecognized operator
+      @ also
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ ensures \result == -1;
+      @ 
+      @ // The behaviors are disjoint and together cover the allowed inputs
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+Calculator1.java:24: verify: The prover cannot establish an assertion (DisjointPreconditions: Calculator1.java:4:) in method calculate
+      @ requires operator == '/';
+        ^
+Calculator1.java:4: verify: Associated declaration: Calculator1.java:24:
+      @ requires (operator != '/' && operator != '%') || num2 != 0;
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class Calculator1 {
+    /*@
+      @ // Exclude states that would cause ArithmeticException (division or modulo by zero)
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @ assigns \nothing;
+      @ // For each recognized operator, state the exact result
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ // For any unrecognized operator, the method returns -1
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:25: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: underflow in int difference
+            output = num1 - num2;
+                          ^
+1 verification failure
+==============================================
+--------------- Iteration 5 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Sub {
+    //@ ensures \result == x - y;
+    public static int Sub(int x, int y) {
+        return x - y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Sub.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Sub: underflow in int difference
+        return x - y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Sub {
+    //@ requires Integer.MIN_VALUE <= x - y <= Integer.MAX_VALUE;
+    //@ ensures \result == x - y;
+    public static int Sub(int x, int y) {
+        return x - y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Calculator1 {
+    /*@
+      @ // Exclude states that would cause ArithmeticException (division or modulo by zero)
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @ assigns \nothing;
+      @ // For each recognized operator, state the exact result
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ // For any unrecognized operator, the method returns -1
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Calculator1.java:25: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: underflow in int difference
+            output = num1 - num2;
+                          ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @
+      @ // Prevent overflow/underflow for addition
+      @ requires (operator == '+') ==>
+      @           ((num2 >= 0) ==> (num1 <= Integer.MAX_VALUE - num2)) &&
+      @           ((num2 <= 0) ==> (num1 >= Integer.MIN_VALUE - num2));
+      @
+      @ // Prevent overflow/underflow for subtraction
+      @ requires (operator == '-') ==>
+      @           ((num2 >= 0) ==> (num1 >= Integer.MIN_VALUE + num2)) &&
+      @           ((num2 <= 0) ==> (num1 <= Integer.MAX_VALUE + num2));
+      @
+      @ // Prevent overflow for multiplication (guard against division by zero in the check)
+      @ requires (operator == '*') ==>
+      @           (num1 == 0 ||
+      @            (Integer.MIN_VALUE / num1 <= num2 && num2 <= Integer.MAX_VALUE / num1));
+      @
+      @ assigns \nothing;
+      @
+      @ // For each recognized operator, state the exact result
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ // For any unrecognized operator, the method returns -1
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:50: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: overflow in int divide
+            output = num1 / num2;
+                          ^
+1 verification failure
+==============================================
+--------------- Iteration 6 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Div {
+    //@ requires y != 0;
+    //@ ensures \result == x / y;
+    public static int Div(int x, int y) {
+        return x / y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Div.java:5: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Div: overflow in int divide
+        return x / y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer overflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Div {
+    //@ requires y != 0;
+    //@ requires Integer.MIN_VALUE <= x / y <= Integer.MAX_VALUE;
+    //@ ensures \result == x / y;
+    public static int Div(int x, int y) {
+        return x / y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @
+      @ // Prevent overflow/underflow for addition
+      @ requires (operator == '+') ==>
+      @           ((num2 >= 0) ==> (num1 <= Integer.MAX_VALUE - num2)) &&
+      @           ((num2 <= 0) ==> (num1 >= Integer.MIN_VALUE - num2));
+      @
+      @ // Prevent overflow/underflow for subtraction
+      @ requires (operator == '-') ==>
+      @           ((num2 >= 0) ==> (num1 >= Integer.MIN_VALUE + num2)) &&
+      @           ((num2 <= 0) ==> (num1 <= Integer.MAX_VALUE + num2));
+      @
+      @ // Prevent overflow for multiplication (guard against division by zero in the check)
+      @ requires (operator == '*') ==>
+      @           (num1 == 0 ||
+      @            (Integer.MIN_VALUE / num1 <= num2 && num2 <= Integer.MAX_VALUE / num1));
+      @
+      @ assigns \nothing;
+      @
+      @ // For each recognized operator, state the exact result
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ // For any unrecognized operator, the method returns -1
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Calculator1.java:50: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: overflow in int divide
+            output = num1 / num2;
+                          ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer overflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @
+      @ // Exclude the single int-division overflow case: Integer.MIN_VALUE / -1
+      @ // (also exclude the same pair for % to be conservative with the prover)
+      @ requires !((operator == '/' || operator == '%') && num1 == Integer.MIN_VALUE && num2 == -1);
+      @
+      @ // Prevent overflow/underflow for addition
+      @ requires (operator == '+') ==>
+      @           ((num2 >= 0) ==> (num1 <= Integer.MAX_VALUE - num2)) &&
+      @           ((num2 <= 0) ==> (num1 >= Integer.MIN_VALUE - num2));
+      @
+      @ // Prevent overflow/underflow for subtraction
+      @ requires (operator == '-') ==>
+      @           ((num2 >= 0) ==> (num1 >= Integer.MIN_VALUE + num2)) &&
+      @           ((num2 <= 0) ==> (num1 <= Integer.MAX_VALUE + num2));
+      @
+      @ // Prevent overflow for multiplication.
+      @ // Treat the problematic -1 * Integer.MIN_VALUE case explicitly to avoid overflow
+      @ // in the specification arithmetic (Integer.MIN_VALUE / -1).
+      @ requires (operator == '*') ==>
+      @           ( num1 == 0
+      @           || num1 == -1 && num2 != Integer.MIN_VALUE
+      @           || (num1 != -1 && (Integer.MIN_VALUE / num1 <= num2 && num2 <= Integer.MAX_VALUE / num1))
+      @           );
+      @
+      @ assigns \nothing;
+      @
+      @ // For each recognized operator, state the exact result
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ // For any unrecognized operator, the method returns -1
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:40: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static int calculate(int num1, int num2, char operator) {
+                      ^
+1 verification failure
+==============================================
+--------------- Iteration 7 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Calculator1 {
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Behaviors for each recognized operator with overflow/zero-safety preconditions
+      @ 
+      @ // Addition: require that the mathematical sum fits into an int
+      @ requires operator == '+';
+      @ requires ((long)num1 + (long)num2) >= Integer.MIN_VALUE && ((long)num1 + (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 + num2;
+      @ also
+      @ // Subtraction: require that the mathematical difference fits into an int
+      @ requires operator == '-';
+      @ requires ((long)num1 - (long)num2) >= Integer.MIN_VALUE && ((long)num1 - (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 - num2;
+      @ also
+      @ // Multiplication: require that the mathematical product fits into an int
+      @ requires operator == '*';
+      @ requires ((long)num1 * (long)num2) >= Integer.MIN_VALUE && ((long)num1 * (long)num2) <= Integer.MAX_VALUE;
+      @ assigns \nothing;
+      @ ensures \result == num1 * num2;
+      @ also
+      @ // Division: exclude division by zero and the INT_MIN / -1 overflow case
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ requires !(num1 == Integer.MIN_VALUE && num2 == -1);
+      @ assigns \nothing;
+      @ ensures \result == num1 / num2;
+      @ also
+      @ // Modulo: exclude modulo by zero (no overflow for Java %)
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ assigns \nothing;
+      @ ensures \result == num1 % num2;
+      @ also
+      @ // Default behavior for unrecognized operator
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ assigns \nothing;
+      @ ensures \result == -1;
+      @ 
+      @ // The set of behaviors is complete and disjoint
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+Calculator1.java:43: verify: The prover cannot establish an assertion (CompletePreconditions) in method calculate
+      @ behaviors complete;
+        ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class Calculator1 {
+    /*@ 
+      @ // Global precondition: exclude division/modulo by zero (these would throw ArithmeticException)
+      @ requires (operator != '/' && operator != '%') || num2 != 0;
+      @ assigns \nothing;
+      @ 
+      @ // Addition
+      @ also
+      @ requires operator == '+';
+      @ ensures \result == num1 + num2;
+      @ 
+      @ // Subtraction
+      @ also
+      @ requires operator == '-';
+      @ ensures \result == num1 - num2;
+      @ 
+      @ // Multiplication
+      @ also
+      @ requires operator == '*';
+      @ ensures \result == num1 * num2;
+      @ 
+      @ // Division (num2 != 0 ensured by global precondition and repeated here for clarity)
+      @ also
+      @ requires operator == '/';
+      @ requires num2 != 0;
+      @ ensures \result == num1 / num2;
+      @ 
+      @ // Modulo (num2 != 0 ensured by global precondition and repeated here for clarity)
+      @ also
+      @ requires operator == '%';
+      @ requires num2 != 0;
+      @ ensures \result == num1 % num2;
+      @ 
+      @ // Default: unrecognized operator
+      @ also
+      @ requires operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%';
+      @ ensures \result == -1;
+      @ 
+      @ // The behaviors are disjoint and together cover the allowed inputs
+      @ behaviors disjoint;
+      @ behaviors complete;
+      @ pure
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+Calculator1.java:24: verify: The prover cannot establish an assertion (DisjointPreconditions: Calculator1.java:4:) in method calculate
+      @ requires operator == '/';
+        ^
+Calculator1.java:4: verify: Associated declaration: Calculator1.java:24:
+      @ requires (operator != '/' && operator != '%') || num2 != 0;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @
+      @ // Exclude the single int-division overflow case: Integer.MIN_VALUE / -1
+      @ // (also exclude the same pair for % to be conservative with the prover)
+      @ requires !((operator == '/' || operator == '%') && num1 == Integer.MIN_VALUE && num2 == -1);
+      @
+      @ // Prevent overflow/underflow for addition
+      @ requires (operator == '+') ==>
+      @           ((num2 >= 0) ==> (num1 <= Integer.MAX_VALUE - num2)) &&
+      @           ((num2 <= 0) ==> (num1 >= Integer.MIN_VALUE - num2));
+      @
+      @ // Prevent overflow/underflow for subtraction
+      @ requires (operator == '-') ==>
+      @           ((num2 >= 0) ==> (num1 >= Integer.MIN_VALUE + num2)) &&
+      @           ((num2 <= 0) ==> (num1 <= Integer.MAX_VALUE + num2));
+      @
+      @ // Prevent overflow for multiplication.
+      @ // Treat the problematic -1 * Integer.MIN_VALUE case explicitly to avoid overflow
+      @ // in the specification arithmetic (Integer.MIN_VALUE / -1).
+      @ requires (operator == '*') ==>
+      @           ( num1 == 0
+      @           || num1 == -1 && num2 != Integer.MIN_VALUE
+      @           || (num1 != -1 && (Integer.MIN_VALUE / num1 <= num2 && num2 <= Integer.MAX_VALUE / num1))
+      @           );
+      @
+      @ assigns \nothing;
+      @
+      @ // For each recognized operator, state the exact result
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ // For any unrecognized operator, the method returns -1
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+Calculator1.java:40: verify: Validity is unknown - time or memory limit reached: : Aborted proof: timeout
+    public static int calculate(int num1, int num2, char operator) {
+                      ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero (these would throw ArithmeticException)
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @ assigns \nothing;
+      @
+      @ // For each possible operator, state the exact returned int value.
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+Calculator1.java:25: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: underflow in int difference
+            output = num1 - num2;
+                          ^
+1 verification failure
+==============================================
+--------------- Iteration 8 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Sub {
+    //@ ensures \result == x - y;
+    public static int Sub(int x, int y) {
+        return x - y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Sub.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Sub: underflow in int difference
+        return x - y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Sub {
+    //@ requires Integer.MIN_VALUE <= x - y <= Integer.MAX_VALUE;
+    //@ ensures \result == x - y;
+    public static int Sub(int x, int y) {
+        return x - y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero (these would throw ArithmeticException)
+      @ requires !((operator == '/' || operator == '%') && num2 == 0);
+      @ assigns \nothing;
+      @
+      @ // For each possible operator, state the exact returned int value.
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Calculator1.java:25: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method calculate: underflow in int difference
+            output = num1 - num2;
+                          ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class Calculator1 {
+    /*@
+      @ // Exclude division/modulo by zero
+      @ requires (operator == '/' || operator == '%') ==> num2 != 0;
+      @
+      @ // Prevent overflow/underflow for each arithmetic operator by using long arithmetic in the precondition
+      @ requires (operator == '+') ==> ((long)num1 + (long)num2 >= Integer.MIN_VALUE && (long)num1 + (long)num2 <= Integer.MAX_VALUE);
+      @ requires (operator == '-') ==> ((long)num1 - (long)num2 >= Integer.MIN_VALUE && (long)num1 - (long)num2 <= Integer.MAX_VALUE);
+      @ requires (operator == '*') ==> ((long)num1 * (long)num2 >= Integer.MIN_VALUE && (long)num1 * (long)num2 <= Integer.MAX_VALUE);
+      @ // Division: exclude division by zero and the special overflow case Integer.MIN_VALUE / -1
+      @ requires (operator == '/') ==> (num2 != 0 && !(num1 == Integer.MIN_VALUE && num2 == -1));
+      @
+      @ assigns \nothing;
+      @
+      @ // For each possible operator, state the exact returned int value.
+      @ ensures (operator == '+') ==> \result == num1 + num2;
+      @ ensures (operator == '-') ==> \result == num1 - num2;
+      @ ensures (operator == '*') ==> \result == num1 * num2;
+      @ ensures (operator == '/') ==> \result == num1 / num2;
+      @ ensures (operator == '%') ==> \result == num1 % num2;
+      @ ensures (operator != '+' && operator != '-' && operator != '*' && operator != '/' && operator != '%') ==> \result == -1;
+      @*/
+    public static int calculate(int num1, int num2, char operator) {
+
+        int output;
+
+        switch (operator) {
+        case '+':
+            output = num1 + num2;
+            break;
+
+        case '-':
+            output = num1 - num2;
+            break;
+
+        case '*':
+            output = num1 * num2;
+            break;
+
+        case '/':
+            output = num1 / num2;
+            break;
+
+        case '%':
+            output = num1 % num2;
+            break;
+
+        default:
+            return -1;
+        }
+        return output;
+    }
+}
+```
+
+Finished. Verifier invoked 9 times
+--- Elapsed time: 845 seconds ---
+Success

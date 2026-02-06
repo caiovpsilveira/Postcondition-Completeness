@@ -1,0 +1,3580 @@
+--input dataset_v1_no_annotations/hard/MatrixSum.java
+--max_gen_iterations 10
+--model gpt-5-mini-2025-08-07
+--temperature 1.0
+--prompt_type strict
+--mutation False
+--max_mut_iterations 1000
+--embedded_compl True
+--use_nonnull_and_no_ovf_asm False
+Using OpenJML command: openjml --esc --esc-max-warnings 1 --arithmetic-failure=hard --nullable-by-default --timeout 200 
+Using completeness flags: 
+=============== Generation Phase ===============
+--------------- Iteration 1 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class MatrixSum {
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ // method does not modify any preexisting memory locations
+      @ assigns \nothing;
+      @ 
+      @ // return is a freshly allocated matrix of the same dimensions,
+      @ // whose entries are the pairwise sums of a and b
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:37: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method matrixSum
+            //@ loop_writes c[i][*], j;
+                            ^
+1 verification failure
+==============================================
+--------------- Iteration 2 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class MatrixSum {
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ // method does not modify any preexisting memory locations
+      @ assigns \nothing;
+      @ 
+      @ // return is a freshly allocated matrix of the same dimensions,
+      @ // whose entries are the pairwise sums of a and b
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:37: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method matrixSum
+            //@ loop_writes c[i][*], j;
+                            ^
+1 verification failure
+
+Please generate again.
+
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ assigns \nothing;
+      @ 
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:44: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:17:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:17: verify: Associated declaration: MatrixSum.java:44:
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 3 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class MatrixSum {
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ // method does not modify any preexisting memory locations
+      @ assigns \nothing;
+      @ 
+      @ // return is a freshly allocated matrix of the same dimensions,
+      @ // whose entries are the pairwise sums of a and b
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:37: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method matrixSum
+            //@ loop_writes c[i][*], j;
+                            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ assigns \nothing;
+      @ 
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:44: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:17:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:17: verify: Associated declaration: MatrixSum.java:44:
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ // Preconditions: no nulls, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @ 
+      @ // The method only allocates and writes the returned matrix and its contents.
+      @ // We list the exact locations that may be assigned.
+      @ assigns \result, \result[*], \result[*][*];
+      @ 
+      @ // The result is a freshly allocated matrix of the same dimensions whose
+      @ // entries are the pointwise sums of a and b. Also ensure there is no
+      @ // aliasing with the input matrices' rows.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                 ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                          ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                                      ^
+3 errors
+==============================================
+--------------- Iteration 4 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class MatrixSum {
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ // method does not modify any preexisting memory locations
+      @ assigns \nothing;
+      @ 
+      @ // return is a freshly allocated matrix of the same dimensions,
+      @ // whose entries are the pairwise sums of a and b
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:37: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method matrixSum
+            //@ loop_writes c[i][*], j;
+                            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ assigns \nothing;
+      @ 
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:44: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:17:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:17: verify: Associated declaration: MatrixSum.java:44:
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ // Preconditions: no nulls, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @ 
+      @ // The method only allocates and writes the returned matrix and its contents.
+      @ // We list the exact locations that may be assigned.
+      @ assigns \result, \result[*], \result[*][*];
+      @ 
+      @ // The result is a freshly allocated matrix of the same dimensions whose
+      @ // entries are the pointwise sums of a and b. Also ensure there is no
+      @ // aliasing with the input matrices' rows.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                 ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                          ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                                      ^
+3 errors
+
+Please generate again.
+
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The method does not modify any pre-existing memory location.
+      @ assigns \nothing;
+      @
+      @ // The result is a freshly allocated matrix with the same dimensions,
+      @ // and each entry is the pointwise sum of a and b (from the pre-state).
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:43: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+==============================================
+--------------- Iteration 5 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Add {
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Add.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Add: underflow in int sum
+        return x + y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Add {
+    //@ requires Integer.MIN_VALUE <= x + y <= Integer.MAX_VALUE;
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The method does not modify any pre-existing memory location.
+      @ assigns \nothing;
+      @
+      @ // The result is a freshly allocated matrix with the same dimensions,
+      @ // and each entry is the pointwise sum of a and b (from the pre-state).
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+MatrixSum.java:43: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The pointwise sums must fit in a Java int (prevent overflow/underflow).
+      @ requires (\forall int i, j;
+      @              0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @              Integer.MIN_VALUE <= a[i][j] + b[i][j] && a[i][j] + b[i][j] <= Integer.MAX_VALUE);
+      @
+      @ // The method does not modify any pre-existing memory location.
+      @ assigns \nothing;
+      @
+      @ // The result is a freshly allocated matrix with the same dimensions,
+      @ // each row is freshly allocated, and each entry is the pointwise sum
+      @ // of a and b (from the pre-state). No aliasing with the inputs.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:55: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:27:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:27: verify: Associated declaration: MatrixSum.java:55:
+      @ ensures (\forall int i, j;
+        ^
+2 verification failures
+==============================================
+--------------- Iteration 6 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class MatrixSum {
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ // method does not modify any preexisting memory locations
+      @ assigns \nothing;
+      @ 
+      @ // return is a freshly allocated matrix of the same dimensions,
+      @ // whose entries are the pairwise sums of a and b
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:37: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method matrixSum
+            //@ loop_writes c[i][*], j;
+                            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ assigns \nothing;
+      @ 
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:44: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:17:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:17: verify: Associated declaration: MatrixSum.java:44:
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ // Preconditions: no nulls, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @ 
+      @ // The method only allocates and writes the returned matrix and its contents.
+      @ // We list the exact locations that may be assigned.
+      @ assigns \result, \result[*], \result[*][*];
+      @ 
+      @ // The result is a freshly allocated matrix of the same dimensions whose
+      @ // entries are the pointwise sums of a and b. Also ensure there is no
+      @ // aliasing with the input matrices' rows.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                 ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                          ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                                      ^
+3 errors
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The pointwise sums must fit in a Java int (prevent overflow/underflow).
+      @ requires (\forall int i, j;
+      @              0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @              Integer.MIN_VALUE <= a[i][j] + b[i][j] && a[i][j] + b[i][j] <= Integer.MAX_VALUE);
+      @
+      @ // The method does not modify any pre-existing memory location.
+      @ assigns \nothing;
+      @
+      @ // The result is a freshly allocated matrix with the same dimensions,
+      @ // each row is freshly allocated, and each entry is the pointwise sum
+      @ // of a and b (from the pre-state). No aliasing with the inputs.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:55: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:27:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:27: verify: Associated declaration: MatrixSum.java:55:
+      @ ensures (\forall int i, j;
+        ^
+2 verification failures
+
+Please generate again.
+
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Do not modify any pre-existing memory locations (we only allocate and
+      @ // write the freshly created result).
+      @ assigns \nothing;
+      @
+      @ // Result is a freshly allocated matrix with same dimensions; each row is
+      @ // freshly allocated and contains the pointwise sums of a and b.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == a.length;
+      @ ensures (\forall int i; 0 <= i && i < a.length; \fresh(\result[i]) && \result[i].length == a[0].length);
+      @ ensures (\forall int i; 0 <= i && i < a.length; \result[i] != a[i] && \result[i] != b[i]);
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @            \result[i][j] == a[i][j] + b[i][j]);
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@ 
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:49: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+==============================================
+--------------- Iteration 7 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Add {
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Add.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Add: underflow in int sum
+        return x + y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Add {
+    //@ requires Integer.MIN_VALUE <= x + y <= Integer.MAX_VALUE;
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Do not modify any pre-existing memory locations (we only allocate and
+      @ // write the freshly created result).
+      @ assigns \nothing;
+      @
+      @ // Result is a freshly allocated matrix with same dimensions; each row is
+      @ // freshly allocated and contains the pointwise sums of a and b.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == a.length;
+      @ ensures (\forall int i; 0 <= i && i < a.length; \fresh(\result[i]) && \result[i].length == a[0].length);
+      @ ensures (\forall int i; 0 <= i && i < a.length; \result[i] != a[i] && \result[i] != b[i]);
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @            \result[i][j] == a[i][j] + b[i][j]);
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@ 
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+MatrixSum.java:49: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: Updated JML-only specification (I did not change the Java code, only the JML annotations). I replaced the incorrect frame condition and added a precondition that guarantees each elementwise sum fits into a Java int (so the prover can establish the arithmetic operation is safe).
+
+```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The elementwise sums must be representable as Java ints (no overflow/underflow)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= a[i][j] + b[i][j] &&
+      @                a[i][j] + b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we only create and initialize the result matrix
+      @ assigns \result, \result[*], \result[*][*];
+      @
+      @ // Result is a freshly allocated matrix with same dimensions; each row is
+      @ // freshly allocated and contains the pointwise sums of a and b.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == a.length;
+      @ ensures (\forall int i; 0 <= i && i < a.length; \fresh(\result[i]) && \result[i].length == a[0].length);
+      @ ensures (\forall int i; 0 <= i && i < a.length; \result[i] != a[i] && \result[i] != b[i]);
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @            \result[i][j] == a[i][j] + b[i][j]);
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@ 
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:18: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                 ^
+MatrixSum.java:18: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                          ^
+MatrixSum.java:18: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                                      ^
+3 errors
+==============================================
+--------------- Iteration 8 ---------------
+system: You are a JML specification generator for java programs.
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Abs1 {
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Abs1 {
+    //@ requires x != Integer.MIN_VALUE;
+    //@ assigns \nothing;
+    //@ ensures \result == (x >= 0 ? x : -x);
+    public static int abs(int x) {
+        if (x >= 0)
+            return x;
+        return -x;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class DivArrayByTwo {
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class DivArrayByTwo {
+    //@  requires arr == null;
+    //@  assigns \nothing;
+    //@ also
+    //@  requires arr != null;
+    //@  assigns arr[*];
+    //@  ensures \forall int i; 0 <= i < arr.length; arr[i] == \old(arr[i]) / 2;
+    //@ behaviors complete;
+    //@ behaviors disjoint;
+    public static void DivArrayByTwo(int[] arr) {
+        if (arr == null)
+            return;
+
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] == \old(arr[j]) / 2;
+        //@ maintaining \forall int k; i <= k < arr.length; arr[k] == \old(arr[k]);
+        //@ loop_writes arr[*], i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; ++i) {
+            arr[i] = arr[i] / 2;
+        }
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class IsPrefix {
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class IsPrefix {
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() <= txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == (\forall int i; 0 <= i < pat.length(); pat.charAt(i) == txt.charAt(i));
+    //@ also
+    //@  requires pat != null;
+    //@  requires txt != null;
+    //@  requires pat.length() > txt.length();
+    //@  assigns \nothing;
+    //@  ensures \result == false;
+    //@ behaviors disjoint;
+    public static boolean isPrefix(String pat, String txt) {
+        if (pat.length() > txt.length())
+            return false;
+
+        int i = 0;
+        //@ maintaining 0 <= i <= pat.length();
+        //@ maintaining \forall int j; 0 <= j < i; pat.charAt(j) == txt.charAt(j);
+        //@ loop_writes i;
+        //@ decreases pat.length() - i;
+        while (i < pat.length()) {
+            if (pat.charAt(i) != txt.charAt(i))
+                return false;
+            i = i + 1;
+        }
+
+        return true;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class Find {
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class Find {
+    //@  requires arr != null;
+    //@  requires \exists int i; 0 <= i < arr.length; arr[i] == elem;
+    //@  assigns \nothing;
+    //@  ensures 0 <= \result < arr.length;
+    //@  ensures \forall int i; 0 <= i < \result; arr[i] != elem;
+    //@  ensures arr[\result] == elem;
+    //@ also
+    //@  requires arr == null || \forall int i; 0 <= i < arr.length; arr[i] != elem;
+    //@  assigns \nothing;
+    //@  ensures \result == -1;
+    //@ behaviors disjoint;
+    //@ behaviors complete;
+    //@ pure
+    public static int find(int[] arr, int elem) {
+        if (arr == null)
+            return -1;
+        //@ maintaining 0 <= i <= arr.length;
+        //@ maintaining \forall int j; 0 <= j < i; arr[j] != elem;
+        //@ loop_writes i;
+        //@ decreases arr.length - i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == elem)
+                return i;
+        return -1;
+    }
+}
+
+```
+user: 
+Please generate JML specifications for the Java program given below.
+```
+public class MatrixSum {
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+
+```
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ // method does not modify any preexisting memory locations
+      @ assigns \nothing;
+      @ 
+      @ // return is a freshly allocated matrix of the same dimensions,
+      @ // whose entries are the pairwise sums of a and b
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:37: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method matrixSum
+            //@ loop_writes c[i][*], j;
+                            ^
+1 verification failure
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null);
+      @ requires b.length == a.length;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i].length == a[0].length);
+      @ 
+      @ assigns \nothing;
+      @ 
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:44: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:17:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:17: verify: Associated declaration: MatrixSum.java:44:
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@ 
+      @ // Preconditions: no nulls, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @ 
+      @ // The method only allocates and writes the returned matrix and its contents.
+      @ // We list the exact locations that may be assigned.
+      @ assigns \result, \result[*], \result[*][*];
+      @ 
+      @ // The result is a freshly allocated matrix of the same dimensions whose
+      @ // entries are the pointwise sums of a and b. Also ensure there is no
+      @ // aliasing with the input matrices' rows.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j; 0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length);
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length);
+      @            \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                 ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                          ^
+MatrixSum.java:13: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                                      ^
+3 errors
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The pointwise sums must fit in a Java int (prevent overflow/underflow).
+      @ requires (\forall int i, j;
+      @              0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @              Integer.MIN_VALUE <= a[i][j] + b[i][j] && a[i][j] + b[i][j] <= Integer.MAX_VALUE);
+      @
+      @ // The method does not modify any pre-existing memory location.
+      @ assigns \nothing;
+      @
+      @ // The result is a freshly allocated matrix with the same dimensions,
+      @ // each row is freshly allocated, and each entry is the pointwise sum
+      @ // of a and b (from the pre-state). No aliasing with the inputs.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures \result != a && \result != b;
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        //@ maintaining 0 <= i && i <= n;
+        //@ maintaining c != null && c.length == n;
+        //@ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+        //@ maintaining (\forall int ii; 0 <= ii && ii < i; (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+        //@ loop_writes c[*][*], i;
+        //@ decreases n - i;
+        for (int i = 0; i < n; i++) {
+            //@ maintaining 0 <= j && j <= m;
+            //@ maintaining c[i] != null && c[i].length == m;
+            //@ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+            //@ loop_writes c[i][*], j;
+            //@ decreases m - j;
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:55: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:27:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:27: verify: Associated declaration: MatrixSum.java:55:
+      @ ensures (\forall int i, j;
+        ^
+2 verification failures
+
+Please generate again.
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // The elementwise sums must be representable as Java ints (no overflow/underflow)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= a[i][j] + b[i][j] &&
+      @                a[i][j] + b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we only create and initialize the result matrix
+      @ assigns \result, \result[*], \result[*][*];
+      @
+      @ // Result is a freshly allocated matrix with same dimensions; each row is
+      @ // freshly allocated and contains the pointwise sums of a and b.
+      @ ensures \fresh(\result);
+      @ ensures \result.length == a.length;
+      @ ensures (\forall int i; 0 <= i && i < a.length; \fresh(\result[i]) && \result[i].length == a[0].length);
+      @ ensures (\forall int i; 0 <= i && i < a.length; \result[i] != a[i] && \result[i] != b[i]);
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < a.length && 0 <= j && j < a[0].length ==>
+      @            \result[i][j] == a[i][j] + b[i][j]);
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@ 
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+user: 
+Your specification got the following error information:
+
+MatrixSum.java:18: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                 ^
+MatrixSum.java:18: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                          ^
+MatrixSum.java:18: error: A \result expression may not be in a assignable clause
+      @ assigns \result, \result[*], \result[*][*];
+                                      ^
+3 errors
+
+Please generate again.
+
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Optional: ensure sums fit in int (avoids overflow reasoning)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= a[i][j] + b[i][j] &&
+      @                a[i][j] + b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we do not modify any pre-existing memory locations.
+      @ assigns \nothing;
+      @
+      @ // Result is fresh, properly sized, rows are fresh, and entries are pointwise sums
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@
+          @ // Relate locals n,m to the input arrays so the prover can connect
+          @ // loop invariants to the ensures clauses.
+          @ maintaining n == a.length && m == a[0].length;
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:56: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+==============================================
+--------------- Iteration 9 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Add {
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Add.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Add: underflow in int sum
+        return x + y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Add {
+    //@ requires Integer.MIN_VALUE <= x + y <= Integer.MAX_VALUE;
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Optional: ensure sums fit in int (avoids overflow reasoning)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= a[i][j] + b[i][j] &&
+      @                a[i][j] + b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we do not modify any pre-existing memory locations.
+      @ assigns \nothing;
+      @
+      @ // Result is fresh, properly sized, rows are fresh, and entries are pointwise sums
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@
+          @ // Relate locals n,m to the input arrays so the prover can connect
+          @ // loop invariants to the ensures clauses.
+          @ maintaining n == a.length && m == a[0].length;
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+MatrixSum.java:56: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Ensure sums fit in int (avoid overflow/underflow reasoning by doing the
+      @ // check in long arithmetic so the prover can validate safety of the int addition)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= (long)a[i][j] + (long)b[i][j] &&
+      @                (long)a[i][j] + (long)b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we do not modify any pre-existing memory locations.
+      @ assigns \nothing;
+      @
+      @ // Result is fresh, properly sized, rows are fresh, and entries are pointwise sums
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@
+          @ // Relate locals n,m to the input arrays so the prover can connect
+          @ // loop invariants to the ensures clauses.
+          @ maintaining n == a.length && m == a[0].length;
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:57: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+==============================================
+--------------- Iteration 10 ---------------
+system: You are an JML specification generator for java programs.
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class Add {
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+Add.java:4: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method Add: underflow in int sum
+        return x + y;
+                 ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+assistant: ```
+public class Add {
+    //@ requires Integer.MIN_VALUE <= x + y <= Integer.MAX_VALUE;
+    //@ ensures \result == x + y;
+    public static int Add(int x, int y) {
+        return x + y;
+    }
+}
+```
+user: 
+The following Java code is instrumented with JML specifications:
+```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Ensure sums fit in int (avoid overflow/underflow reasoning by doing the
+      @ // check in long arithmetic so the prover can validate safety of the int addition)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= (long)a[i][j] + (long)b[i][j] &&
+      @                (long)a[i][j] + (long)b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we do not modify any pre-existing memory locations.
+      @ assigns \nothing;
+      @
+      @ // Result is fresh, properly sized, rows are fresh, and entries are pointwise sums
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@
+          @ // Relate locals n,m to the input arrays so the prover can connect
+          @ // loop invariants to the ensures clauses.
+          @ maintaining n == a.length && m == a[0].length;
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+Verifier failed to verify the specifications given above, with the following error information:
+
+MatrixSum.java:57: verify: The prover cannot establish an assertion (ArithmeticOperationRange) in method matrixSum: underflow in int sum
+                c[i][j] = a[i][j] + b[i][j];
+                                  ^
+1 verification failure
+
+Please strengthen or correct the wrong specifications.
+Rules (apply all, exactly as written):
+- DO NOT modify the original source code. Only JML specifications are allowed to be modified.
+- Every method must have at least one postcondition ("ensures" clause). Add more if needed to strengthen the specification.
+- Every method must have a frame condition ("assigns" clause). Specify the exact frame condition or use "assigns \nothing" if no memory location is modified.
+- Every loop must have loop invariants ("maintaining" clauses).
+- Do NOT use assumptions ("assume" clause).
+- Do NOT specify exceptional behavior ("signals" clauses). Exclude all exception-causing states via preconditions ("requires" clause).
+- If the method returns a newly allocated object, state the freshness with "ensures \fresh(\result);".
+- Provide a STRONG and COMPLETE specification: cover all functional behavior, state effects, and return value. The specification must contain enough detail to allow to reconstruct the original code unambiguously.
+To avoid integer underflow in arithmetic operation, you can add a precondition ("requires") to propagate the requirement to the caller, to guarantee that the operation result is within expressable range (smaller than maximum value and bigger than minimum value)
+
+assistant: ```
+public class MatrixSum {
+    /*@
+      @ // Preconditions: non-null, rectangular matrices of equal size
+      @ requires a != null;
+      @ requires b != null;
+      @ requires a.length > 0;
+      @ requires (\forall int i; 0 <= i && i < a.length; a[i] != null && a[i].length == a[0].length);
+      @ requires (\forall int i; 0 <= i && i < b.length; b[i] != null && b[i].length == a[0].length);
+      @ requires b.length == a.length;
+      @
+      @ // Ensure sums fit in int (avoid overflow/underflow reasoning by doing the
+      @ // check in long arithmetic so the prover can validate safety of the int addition)
+      @ requires (\forall int i; 0 <= i && i < a.length;
+      @             (\forall int j; 0 <= j && j < a[0].length;
+      @                Integer.MIN_VALUE <= (long)a[i][j] + (long)b[i][j] &&
+      @                (long)a[i][j] + (long)b[i][j] <= Integer.MAX_VALUE));
+      @
+      @ // Frame condition: we do not modify any pre-existing memory locations.
+      @ assigns \nothing;
+      @
+      @ // Result is fresh, properly sized, rows are fresh, and entries are pointwise sums
+      @ ensures \fresh(\result);
+      @ ensures \result.length == \old(a.length);
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \fresh(\result[i]) && \result[i].length == \old(a[0].length));
+      @ ensures (\forall int i, j;
+      @            0 <= i && i < \old(a.length) && 0 <= j && j < \old(a[0].length) ==>
+      @            \result[i][j] == \old(a[i][j]) + \old(b[i][j]));
+      @ ensures (\forall int i; 0 <= i && i < \old(a.length); \result[i] != \old(a[i]) && \result[i] != \old(b[i]));
+      @*/
+    public static int[][] matrixSum(int[][] a, int[][] b) {
+        int n = a.length;
+        int m = a[0].length;
+
+        int[][] c = new int[n][m];
+
+        /*@
+          @ // Relate locals n,m to the input arrays so the prover can connect
+          @ // loop invariants to the ensures clauses.
+          @ maintaining n == a.length && m == a[0].length;
+          @ maintaining 0 <= i && i <= n;
+          @ maintaining c != null && c.length == n;
+          @ maintaining (\forall int ii; 0 <= ii && ii < n; c[ii] != null && c[ii].length == m);
+          @ maintaining (\forall int ii; 0 <= ii && ii < i;
+          @                (\forall int jj; 0 <= jj && jj < m; c[ii][jj] == a[ii][jj] + b[ii][jj]));
+          @ // Make the integer-safety precondition available inside the loop:
+          @ maintaining (\forall int ii; 0 <= ii && ii < n;
+          @                (\forall int jj; 0 <= jj && jj < m;
+          @                   Integer.MIN_VALUE <= (long)a[ii][jj] + (long)b[ii][jj] &&
+          @                   (long)a[ii][jj] + (long)b[ii][jj] <= Integer.MAX_VALUE));
+          @ loop_writes c[*][*], i;
+          @ decreases n - i;
+          @*/
+        for (int i = 0; i < n; i++) {
+            /*@
+              @ maintaining 0 <= j && j <= m;
+              @ maintaining c[i] != null && c[i].length == m;
+              @ maintaining (\forall int jj; 0 <= jj && jj < j; c[i][jj] == a[i][jj] + b[i][jj]);
+              @ // Also keep the int-safety property visible inside the inner loop:
+              @ maintaining (\forall int ii; 0 <= ii && ii < n;
+              @                (\forall int jj; 0 <= jj && jj < m;
+              @                   Integer.MIN_VALUE <= (long)a[ii][jj] + (long)b[ii][jj] &&
+              @                   (long)a[ii][jj] + (long)b[ii][jj] <= Integer.MAX_VALUE));
+              @ loop_writes c[i][*], j;
+              @ decreases m - j;
+              @*/
+            for (int j = 0; j < m; j++) {
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+
+        return c;
+    }
+}
+```
+
+Explanation of the changes:
+- The original method precondition that every pairwise sum fits into an int is preserved.
+- To help the prover apply that precondition at each assignment inside the nested loops, the same per-entry int-safety property is reiterated as loop invariants (both in the outer and inner loops). This makes the needed fact locally available when verifying c[i][j] = a[i][j] + b[i][j], avoiding the ArithmeticOperationRange failure.
+- The method keeps assigns \nothing because only freshly allocated memory (the result array and its contents) is written; no pre-existing locations are modified.
+
+==== Gen Iteration finished with err_info ====
+MatrixSum.java:71: verify: The prover cannot establish an assertion (Postcondition: MatrixSum.java:25:) in method matrixSum
+        return c;
+        ^
+MatrixSum.java:25: verify: Associated declaration: MatrixSum.java:71:
+      @ ensures (\forall int i, j;
+        ^
+2 verification failures
+==============================================
+
+Finished. Verifier invoked 10 times
+--- Elapsed time: 600 seconds ---
+Failure
