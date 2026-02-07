@@ -409,6 +409,69 @@ def see_impact_of_embedded_compl(df):
     out.index.name = None
     return out
 
+def overall_time_avg(df):
+    """
+    Compute the average time per experiment.
+    Returns a DataFrame with columns ['experiment', 'time_avg'].
+    """
+    required = {'experiment', 'time'}
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise KeyError(f"Missing required columns: {missing}")
+
+    tmp = df.copy()
+    tmp['time'] = pd.to_numeric(tmp['time'], errors='coerce')
+
+    out = tmp.groupby('experiment', sort=False)['time'].mean().reset_index()
+    out.columns = ['experiment', 'time_avg']
+
+    def exp_key(x):
+        try:
+            return int(x.replace('exp', ''))
+        except Exception:
+            return x
+    out['_order'] = out['experiment'].apply(exp_key)
+    out = out.sort_values('_order').drop(columns=['_order']).reset_index(drop=True)
+
+    out.columns.name = None
+    out.index.name = None
+    return out
+
+
+def avg_time_per_difficulty(df):
+    """
+    Compute the average time per experiment and difficulty.
+    Returns a DataFrame with columns ['experiment', 'difficulty', 'time_avg'].
+    """
+    required = {'experiment', 'difficulty', 'time'}
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise KeyError(f"Missing required columns: {missing}")
+
+    tmp = df.copy()
+    tmp['time'] = pd.to_numeric(tmp['time'], errors='coerce')
+    tmp['difficulty'] = tmp['difficulty'].astype(str).str.strip()
+
+    out = tmp.groupby(['experiment', 'difficulty'], sort=False)['time'].mean().reset_index()
+    out.columns = ['experiment', 'difficulty', 'time_avg']
+
+    def exp_key(x):
+        try:
+            return int(x.replace('exp', ''))
+        except Exception:
+            return x
+    diff_order = {'easy': 0, 'medium': 1, 'hard': 2}
+    out['_exp_order'] = out['experiment'].apply(exp_key)
+    out['_diff_order'] = out['difficulty'].map(diff_order).fillna(99)
+    out = (out.sort_values(['_exp_order', '_diff_order'])
+              .drop(columns=['_exp_order', '_diff_order'])
+              .reset_index(drop=True))
+
+    out.columns.name = None
+    out.index.name = None
+    return out
+
+
 def number_of_times_llm_gave_up(df):
     """
     For each 'result': failure, valid, complete, complete_gt, grouped by difficulty: 'easy', 'medium', 'hard'
@@ -545,6 +608,16 @@ if __name__ == '__main__':
         default=None,
         help="Output path for completeness.csv (default: <all_results>/completeness.csv)",
     )
+    parser.add_argument(
+        "--overall_time_avg_csv",
+        default=None,
+        help="Output path for overall_time_avg.csv (default: <all_results>/overall_time_avg.csv)",
+    )
+    parser.add_argument(
+        "--time_avg_per_difficulty_csv",
+        default=None,
+        help="Output path for time_avg_per_difficulty.csv (default: <all_results>/time_avg_per_difficulty.csv)",
+    )
     args = parser.parse_args()
 
     combined_csv = args.combined_csv or os.path.join(args.all_results, 'combined_results.csv')
@@ -552,10 +625,12 @@ if __name__ == '__main__':
     overall_csv = args.overall_csv or os.path.join(args.all_results, 'overall_results.csv')
     mutation_csv = args.mutation_csv or os.path.join(args.all_results, 'mutation.csv')
     completeness_csv = args.completeness_csv or os.path.join(args.all_results, 'completeness.csv')
+    overall_time_avg_csv = args.overall_time_avg_csv or os.path.join(args.all_results, 'overall_time_avg.csv')
+    time_avg_per_difficulty_csv = args.time_avg_per_difficulty_csv or os.path.join(args.all_results, 'time_avg_per_difficulty.csv')
 
     # If not appending, clear outputs once per run.
     if not args.append:
-        for p in [combined_csv, grouped_csv, overall_csv, mutation_csv, completeness_csv]:
+        for p in [combined_csv, grouped_csv, overall_csv, mutation_csv, completeness_csv, overall_time_avg_csv, time_avg_per_difficulty_csv]:
             try:
                 if os.path.exists(p):
                     os.remove(p)
@@ -625,6 +700,28 @@ if __name__ == '__main__':
             impacted_by_embedded_compl,
             completeness_csv,
             ['experiment', 'difficulty', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl'],
+            append=True,
+        )
+
+        # Compute and write overall time average
+        time_avg_overall_df = overall_time_avg(df)
+        print('Overall time average')
+        print(time_avg_overall_df.to_csv(sep=',', index=False))
+        _append_csv(
+            time_avg_overall_df,
+            overall_time_avg_csv,
+            ['experiment', 'time_avg'],
+            append=True,
+        )
+
+        # Compute and write time average per difficulty
+        time_avg_diff_df = avg_time_per_difficulty(df)
+        print('Average time per difficulty')
+        print(time_avg_diff_df.to_csv(sep=',', index=False))
+        _append_csv(
+            time_avg_diff_df,
+            time_avg_per_difficulty_csv,
+            ['experiment', 'difficulty', 'time_avg'],
             append=True,
         )
 
