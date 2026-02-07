@@ -30,17 +30,38 @@ def _parse_experiment_number(experiment: str):
     return None
 
 
+def _validate_consistent_sample_counts(df: pd.DataFrame) -> None:
+    """Ensure every experiment has the same number of samples for each difficulty."""
+    cats = ['failure', 'valid', 'complete', 'complete_gt']
+    if not all(c in df.columns for c in cats):
+        return
+    tmp = df.copy()
+    tmp['_total'] = tmp[cats].sum(axis=1)
+    for diff, group in tmp.groupby('difficulty'):
+        unique_totals = group['_total'].unique()
+        if len(unique_totals) > 1:
+            details = dict(zip(group['experiment'], group['_total']))
+            raise ValueError(
+                f"Inconsistent sample counts for difficulty '{diff}': {details}. "
+                f"All experiments must have the same number of samples per difficulty."
+            )
+
+
 def _resolve_input_to_grouped_df(input_path: str) -> pd.DataFrame:
     """Load grouped classification-only results from a CSV or from an all_results directory."""
     if os.path.isfile(input_path):
-        return pd.read_csv(input_path)
+        result = pd.read_csv(input_path)
+        _validate_consistent_sample_counts(result)
+        return result
 
     if not os.path.isdir(input_path):
         raise FileNotFoundError(f"Input path not found: {input_path}")
 
     grouped_candidate = os.path.join(input_path, 'grouped_data_classification_only.csv')
     if os.path.isfile(grouped_candidate):
-        return pd.read_csv(grouped_candidate)
+        result = pd.read_csv(grouped_candidate)
+        _validate_consistent_sample_counts(result)
+        return result
 
     # Otherwise, attempt to build from results_E*/experiments_results.csv.
     rows = []
@@ -80,6 +101,7 @@ def _resolve_input_to_grouped_df(input_path: str) -> pd.DataFrame:
     out = counts.reset_index()
     out.columns.name = None
     out.index.name = None
+    _validate_consistent_sample_counts(out)
     return out
 
 def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None = None, out_dir: str = 'figures'):
@@ -158,11 +180,12 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
     categories_colors = ["#d55e00", "#f0e442", "#0072b2", "#009e73"]
     categories_colors = [lighten_color(c, 0.3) for c in categories_colors]
 
-    num_samples_by_difficulty = {
-        'easy': 140,
-        'medium': 160,
-        'hard': 20
-    }
+    num_samples_by_difficulty = {}
+    for diff in difficulties:
+        diff_rows = df[df['difficulty'] == diff]
+        if not diff_rows.empty:
+            totals = diff_rows[categories].sum(axis=1)
+            num_samples_by_difficulty[diff] = int(totals.iloc[0])
 
     # Make a 100% stacked bar chart
     # The stacks must be in the following order (bottom to top):
@@ -426,10 +449,10 @@ if __name__ == '__main__':
     parser.add_argument(
         'input',
         nargs='?',
-        default='exp_results/grouped_data_classification_only.csv',
+        default='all_results/grouped_data_classification_only.csv',
         help=(
             "Path to grouped_data_classification_only.csv OR an all_results directory containing results_E* directories. "
-            "Default: exp_results/grouped_data_classification_only.csv"
+            "Default: all_results/grouped_data_classification_only.csv"
         ),
     )
     parser.add_argument(
