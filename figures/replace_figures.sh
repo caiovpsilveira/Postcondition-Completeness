@@ -26,6 +26,8 @@ for fig in 3_4.pdf 8_9.pdf 13_14.pdf; do
   mv "figures/$fig" "figures/impact_mutation/$fig"
 done
 
-for fig in 4_5.pdf 6_7.pdf 9_10.pdf 11_12.pdf 14_15.pdf 16_17.pdf; do
+# removed EC impact figures, as we want to focus only on the prompt influence
+#for fig in 4_5.pdf 6_7.pdf 9_10.pdf 11_12.pdf 14_15.pdf 16_17.pdf; do
+for fig in 4_5.pdf 9_10.pdf 14_15.pdf; do
   mv "figures/$fig" "figures/prompt_influence/$fig"
 done

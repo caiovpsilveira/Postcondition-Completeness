@@ -416,13 +416,13 @@ if __name__ == '__main__':
         ['exp8', 'exp9'],
         ['exp13', 'exp14'],
 
-        #2. impact of the prompt
+        #2. impact of the prompt. (removed EC pairs, as we want to focus only on the prompt influence)
         ['exp4', 'exp5'],
-        ['exp6', 'exp7'],
+        #['exp6', 'exp7'],
         ['exp9', 'exp10'],
-        ['exp11', 'exp12'],
+        #['exp11', 'exp12'],
         ['exp14', 'exp15'],
-        ['exp16', 'exp17'],
+        #['exp16', 'exp17'],
 
         #3. impact of the embedded completeness
         ['exp4', 'exp6'],
