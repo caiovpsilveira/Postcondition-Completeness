@@ -79,10 +79,10 @@ if __name__ == '__main__':
     parser.add_argument(
         'input',
         nargs='?',
-        default='exp_results/combined_results.csv',
+        default='all_results/combined_results.csv',
         help=(
             "Path to combined_results.csv OR an all_results directory containing results_E* directories. "
-            "Default: exp_results/combined_results.csv"
+            "Default: all_results/combined_results.csv"
         ),
     )
     parser.add_argument(
