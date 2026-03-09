@@ -276,8 +276,8 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
         # Cumulative bottom for stacking
         bottoms = np.zeros(len(sub))
-        # Alternate vertical offset for each outside arrow in this section
-        arrow_index = 0
+        # Alternate vertical offset for each outside arrow per bar
+        arrow_index = [0] * len(sub)
 
         # Stacked bars in required order (failure, valid, complete, complete_gt)
         for cat, color in zip(categories, categories_colors):
@@ -288,7 +288,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
             )
 
             # Percentage labels: inside if >= threshold, otherwise outside with arrow
-            for rect, h, b in zip(bars, heights, bottoms):
+            for bar_i, (rect, h, b) in enumerate(zip(bars, heights, bottoms)):
                 if h >= PERCENTAGE_LABEL_THRESHHOLD:
                     ax.text(
                         rect.get_x() + rect.get_width() / 2.0,
@@ -310,7 +310,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
                         x_off = OUTSIDE_LABEL_OFFSET_POINTS
                         ha = 'left'
                     # Alternate Y offset: -Y, 0, Y, ...
-                    y_sign = -1 if (arrow_index % 3 == 0) else 0 if (arrow_index % 3 == 1) else 1
+                    y_sign = -1 if (arrow_index[bar_i] % 3 == 0) else 0 if (arrow_index[bar_i] % 3 == 1) else 1
                     y_off = y_sign * OUTSIDE_LABEL_Y_OFFSET_POINTS
                     ann = ax.annotate(
                         f"{h:.1f}%",
@@ -332,7 +332,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
                     # Add light stroke for readability over grid
                     ann.set_path_effects([pe.withStroke(linewidth=2, foreground='white')])
-            arrow_index += 1
+                    arrow_index[bar_i] += 1
             bottoms += heights
 
         # X ticks as experiment short names
