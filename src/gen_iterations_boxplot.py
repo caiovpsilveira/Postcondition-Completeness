@@ -199,7 +199,7 @@ if __name__ == '__main__':
             labels.append(exp_label)
             exp_center_positions[exp_label] = base_x
 
-        plt.figure(figsize=(18, 8))
+        plt.figure(figsize=(7.16, 4.0))
         ax = plt.gca()
         bp = ax.boxplot(
             box_data,
@@ -207,22 +207,22 @@ if __name__ == '__main__':
             widths=width,
             patch_artist=True,
             manage_ticks=False,
-            flierprops=dict(marker='o', markersize=4, markerfacecolor='white', markeredgecolor='#666666', alpha=0.7, linestyle='none')
+            flierprops=dict(marker='o', markersize=2, markerfacecolor='white', markeredgecolor='#666666', alpha=0.7, linestyle='none')
         )
 
         # Style boxes
         for i, (_, exp_label, cat, _) in enumerate(data_entries):
             box = bp['boxes'][i]
             color = base_colors[cat]
-            box.set_facecolor(lighten_color(color, 0.65))
+            box.set_facecolor(lighten_color(color, 0.35))
             box.set_edgecolor(color)
-            box.set_linewidth(1.2)
+            box.set_linewidth(0.8)
             for w in [bp['whiskers'][2*i], bp['whiskers'][2*i+1]]:
                 w.set_color('black'); w.set_linewidth(1.5)
             for ccap in [bp['caps'][2*i], bp['caps'][2*i+1]]:
-                ccap.set_color('black'); ccap.set_linewidth(1.5)
+                ccap.set_color('black'); ccap.set_linewidth(2)
             median = bp['medians'][i]
-            median.set_color(color); median.set_linewidth(2.5)
+            median.set_color(color); median.set_linewidth(2)
 
         ordered_labels = [_experiment_display_label(n) for n in exp_nums_present]
         centers = [exp_center_positions[lbl] for lbl in ordered_labels if lbl in exp_center_positions]
@@ -230,13 +230,13 @@ if __name__ == '__main__':
         ax.set_xticks(centers)
         ax.set_xticklabels(tick_labels, rotation=0)
 
-        ax.set_xlabel('Experiment', fontsize=20)
-        ax.set_ylabel('Number of Generation Iterations', fontsize=20)
-        ax.tick_params(axis='x', labelsize=20)
-        ax.tick_params(axis='y', labelsize=20)
+        ax.set_xlabel('Experiment', fontsize=14)
+        ax.set_ylabel('Number of Generation Iterations', fontsize=14)
+        ax.tick_params(axis='x', labelsize=10.5)
+        ax.tick_params(axis='y', labelsize=14)
 
-        legend_patches = [Patch(facecolor=lighten_color(base_colors[c], 0.65), edgecolor=base_colors[c], label=lab) for c, lab in zip(cat_order, category_labels)]
-        ax.legend(handles=legend_patches, loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=len(cat_order), frameon=False, fontsize=22)
+        legend_patches = [Patch(facecolor=lighten_color(base_colors[c], 0.35), edgecolor=base_colors[c], label=lab) for c, lab in zip(cat_order, category_labels)]
+        ax.legend(handles=legend_patches, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(cat_order), frameon=False, fontsize=15, columnspacing=1.0, handletextpad=0.4)
 
         # Fixed y-axis top limit at 10.1
         y_bottom = 0.9
@@ -293,16 +293,16 @@ if __name__ == '__main__':
             center = (x_start + x_end) / 2.0
             x_frac = (center - xmin) / (xmax - xmin) if xmax > xmin else 0.5
             ax.text(x_frac, 1.012, gname, transform=ax.transAxes,
-                    ha='center', va='bottom', fontsize=20, fontweight='bold',
+                    ha='center', va='bottom', fontsize=14, fontweight='bold',
                     color='#444', zorder=5, clip_on=False)
 
         sorted_centers = [exp_center_positions[lbl] for lbl in ordered_labels]
         for i in range(1, len(sorted_centers)):
             mid = (sorted_centers[i-1] + sorted_centers[i]) / 2.0
-            ax.axvline(mid, color='grey', linestyle=':', linewidth=0.8, alpha=0.7)
+            ax.axvline(mid, color='grey', linestyle=':', linewidth=0.6, alpha=0.7)
 
         plt.tight_layout()
-        plt.subplots_adjust(bottom=0.22, top=0.93)
+        plt.subplots_adjust(bottom=0.20, top=0.92)
         out_path = os.path.join(out_dir, f'{args.prefix}_{dif}.pdf')
         plt.savefig(out_path, dpi=600, format='pdf')
         plt.close()

@@ -136,23 +136,23 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
     # Mapping experiment number -> label shown
     experiment_names = {
-        1: 'E1: SpecGen\nnon-null/no ovf asm',
-        2: 'E2: OG Prompt\nnon-null/no ovf asm',
+        1: 'E1: SpecGen\nwith asm',
+        2: 'E2: OG Prompt\nwith asm',
         3: 'E3: SpegGen',
         4: 'E4: OG prompt',
         5: 'E5: strict prompt',
-        6: 'E6: OG prompt + EC',
-        7: 'E7: strict prompt + EC',
+        6: 'E6: OG\nprompt + EC',
+        7: 'E7: strict\nprompt + EC',
         8: 'E8: SpegGen',
         9: 'E9: OG prompt',
         10: 'E10: strict prompt',
-        11: 'E11: OG prompt + EC',
-        12: 'E12: strict prompt + EC',
+        11: 'E11: OG\nprompt + EC',
+        12: 'E12: strict\nprompt + EC',
         13: 'E13: SpegGen',
         14: 'E14: OG prompt',
         15: 'E15: strict prompt',
-        16: 'E16: OG prompt + EC',
-        17: 'E17: strict prompt + EC',
+        16: 'E16: OG\nprompt + EC',
+        17: 'E17: strict\nprompt + EC',
     }
 
     # Override with custom labels if provided
@@ -199,25 +199,25 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
     # In the middle of each stack, add a label with the percentage, with 1 decimal place.
     # Show every percentage, except the ones below the threshold:
-    PERCENTAGE_LABEL_THRESHHOLD=3.7
+    PERCENTAGE_LABEL_THRESHHOLD=5.0
 
     # Outside-percentage annotation controls (for values below threshold)
-    OUTSIDE_LABEL_OFFSET_POINTS = 6   # horizontal gap from bar edge (in points)
-    OUTSIDE_LABEL_FONT_SIZE = 18
-    OUTSIDE_LABEL_FONT_WEIGHT = 'regular'
+    OUTSIDE_LABEL_OFFSET_POINTS = 5   # horizontal gap from bar edge (in points)
+    OUTSIDE_LABEL_FONT_SIZE = 10 if len(exp_nums) >= 3 else 12
+    OUTSIDE_LABEL_FONT_WEIGHT = 'bold'
     OUTSIDE_ARROW_STYLE = '-'
     OUTSIDE_ARROW_COLOR = '#444444'
-    OUTSIDE_ARROW_LINEWIDTH = 0.8
+    OUTSIDE_ARROW_LINEWIDTH = 2
     OUTSIDE_LABEL_SIDE = 'right'   # 'right' or 'left'
-    OUTSIDE_LABEL_Y_OFFSET_POINTS = 18  # vertical offset (points) for outside labels; alternates -Y,0,Y this value
+    OUTSIDE_LABEL_Y_OFFSET_POINTS = 12  # vertical offset (points) for outside labels; alternates -Y,0,Y this value
 
     # Make bars thicker (0<width<=1; 1 means bars touch)
-    BAR_WIDTH = 0.65
+    BAR_WIDTH = 0.93
 
     # Legend spacing controls (increase these to add more gap)
-    LEGEND_Y_OFFSET = -0.06        # more negative -> legend lower
-    LEGEND_BORDERAXESPAD = 1.4    # bigger -> more gap between axes and legend
-    BOTTOM_MARGIN = 0.30          # bigger -> more space reserved at bottom
+    LEGEND_Y_OFFSET = -0.13        # more negative -> legend lower
+    LEGEND_BORDERAXESPAD = 0.8    # bigger -> more gap between axes and legend
+    BOTTOM_MARGIN = 0.25          # bigger -> more space reserved at bottom
 
     # Option: incline experiment labels (slanted x-ticks)
     ROTATE_XTICK_LABELS = True
@@ -246,7 +246,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
     # Create subplots: one column per difficulty
     n_sections = len(difficulties)
-    fig, axes = plt.subplots(1, n_sections, figsize=(18, 8), sharey=True)
+    fig, axes = plt.subplots(1, n_sections, figsize=(7.16, 5.0), sharey=True)
 
     if n_sections == 1:
         axes = [axes]
@@ -279,12 +279,19 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
         # Alternate vertical offset for each outside arrow per bar
         arrow_index = [0] * len(sub)
 
+        # Pre-count outside labels per bar to decide whether to alternate Y offset
+        outside_count_per_bar = [0] * len(sub)
+        for cat in categories:
+            for bar_i, h in enumerate(percs[cat].to_numpy()):
+                if 0 < h < PERCENTAGE_LABEL_THRESHHOLD:
+                    outside_count_per_bar[bar_i] += 1
+
         # Stacked bars in required order (failure, valid, complete, complete_gt)
         for cat, color in zip(categories, categories_colors):
             heights = percs[cat].to_numpy()
             bars = ax.bar(
                 x, heights, bottom=bottoms, width=width,
-                color=color, edgecolor='white', linewidth=0.6
+                color=color, edgecolor='white', linewidth=0.4
             )
 
             # Percentage labels: inside if >= threshold, otherwise outside with arrow
@@ -295,7 +302,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
                         b + h / 2.0,
                         f"{h:.1f}%",
                         ha='center', va='center',
-                        fontsize=22, fontweight='regular', color='black',
+                        fontsize=10 if len(exp_nums) >= 3 else 13, fontweight='bold', color='black',
                         clip_on=True
                     )
                 elif 0 < h < PERCENTAGE_LABEL_THRESHHOLD:
@@ -309,8 +316,11 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
                         x_edge = rect.get_x() + rect.get_width()
                         x_off = OUTSIDE_LABEL_OFFSET_POINTS
                         ha = 'left'
-                    # Alternate Y offset: -Y, 0, Y, ...
-                    y_sign = -1 if (arrow_index[bar_i] % 3 == 0) else 0 if (arrow_index[bar_i] % 3 == 1) else 1
+                    # Alternate Y offset only if this bar has more than one outside label
+                    if outside_count_per_bar[bar_i] > 1:
+                        y_sign = -1 if (arrow_index[bar_i] % 3 == 0) else 0 if (arrow_index[bar_i] % 3 == 1) else 1
+                    else:
+                        y_sign = 0
                     y_off = y_sign * OUTSIDE_LABEL_Y_OFFSET_POINTS
                     ann = ax.annotate(
                         f"{h:.1f}%",
@@ -345,9 +355,9 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
                      ha=XTICK_LABEL_HALIGN,
                      rotation_mode='anchor')
         # Font size for experiment names
-        ax.tick_params(axis='x', labelsize=20)
+        ax.tick_params(axis='x', labelsize=14, pad=6)
         # Font size for Y axis ticks
-        ax.tick_params(axis='y', labelsize=20)
+        ax.tick_params(axis='y', labelsize=14)
 
         ax.set_ylim(0, 100)
         ax.set_yticks([0, 25, 50, 75, 100])
@@ -361,13 +371,13 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
         # Section title (difficulty at the top)
         n = num_samples_by_difficulty.get(diff)
         title = f"{diff.capitalize()} (n={n})" if n is not None else diff.capitalize()
-        ax.set_title(title, pad=10, fontsize=20, fontweight='regular')
+        ax.set_title(title, pad=24, fontsize=13, fontweight='bold')
 
         # Clean look
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
 
-    axes[0].set_ylabel('% of samples with result', fontsize=18)
+    axes[0].set_ylabel('% of samples with result', fontsize=15)
 
     # Single legend at bottom
     handles = [Patch(facecolor=c, edgecolor='white', label=legend_labels[k])
@@ -379,9 +389,9 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
         frameon=False,
         bbox_to_anchor=(0.5, LEGEND_Y_OFFSET),
         borderaxespad=LEGEND_BORDERAXESPAD,
-        handletextpad=0.6,    # spacing inside legend
-        labelspacing=0.6,     # spacing inside legend
-        fontsize=22           # category labels font size
+        handletextpad=0.4,    # spacing inside legend
+        labelspacing=0.4,     # spacing inside legend
+        fontsize=15           # category labels font size
     )
 
     plt.subplots_adjust(bottom=BOTTOM_MARGIN, wspace=0.15)
