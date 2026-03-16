@@ -1,3 +1,9 @@
+# this file looks at the log of the execution and re-runs the completeness and equivalence tests
+# to avoid rerunning them entirely, if needed to change either the completeness and equivalence logic
+#
+# just remove the "._compl.txt" and the "*_logical_equiv_GT.txt" files
+# (careful for the Embedded Completeness experiments, a change in completeness requires to rerun entirely)
+
 import os
 from pathlib import Path
 import subprocess
