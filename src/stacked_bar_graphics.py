@@ -32,7 +32,7 @@ def _parse_experiment_number(experiment: str):
 
 def _validate_consistent_sample_counts(df: pd.DataFrame) -> None:
     """Ensure every experiment has the same number of samples for each difficulty."""
-    cats = ['failure', 'valid', 'complete', 'complete_gt']
+    cats = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     if not all(c in df.columns for c in cats):
         return
     tmp = df.copy()
@@ -88,7 +88,7 @@ def _resolve_input_to_grouped_df(input_path: str) -> pd.DataFrame:
     tmp['difficulty'] = tmp['difficulty'].astype(str).str.strip()
     tmp['result'] = tmp['result'].astype(str).str.strip()
 
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     counts = (
         tmp.groupby(['experiment', 'difficulty'])['result']
            .value_counts()
@@ -107,9 +107,9 @@ def _resolve_input_to_grouped_df(input_path: str) -> pd.DataFrame:
 def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None = None, out_dir: str = 'figures'):
     """
     df is a dataframe containing columns:
-    experiment,difficulty,failure,valid,complete,complete_gt
+    experiment,difficulty,incorrect,correct_not_complete,complete_not_gt,complete_gt
     each 'experiment' has three entries, one for each difficulty: easy,medium,hard
-    failure,valid,complete,complete_gt are integers
+    incorrect,correct_not_complete,complete_not_gt,complete_gt are integers
 
     Args:
         experiments: list of experiment IDs (e.g., ['exp1', 'exp2', 'exp3'])
@@ -125,7 +125,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
     df['experiment'] = df['experiment'].astype(str).str.strip()
     df['difficulty'] = df['difficulty'].astype(str).str.strip()
 
-    for col in ['failure', 'valid', 'complete', 'complete_gt']:
+    for col in ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']:
         if col not in df.columns:
             df[col] = 0
         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
@@ -174,7 +174,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
         exp_nums.append(int(n))
 
     difficulties = ['easy', 'medium', 'hard']
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
 
     # okabe ito color palette for color blindness
     categories_colors = ["#d55e00", "#f0e442", "#0072b2", "#009e73"]
@@ -189,7 +189,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
     # Make a 100% stacked bar chart
     # The stacks must be in the following order (bottom to top):
-    # failure, valid, complete, complete_gt
+    # incorrect, correct_not_complete, complete_not_gt, complete_gt
 
     # Divide in three sections, one for each difficulty, in the following order: easy, medium, hard
     # Each section must contain the respective entry for each experiment
@@ -238,9 +238,9 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
 
     # Pretty legend labels
     legend_labels = {
-        'failure': 'Failure',
-        'valid': 'Valid',
-        'complete': 'Complete',
+        'incorrect': 'Incorrect',
+        'correct_not_complete': 'Correct\nnot complete',
+        'complete_not_gt': 'Complete\nnot GT',
         'complete_gt': 'Complete GT',
     }
 
@@ -286,7 +286,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
                 if 0 < h < PERCENTAGE_LABEL_THRESHHOLD:
                     outside_count_per_bar[bar_i] += 1
 
-        # Stacked bars in required order (failure, valid, complete, complete_gt)
+        # Stacked bars in required order incorrect,correct_not_complete,complete_not_gt,complete_gt
         for cat, color in zip(categories, categories_colors):
             heights = percs[cat].to_numpy()
             bars = ax.bar(
@@ -389,8 +389,9 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
         frameon=False,
         bbox_to_anchor=(0.5, LEGEND_Y_OFFSET),
         borderaxespad=LEGEND_BORDERAXESPAD,
-        handletextpad=0.4,    # spacing inside legend
-        labelspacing=0.4,     # spacing inside legend
+        columnspacing=0.6,    # gap between legend entries (handles) horizontally
+        handlelength=1.2,     # shorter patch/handle so entries sit closer
+        labelspacing=0.4,     # vertical spacing (only matters if multiple rows)
         fontsize=15           # category labels font size
     )
 

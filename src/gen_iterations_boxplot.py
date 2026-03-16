@@ -67,7 +67,7 @@ def _resolve_input_to_dataframe(input_path: str) -> pd.DataFrame:
 if __name__ == '__main__':
     """
     df is a dataframe containing columns
-    experiment,run,difficulty,classname,result,time,number_of_iterations_before_first_valid,number_of_gen_iterations,number_of_mut_iterations,llm_gave_up,had_embedded_compl_check
+    experiment,run,difficulty,classname,result,time,number_of_iterations_before_first_correct,number_of_gen_iterations,number_of_mut_iterations,llm_gave_up,had_embedded_compl_check
     """
 
     parser = argparse.ArgumentParser(
@@ -110,8 +110,8 @@ if __name__ == '__main__':
     """
 
     difficulties = ['easy', 'medium', 'hard']
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
-    category_labels = ['Failure', 'Valid', 'Complete', 'Complete GT']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
+    category_labels = ['Incorrect', 'Correct\nnot complete', 'Complete\nnot GT', 'Complete GT']
 
     # Normalize data
     df['experiment'] = df['experiment'].astype(str).str.strip()
@@ -135,11 +135,16 @@ if __name__ == '__main__':
     categories_colors = [lighten_color(c, -0.30) for c in categories_colors]
 
     base_colors = {
-        'failure': categories_colors[0],
-        'valid': categories_colors[1],
-        'complete':  categories_colors[2],
-        'complete_gt':  categories_colors[3],
+        'incorrect': categories_colors[0],
+        'correct_not_complete': categories_colors[1],
+        'complete_not_gt': categories_colors[2],
+        'complete_gt': categories_colors[3],
     }
+
+    # Legend spacing controls (increase these to add more gap)
+    LEGEND_Y_OFFSET = -0.13        # more negative -> legend lower
+    LEGEND_BORDERAXESPAD = 0.8    # bigger -> more gap between axes and legend
+    BOTTOM_MARGIN = 0.20          # bigger -> more space reserved at bottom
 
     # Create output directory if needed
     out_dir = args.out_dir
@@ -199,8 +204,7 @@ if __name__ == '__main__':
             labels.append(exp_label)
             exp_center_positions[exp_label] = base_x
 
-        plt.figure(figsize=(7.16, 4.0))
-        ax = plt.gca()
+        fig, ax = plt.subplots(figsize=(7.16, 4.0))
         bp = ax.boxplot(
             box_data,
             positions=positions,
@@ -235,8 +239,26 @@ if __name__ == '__main__':
         ax.tick_params(axis='x', labelsize=10.5)
         ax.tick_params(axis='y', labelsize=14)
 
-        legend_patches = [Patch(facecolor=lighten_color(base_colors[c], 0.35), edgecolor=base_colors[c], label=lab) for c, lab in zip(cat_order, category_labels)]
-        ax.legend(handles=legend_patches, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(cat_order), frameon=False, fontsize=15, columnspacing=1.0, handletextpad=0.4)
+        handles = [
+            Patch(
+                facecolor=lighten_color(base_colors[c], 0.35),
+                edgecolor=base_colors[c],
+                label=lab,
+            )
+            for c, lab in zip(cat_order, category_labels)
+        ]
+        fig.legend(
+            handles=handles,
+            loc='lower center',
+            ncol=len(categories),
+            frameon=False,
+            bbox_to_anchor=(0.5, LEGEND_Y_OFFSET),
+            borderaxespad=LEGEND_BORDERAXESPAD,
+            columnspacing=0.6,    # gap between legend entries (handles) horizontally
+            handlelength=1.2,     # shorter patch/handle so entries sit closer
+            labelspacing=0.4,     # vertical spacing (only matters if multiple rows)
+            fontsize=14           # category labels font size
+        )
 
         # Fixed y-axis top limit at 10.1
         y_bottom = 0.9
@@ -302,9 +324,9 @@ if __name__ == '__main__':
             ax.axvline(mid, color='grey', linestyle=':', linewidth=0.6, alpha=0.7)
 
         plt.tight_layout()
-        plt.subplots_adjust(bottom=0.20, top=0.92)
+        plt.subplots_adjust(bottom=BOTTOM_MARGIN, top=0.92)
         out_path = os.path.join(out_dir, f'{args.prefix}_{dif}.pdf')
-        plt.savefig(out_path, dpi=600, format='pdf')
+        fig.savefig(out_path, dpi=600, bbox_inches='tight', format='pdf')
         plt.close()
 
     # Optionally print where files were saved
