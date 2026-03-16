@@ -12,7 +12,7 @@ COMBINED_RESULTS_COLUMNS = [
     'classname',
     'result',
     'time',
-    'number_of_iterations_before_first_valid',
+    'number_of_iterations_before_first_correct',
     'number_of_gen_iterations',
     'number_of_mut_iterations',
     'llm_gave_up',
@@ -125,9 +125,9 @@ def _append_csv(df: pd.DataFrame, path: str, header_cols: List[str], *, append: 
 
 def avg_mutation_iterations_on_suc(df):
     """
-    For each success category ('valid', 'complete', 'complete_gt'),
+    For each non-incorrect category ('correct_not_complete', 'complete_not_gt', 'complete_gt'),
     compute the average of 'number_of_mut_iterations'.
-    Returns a dict like {'valid': mean, 'complete': mean, 'complete_gt': mean}.
+    Returns a dict like {'correct_not_complete': mean, 'complete_not_gt': mean, 'complete_gt': mean}.
     """
     required = {'result', 'number_of_mut_iterations'}
     missing = [c for c in required if c not in df.columns]
@@ -140,7 +140,7 @@ def avg_mutation_iterations_on_suc(df):
         tmp['number_of_mut_iterations'], errors='coerce'
     )
 
-    categories = ['valid', 'complete', 'complete_gt']
+    categories = ['correct_not_complete', 'complete_not_gt', 'complete_gt']
     means = (
         tmp[tmp['result'].isin(categories)]
         .groupby('result')['number_of_mut_iterations']
@@ -153,7 +153,7 @@ def group_results_categories(df):
     """
     Group by experiment and difficulty and count occurrences of result categories.
     Returns dataframe with columns:
-      ['experiment','difficulty','count_failures','count_valid','count_complete','count_complete_gt']
+            ['experiment','difficulty','count_incorrect','count_correct_not_complete','count_complete_not_gt','count_complete_gt']
     """
     import pandas as pd
 
@@ -169,20 +169,20 @@ def group_results_categories(df):
     # remove the columns' name so "result" doesn't appear above headers
     counts.columns.name = None
 
-    expected = ['failure', 'valid', 'complete', 'complete_gt']
+    expected = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     for col in expected:
         if col not in counts.columns:
             counts[col] = 0
     counts = counts[expected]
 
     out = counts.reset_index().rename(columns={
-        'failure': 'count_failures',
-        'valid': 'count_valid',
-        'complete': 'count_complete',
+        'incorrect': 'count_incorrect',
+        'correct_not_complete': 'count_correct_not_complete',
+        'complete_not_gt': 'count_complete_not_gt',
         'complete_gt': 'count_complete_gt'
     })
 
-    for c in ['count_failures', 'count_valid', 'count_complete', 'count_complete_gt']:
+    for c in ['count_incorrect', 'count_correct_not_complete', 'count_complete_not_gt', 'count_complete_gt']:
         out[c] = out[c].astype(int)
 
     def exp_key(x):
@@ -206,7 +206,7 @@ def group_by_classname(df):
     """
     For each (experiment, difficulty, classname), count occurrences of result categories across runs.
     Returns columns:
-      ['experiment','difficulty','classname','num_failures','num_valid','num_complete','num_complete_gt']
+            ['experiment','difficulty','classname','num_incorrect','num_correct_not_complete','num_complete_not_gt','num_complete_gt']
     """
     required = {'experiment', 'difficulty', 'classname', 'result'}
     missing = [c for c in required if c not in df.columns]
@@ -217,7 +217,7 @@ def group_by_classname(df):
     tmp['result'] = tmp['result'].astype(str).str.strip()
     tmp['difficulty'] = tmp['difficulty'].astype(str).str.strip()
 
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     counts = (
         tmp.groupby(['experiment', 'difficulty', 'classname'])['result']
            .value_counts()
@@ -231,14 +231,14 @@ def group_by_classname(df):
     counts = counts[categories]
 
     out = counts.reset_index().rename(columns={
-        'failure': 'num_failures',
-        'valid': 'num_valid',
-        'complete': 'num_complete',
+        'incorrect': 'num_incorrect',
+        'correct_not_complete': 'num_correct_not_complete',
+        'complete_not_gt': 'num_complete_not_gt',
         'complete_gt': 'num_complete_gt'
     })
 
     # Cast to int and clear index/column names
-    for c in ['num_failures', 'num_valid', 'num_complete', 'num_complete_gt']:
+    for c in ['num_incorrect', 'num_correct_not_complete', 'num_complete_not_gt', 'num_complete_gt']:
         out[c] = out[c].astype(int)
     out.columns.name = None
     out.index.name = None
@@ -254,7 +254,7 @@ def group_by_classname(df):
 
 def group_impacted_by_mutation(df):
     """
-    Creates a table with columns 'experiments', 'difficulty', 'nums_failure_with_mutation', 'nums_valid_with_mutation', 'nums_complete_with_mutation', 'nums_complete_gt_with_mutation'.
+    Creates a table with columns 'experiments', 'difficulty', 'nums_incorrect_with_mutation', 'nums_correct_not_complete_with_mutation', 'nums_complete_not_gt_with_mutation', 'nums_complete_gt_with_mutation'.
     This function sees the entries that have int('number_of_mut_iterations') > 0 and groups by the result and difficulty
     """
     required = {'experiment', 'difficulty', 'result', 'number_of_mut_iterations'}
@@ -274,8 +274,8 @@ def group_impacted_by_mutation(df):
     pairs = tmp[['experiment', 'difficulty']].drop_duplicates()
 
     # Filter to rows where mutations happened and results are successful
-    success_categories = ['failure', 'valid', 'complete', 'complete_gt']
-    filt = (tmp['number_of_mut_iterations'] > 0) & (tmp['result'].isin(success_categories))
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
+    filt = (tmp['number_of_mut_iterations'] > 0) & (tmp['result'].isin(categories))
     tmp = tmp.loc[filt]
 
     counts = (
@@ -285,10 +285,10 @@ def group_impacted_by_mutation(df):
     )
 
     # Ensure all expected success columns exist
-    for col in success_categories:
+    for col in categories:
         if col not in counts.columns:
             counts[col] = 0
-    counts = counts[success_categories]
+    counts = counts[categories]
 
     # Reindex to include all exp/difficulty pairs, filling with zeros
     counts = counts.reindex(
@@ -297,14 +297,14 @@ def group_impacted_by_mutation(df):
     )
 
     out = counts.reset_index().rename(columns={
-        'failure': 'nums_failure_with_mutation',
-        'valid': 'nums_valid_with_mutation',
-        'complete': 'nums_complete_with_mutation',
+        'incorrect': 'nums_incorrect_with_mutation',
+        'correct_not_complete': 'nums_correct_not_complete_with_mutation',
+        'complete_not_gt': 'nums_complete_not_gt_with_mutation',
         'complete_gt': 'nums_complete_gt_with_mutation'
     })
 
     # Cast counts to int
-    for c in ['nums_failure_with_mutation', 'nums_valid_with_mutation', 'nums_complete_with_mutation', 'nums_complete_gt_with_mutation']:
+    for c in ['nums_incorrect_with_mutation', 'nums_correct_not_complete_with_mutation', 'nums_complete_not_gt_with_mutation', 'nums_complete_gt_with_mutation']:
         out[c] = out[c].astype(int)
 
     # Sort only by difficulty (keep experiment column but don't sort by it)
@@ -316,9 +316,9 @@ def group_impacted_by_mutation(df):
     desired_cols = [
         'experiment',
         'difficulty',
-        'nums_failure_with_mutation',
-        'nums_valid_with_mutation',
-        'nums_complete_with_mutation',
+        'nums_incorrect_with_mutation',
+        'nums_correct_not_complete_with_mutation',
+        'nums_complete_not_gt_with_mutation',
         'nums_complete_gt_with_mutation',
     ]
     out = out[desired_cols]
@@ -329,8 +329,8 @@ def group_impacted_by_mutation(df):
 
 def see_impact_of_embedded_compl(df):
     """
-    This looks at how many 'valid', 'complete' and 'complete_gt' results had the 'had_embedded_compl_check' True
-    Outputs a table with columns 'experiment', 'difficulty', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl' and 'num_complete_gt_with_embedded_compl'
+    This looks at how many 'correct_not_complete', 'complete_not_gt' and 'complete_gt' results had the 'had_embedded_compl_check' True
+    Outputs a table with columns 'experiment', 'difficulty', 'num_correct_not_complete_with_embedded_compl', 'num_complete_not_gt_with_embedded_compl' and 'num_complete_gt_with_embedded_compl'
     """
     required = {'experiment', 'difficulty', 'result', 'had_embedded_compl_check'}
     missing = [c for c in required if c not in df.columns]
@@ -360,8 +360,8 @@ def see_impact_of_embedded_compl(df):
     pairs = tmp[['experiment', 'difficulty']].drop_duplicates()
 
     # Filter to successes that had embedded completeness check
-    success_categories = ['valid', 'complete', 'complete_gt']
-    tmp = tmp[(tmp['result'].isin(success_categories)) & (tmp['had_embedded_compl_check'])]
+    categories = ['correct_not_complete', 'complete_not_gt', 'complete_gt']
+    tmp = tmp[(tmp['result'].isin(categories)) & (tmp['had_embedded_compl_check'])]
 
     counts = (
         tmp.groupby(['experiment', 'difficulty'])['result']
@@ -370,10 +370,10 @@ def see_impact_of_embedded_compl(df):
     )
 
     # Ensure expected columns
-    for col in success_categories:
+    for col in categories:
         if col not in counts.columns:
             counts[col] = 0
-    counts = counts[success_categories]
+    counts = counts[categories]
 
     # Include missing exp/difficulty pairs with zeros
     counts = counts.reindex(
@@ -382,13 +382,13 @@ def see_impact_of_embedded_compl(df):
     )
 
     out = counts.reset_index().rename(columns={
-        'valid': 'num_valid_with_embedded_compl',
-        'complete': 'num_complete_with_embedded_compl',
+        'correct_not_complete': 'num_correct_not_complete_with_embedded_compl',
+        'complete_not_gt': 'num_complete_not_gt_with_embedded_compl',
         'complete_gt': 'num_complete_gt_with_embedded_compl'
     })
 
     # Cast to int
-    for c in ['num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl']:
+    for c in ['num_correct_not_complete_with_embedded_compl', 'num_complete_not_gt_with_embedded_compl', 'num_complete_gt_with_embedded_compl']:
         out[c] = out[c].astype(int)
 
     # Sort only by difficulty
@@ -400,8 +400,8 @@ def see_impact_of_embedded_compl(df):
     out = out[
         ['experiment',
          'difficulty',
-         'num_valid_with_embedded_compl',
-         'num_complete_with_embedded_compl',
+            'num_correct_not_complete_with_embedded_compl',
+            'num_complete_not_gt_with_embedded_compl',
          'num_complete_gt_with_embedded_compl']
     ]
 
@@ -474,9 +474,9 @@ def avg_time_per_difficulty(df):
 
 def number_of_times_llm_gave_up(df):
     """
-    For each 'result': failure, valid, complete, complete_gt, grouped by difficulty: 'easy', 'medium', 'hard'
+    For each 'result': incorrect, correct_not_complete, complete_not_gt, complete_gt, grouped by difficulty: 'easy', 'medium', 'hard'
     Get if the number of times the LLM gave up, by the column 'llm_gave_up', which has values True or False
-    Outputs a table containing 'experiment','difficulty','gave_up_failure','gave_up_valid','gave_up_complete','gave_up_complete_gt'
+    Outputs a table containing 'experiment','difficulty','gave_up_incorrect','gave_up_correct_not_complete','gave_up_complete_not_gt','gave_up_complete_gt'
     """
     required = {'experiment', 'difficulty', 'result', 'llm_gave_up'}
     missing = [c for c in required if c not in df.columns]
@@ -508,7 +508,7 @@ def number_of_times_llm_gave_up(df):
     # Filter only rows where the LLM gave up
     tmp = tmp[tmp['llm_gave_up']]
 
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     counts = (
         tmp.groupby(['experiment', 'difficulty'])['result']
            .value_counts()
@@ -528,14 +528,14 @@ def number_of_times_llm_gave_up(df):
     )
 
     out = counts.reset_index().rename(columns={
-        'failure': 'gave_up_failure',
-        'valid': 'gave_up_valid',
-        'complete': 'gave_up_complete',
+        'incorrect': 'gave_up_incorrect',
+        'correct_not_complete': 'gave_up_correct_not_complete',
+        'complete_not_gt': 'gave_up_complete_not_gt',
         'complete_gt': 'gave_up_complete_gt'
     })
 
     # Cast to int
-    for c in ['gave_up_failure', 'gave_up_valid', 'gave_up_complete', 'gave_up_complete_gt']:
+    for c in ['gave_up_incorrect', 'gave_up_correct_not_complete', 'gave_up_complete_not_gt', 'gave_up_complete_gt']:
         out[c] = out[c].astype(int)
 
     # Sort only by difficulty
@@ -545,7 +545,7 @@ def number_of_times_llm_gave_up(df):
 
     # Keep experiment column first
     out = out[
-        ['experiment', 'difficulty', 'gave_up_failure', 'gave_up_valid', 'gave_up_complete', 'gave_up_complete_gt']
+        ['experiment', 'difficulty', 'gave_up_incorrect', 'gave_up_correct_not_complete', 'gave_up_complete_not_gt', 'gave_up_complete_gt']
     ]
 
     out.columns.name = None
@@ -659,15 +659,15 @@ if __name__ == '__main__':
             print(f"[{exp_name}] Filtered to preliminary dataset: {len(df)} rows")
 
         # Keep stdout printing behavior (same tables as before) for each directory.
-        categories = ['failure', 'valid', 'complete', 'complete_gt']
+        categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
         counts = df['result'].value_counts().reindex(categories, fill_value=0)
 
         # Write overall results to CSV
         overall_row = pd.DataFrame([{
             'experiment': exp_name,
-            'failure': counts.get('failure', 0),
-            'valid': counts.get('valid', 0),
-            'complete': counts.get('complete', 0),
+            'incorrect': counts.get('incorrect', 0),
+            'correct_not_complete': counts.get('correct_not_complete', 0),
+            'complete_not_gt': counts.get('complete_not_gt', 0),
             'complete_gt': counts.get('complete_gt', 0),
         }])
         print(f"[{exp_name}] Overall results:")
@@ -675,7 +675,7 @@ if __name__ == '__main__':
         _append_csv(
             overall_row,
             overall_csv,
-            ['experiment', 'failure', 'valid', 'complete', 'complete_gt'],
+            ['experiment', 'incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt'],
             append=True,
         )
 
@@ -689,7 +689,7 @@ if __name__ == '__main__':
         _append_csv(
             grouped_impacted_by_mutation,
             mutation_csv,
-            ['experiment', 'difficulty', 'nums_failure_with_mutation', 'nums_valid_with_mutation', 'nums_complete_with_mutation', 'nums_complete_gt_with_mutation'],
+            ['experiment', 'difficulty', 'nums_incorrect_with_mutation', 'nums_correct_not_complete_with_mutation', 'nums_complete_not_gt_with_mutation', 'nums_complete_gt_with_mutation'],
             append=True,
         )
 
@@ -699,7 +699,7 @@ if __name__ == '__main__':
         _append_csv(
             impacted_by_embedded_compl,
             completeness_csv,
-            ['experiment', 'difficulty', 'num_valid_with_embedded_compl', 'num_complete_with_embedded_compl', 'num_complete_gt_with_embedded_compl'],
+            ['experiment', 'difficulty', 'num_correct_not_complete_with_embedded_compl', 'num_complete_not_gt_with_embedded_compl', 'num_complete_gt_with_embedded_compl'],
             append=True,
         )
 
@@ -731,21 +731,21 @@ if __name__ == '__main__':
 
         # Append grouped classification-only counts
         grouped_for_csv = grouped_df.rename(columns={
-            'count_failures': 'failure',
-            'count_valid': 'valid',
-            'count_complete': 'complete',
+            'count_incorrect': 'incorrect',
+            'count_correct_not_complete': 'correct_not_complete',
+            'count_complete_not_gt': 'complete_not_gt',
             'count_complete_gt': 'complete_gt',
         })
         grouped_for_csv = _ensure_columns(
             grouped_for_csv,
-            ['experiment', 'difficulty', 'failure', 'valid', 'complete', 'complete_gt'],
+            ['experiment', 'difficulty', 'incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt'],
         )
         grouped_for_csv = grouped_for_csv[
-            ['experiment', 'difficulty', 'failure', 'valid', 'complete', 'complete_gt']
+            ['experiment', 'difficulty', 'incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
         ]
         _append_csv(
             grouped_for_csv,
             grouped_csv,
-            ['experiment', 'difficulty', 'failure', 'valid', 'complete', 'complete_gt'],
+            ['experiment', 'difficulty', 'incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt'],
             append=True,
         )
