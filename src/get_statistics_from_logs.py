@@ -98,7 +98,7 @@ def find_original_source_file(classname: str) -> Path | None:
 
 def extract_stats(results_dirs):
     # Parse logs to create a dataframe with
-    # 'run,difficulty,classname,result,time,number_of_iterations_before_first_valid,number_of_iterations'
+    # 'run,difficulty,classname,result,time,number_of_iterations_before_first_correct,number_of_iterations'
 
     # Array to create dataframe
     run_records = []
@@ -112,15 +112,15 @@ def extract_stats(results_dirs):
     # If it says "Sucess":
     #   Then, we expect a completeness log file to be present.
     #   We check the return code of the completeness log.
-    #   If the return code is != 0 (fail), then this is a VALID result.
+    #   If the return code is != 0 (fail), then this is a CORRECT_NOT_COMPLETE result.
     #   Else, if the return code == 0, then we expect a logical_equiv_GT log file to be present.
     #       We check the return code of the logical_equiv_GT log.
     #       If the return code == 0, then this is a COMPLETE_GT result.
-    #       Else, if the return code != 0, then this is a COMPLETE result
+    #       Else, if the return code != 0, then this is a COMPLETE_NOT_GT result
     # Else (it says "Failure"):
     #   We check the existance of the 'too weak' message in the log file. (only happens with embedded completeness check)
-    #   If this message is present, then this is a VALID result.
-    #   Else, this is a FAILURE result.
+    #   If this message is present, then this is a CORRECT_NOT_COMPLETE result.
+    #   Else, this is a INCORRECT result.
 
     for exp_dir in results_dirs:
         log_files = set(list_all_files_os_walk(exp_dir))
@@ -163,11 +163,11 @@ def extract_stats(results_dirs):
                         )
 
                 # get number of iterations and time
-                iterations_to_first_valid = 0
+                iterations_to_first_correct = 0
                 total_gen_iterations = 0
                 total_mut_iterations = 0
                 time = 0.0
-                at_least_valid = False
+                at_least_correct = False
                 had_embedded_compl_check = False
                 llm_gave_up = False
                 with open(log, 'r', encoding="utf-8") as l:
@@ -194,25 +194,25 @@ def extract_stats(results_dirs):
                             llm_gave_up = True
 
                         if 'The specification generated is correct and verifiable, but incomplete (too weak).' in line:
-                            # Passed 'valid' at least once. Might have "Failure" in the log because of embedded completeness
-                            # But since it was proven at least once, it's valid
-                            if not at_least_valid:  # Only set on the FIRST occurrence
-                                iterations_to_first_valid = total_gen_iterations
-                            at_least_valid = True
+                            # Passed 'correct' at least once. Might have "Failure" in the log because of embedded completeness
+                            # But since it was proven at least once, it's correct
+                            if not at_least_correct:  # Only set on the FIRST occurrence
+                                iterations_to_first_correct = total_gen_iterations
+                            at_least_correct = True
                             had_embedded_compl_check = True
 
                 invalid_run = False
                 last_log_line = tail(log, 1)
                 if 'Success' in last_log_line:
-                    at_least_valid = True
-                    if iterations_to_first_valid == 0: # We have not found the 'too weak' message
-                        # Then it's not an embedded completeness or it succeeded in generatin a complete on the first valid
-                        iterations_to_first_valid = total_gen_iterations + total_mut_iterations
+                    at_least_correct = True
+                    if iterations_to_first_correct == 0: # We have not found the 'too weak' message
+                        # Then it's not an embedded completeness or it succeeded in generatin a complete on the first correct
+                        iterations_to_first_correct = total_gen_iterations + total_mut_iterations
                 elif 'Failure' in last_log_line:
-                    if at_least_valid:
-                        #print(f'{log} is a "completeness" failure but was valid at some point')
+                    if at_least_correct:
+                        #print(f'{log} is a "completeness" failure but was correct at some point')
                         pass
-                    pass # Not necessarely a failure, because of embedded completeness check
+                    pass # Not necessarely incorrect, because of embedded completeness check
                 else: # Not "Failure" or "Success" in last line. Unexpected
                     invalid_run = True
                     print(f'{log} is an invalid run') # but other files might be present...
@@ -242,15 +242,15 @@ def extract_stats(results_dirs):
                         result = "complete_gt"
                     else:
                         # Generated something complete, but not equal to GT
-                        result = "complete"
-                elif at_least_valid:
-                    # generated something valid at some point (passed the verifier), but not complete
+                        result = "complete_not_gt"
+                elif at_least_correct:
+                    # generated something correct at some point (passed the verifier), but not complete
                     # result might be different than Success in the log, because of embedded completeness check
-                    result = "valid"
+                    result = "correct_not_complete"
                 else:
                     if not invalid_run:
-                        # True failure. LLM was unable to generate something that passed in the verifier
-                        result = "failure"
+                        # True incorrect. LLM was unable to generate something that passed in the verifier
+                        result = "incorrect"
                     else:
                         result = "invalid"
 
@@ -259,21 +259,21 @@ def extract_stats(results_dirs):
                     assert 0
                 
                 # These are the tests in which it did not get a complete in the first try, but the feedback loop helped:
-                #if iterations_to_first_valid != 0 and iterations_to_first_valid != total_gen_iterations:
+                #if iterations_to_first_correct != 0 and iterations_to_first_correct != total_gen_iterations:
                 #    print(f'{exp_dir}: run_{i} {classname}')
 
                 difficulty = difficulty_map[classname]
                 # Normalize experiment name by removing trailing slashes for consistency
                 exp_name = exp_dir.rstrip('/')
-                run_records.append([exp_name, f'run_{i}', difficulty, classname, result, time, iterations_to_first_valid, total_gen_iterations, total_mut_iterations, llm_gave_up, had_embedded_compl_check])
+                run_records.append([exp_name, f'run_{i}', difficulty, classname, result, time, iterations_to_first_correct, total_gen_iterations, total_mut_iterations, llm_gave_up, had_embedded_compl_check])
 
-    df = pd.DataFrame(run_records, columns=['experiment','run','difficulty','classname','result','time','number_of_iterations_before_first_valid','number_of_gen_iterations', 'number_of_mut_iterations', 'llm_gave_up', 'had_embedded_compl_check'])
+    df = pd.DataFrame(run_records, columns=['experiment','run','difficulty','classname','result','time','number_of_iterations_before_first_correct','number_of_gen_iterations', 'number_of_mut_iterations', 'llm_gave_up', 'had_embedded_compl_check'])
     return df
 
 # Postprocessing methods
 
 def get_successfull_runs(df):
-    mask = df['result'].astype(str).str.strip().ne('failure')
+    mask = df['result'].astype(str).str.strip().ne('incorrect')
     successes = df.loc[mask].reset_index(drop=True)
 
     ret = []
@@ -284,8 +284,8 @@ def get_successfull_runs(df):
 
 # See which 'successful' runs had no postcondition
 # FIXME: on runs where the last attept it modified the source code, this is getting the original source code.
-# not critical, as this would already be a failure
-def invalid_by_empty_post(df, base_dir):
+# not critical, as this would already be a incorrect
+def incorrect_by_empty_post(df, base_dir):
     successes = get_successfull_runs(df)
 
     num_suc_empty_post = 0
@@ -307,7 +307,7 @@ def invalid_by_empty_post(df, base_dir):
 
 # See which 'successful' runs had assumptions in them
 # Note: more interested in LoopInvariants assumptions
-def invalid_by_assume(df, base_dir):
+def incorrect_by_assume(df, base_dir):
     successes = get_successfull_runs(df)
 
     num_suc_with_assumes = 0
@@ -328,7 +328,7 @@ def invalid_by_assume(df, base_dir):
     return to_remove
 
 # FIXME: on runs where the last attept it modified the source code, this is getting the original source code.
-# not critical, as this would already be a failure
+# not critical, as this would already be incorrect
 def llm_changed_original_code(df, base_dir):
     """
     For the last entry in each log, compare non-comments with the original code.
@@ -391,17 +391,17 @@ def check_successes_with_signals(df, base_dir):
     print(f'num_successes_with_signals: {num_suc_with_signals}')
     return to_return
 
-def mark_as_failure(df: pd.DataFrame, run, classname) -> None:
-    """Mark a run as failure, but only if had_embedded_compl_check is False.
+def mark_as_incorrect(df: pd.DataFrame, run, classname) -> None:
+    """Mark a run as incorrect, but only if had_embedded_compl_check is False.
     
     If had_embedded_compl_check is True, the spec was verified by OpenJML (the "too weak"
-    message appeared), so it should remain at least 'valid' even if postprocessing
+    message appeared), so it should remain at least 'correct'(not_complete) even if postprocessing
     detects issues like empty postcondition.
     """
     mask = (df['run'] == run) & (df['classname'] == classname)
-    # Only mark as failure if had_embedded_compl_check is False
+    # Only mark as incorrect if had_embedded_compl_check is False
     mask = mask & (df['had_embedded_compl_check'] == False)
-    df.loc[mask, 'result'] = 'failure'
+    df.loc[mask, 'result'] = 'incorrect'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Process a directory with log files from 10 runs.")
@@ -413,33 +413,33 @@ if __name__ == '__main__':
     df = extract_stats(all_results_dirs)
     print(df)
 
-    # postprocessing: mark as failure empty postcondition, usage of assumptions, or changes in the code
-    inv1 = invalid_by_empty_post(df, args.runs_dir)
-    inv2 = invalid_by_assume(df, args.runs_dir)
+    # postprocessing: mark as incorrect empty postcondition, usage of assumptions, or changes in the code
+    inv1 = incorrect_by_empty_post(df, args.runs_dir)
+    inv2 = incorrect_by_assume(df, args.runs_dir)
     inv3 = llm_changed_original_code(df, args.runs_dir)
     signals = check_successes_with_signals(df, args.runs_dir) # not invalidated, just a curiosity if any used signals
 
     print("\nBefore postprocessing:")
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     counts = df['result'].value_counts().reindex(categories, fill_value=0)
     counts_df = counts.rename_axis('result').reset_index(name='count')
     print(counts_df.to_csv(sep=',', index=False))
 
     # might have intersection
     for run, classname in inv1:
-        mark_as_failure(df, run, classname)
+        mark_as_incorrect(df, run, classname)
 
     for run, classname in inv2:
-        mark_as_failure(df, run, classname)
+        mark_as_incorrect(df, run, classname)
 
     for run, classname in inv3:
-        mark_as_failure(df, run, classname)
+        mark_as_incorrect(df, run, classname)
 
     print('Empty post, assume, changed code, signals') # might have intersection
     print(f'{len(inv1)},{len(inv2)},{len(inv3)},{len(signals)}\n')
 
     print("After postprocessing:")
-    categories = ['failure', 'valid', 'complete', 'complete_gt']
+    categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
     counts = df['result'].value_counts().reindex(categories, fill_value=0)
     counts_df = counts.rename_axis('result').reset_index(name='count')
     print(counts_df.to_csv(sep=',', index=False))
