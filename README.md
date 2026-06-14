@@ -111,6 +111,32 @@ python src/run_experiments.py --exp EXP
 | GPT-5 mini    | E13        | E14             | E15           | E16                    | E17                  |
 
 
+PAPER NOTICE: for the paper submission, we choose to don't present the results of comparing different generation prompts.
+We ran experiments comparing the original generation prompt against a prompt with more strict generation rules (See specgen/prompt_format.py).
+The results were inconclusive, with a bit more better results towards the strit prompt.
+Due to the paper size and the low significance of these results, we decided to keep them out of the paper.
+For the reader continuity, we renamed the remaining experiments presented.
+Experiments E5, E7, E10, E12, E15 and E17 are the strict prompt experiments.
+The all_results contains the original data. The "renamed_results" still refers to the original data, but renames when plotting.
+
+E6  -> E5
+E8  -> E6
+E9  -> E7
+E11 -> E8
+E13 -> E9
+E14 -> E10
+E16 -> E11
+
+See renamed_results_src/ dir. It's a copy-adapted version of the figures scripts under src.
+
+| Model         | SpecGen    | Conversational  | Conversational + EC |
+|---------------|------------|-----------------|---------------------|
+| GPT-3.5 turbo | E1 / E3    | E2 / E4         | E5                  |
+| GPT-4.1 mini  | E6         | E7              | E8                  |
+| GPT-5 mini    | E9         | E10             | E11                 |
+
+
+
 After executing, it will create a `results_EXP` directory in the root of your repository.
 The `results_EXP` directory contains the log files of all individual tests, one for each (0..9) runs.
 
@@ -190,7 +216,6 @@ The implementation in `src/completeness/CompletenessUtil.java` has already been 
 ### SpecGen sourced files
 The files under the `specgen` directory were directly sourced or modified from the original [SpecGen](https://doi.org/10.1109/ICSE55347.2025.00129) artifact repository:
 * Upstream: https://github.com/Lezhi-Ma/SpecGen-Artifact (c7e57445a66dd432d1b9605092d0386455ed3df5)
-* Fork (no changes): Anonymized Github Repo Link
 
 These files are licensed under the MIT License. Copyright Lezhi Ma and contributors.
 
