@@ -1,0 +1,90 @@
+diff --git a/FormalBench/evaluation/metrics/completeness.py b/FormalBench/evaluation/metrics/completeness.py
+index d6f3e82..953df28 100644
+--- a/FormalBench/evaluation/metrics/completeness.py
++++ b/FormalBench/evaluation/metrics/completeness.py
+@@ -164,6 +164,8 @@ def eval_completeness(
+         spec_dir: str,
+         analysis_dir: str,
+         save_dir: str,
++        verifier_name: str = "OpenJMLWithoutDocker",
++        mutator_name: str = "MajorWithoutDocker",
+         n_proc: int = 8,
+         language: str = "java", 
+         data_ids: Optional[str] = None,
+@@ -175,8 +177,8 @@ def eval_completeness(
+     os.makedirs(save_dir, exist_ok=True)
+     if language == "java":
+         ending = ".java"
+-        verifier = create_verifier("OpenJML", 21)
+-        mutator = create_mutator("Major")
++        verifier = create_verifier(verifier_name, 21)
++        mutator = create_mutator(mutator_name)
+     elif language == "c":
+         ending = ".c"
+         verifier = create_verifier("FramaC")
+diff --git a/FormalBench/evaluation/metrics/consistency.py b/FormalBench/evaluation/metrics/consistency.py
+index 6b823eb..a072d6f 100644
+--- a/FormalBench/evaluation/metrics/consistency.py
++++ b/FormalBench/evaluation/metrics/consistency.py
+@@ -8,7 +8,7 @@ import os
+ def eval_consistency(
+         spec_dir: str, 
+         analysis_dir: str, 
+-        verifier_name: str = "OpenJML",
++        verifier_name: str = "OpenJMLWithoutDocker",
+         verifier_version: int = 21,
+         timeout: int = 300,
+         language: str = "java",
+@@ -26,7 +26,7 @@ def eval_consistency(
+     """
+     
+     if language == "java":
+-        assert verifier_name == "OpenJML", "Only OpenJML is supported for Java programs"
++        assert verifier_name == "OpenJMLWithoutDocker", "Only OpenJMLWithoutDocker is supported for Java programs"
+         verifier = create_verifier(verifier_name, verifier_version)
+         ending = ".java"
+     elif language == "c":
+diff --git a/FormalBench/evaluation/tools/verifier.py b/FormalBench/evaluation/tools/verifier.py
+index 706580f..74601e9 100644
+--- a/FormalBench/evaluation/tools/verifier.py
++++ b/FormalBench/evaluation/tools/verifier.py
+@@ -117,7 +117,7 @@ class OpenJMLVerifier(Verifier):
+         copy_to_container(self.container, path, tmp_dir)
+         path_in_container = os.path.join(tmp_dir, os.path.basename(path))
+ 
+-        cmd = f"timeout {timeout} /home/openjml{self.openjml_version}/openjml --esc --prover=cvc4 --nullable-by-default --command=check --esc-max-warnings 1 {path_in_container}"
++        cmd = f"timeout {timeout} /home/openjml{self.openjml_version}/openjml --esc --prover=z3 --nullable-by-default --arithmetic-failure=hard --command=check --esc-max-warnings 1 {path_in_container}"
+ 
+         cmd_splitted = cmd.split(" ")
+         print("Executing command: {}".format(cmd))
+@@ -155,7 +155,7 @@ class OpenJMLVerifier(Verifier):
+         copy_to_container(self.container, path, tmp_dir)
+         path_in_container = os.path.join(tmp_dir, os.path.basename(path))
+ 
+-        cmd = f"timeout {timeout} /home/openjml{self.openjml_version}/openjml --esc --prover=cvc4 --nullable-by-default --esc-max-warnings 1 {path_in_container}"
++        cmd = f"timeout {timeout} /home/openjml{self.openjml_version}/openjml --esc --prover=z3 --nullable-by-default --arithmetic-failure=hard --esc-max-warnings 1 {path_in_container}"
+ 
+         cmd_splitted = cmd.split(" ")
+         print("Executing command: {}".format(cmd))
+@@ -216,9 +216,9 @@ class OpenJMLVerifierWithoutDocker(Verifier):
+         self.exec_path = os.path.abspath(f"{verifier_dir}/openjml")
+         if not os.path.exists(self.exec_path):
+             if version == 21:
+-                print("Downloading OpenJML version 0.21.0-alpha-0")
+-                execute_command(f"wget https://github.com/OpenJML/OpenJML/releases/download/0.21.0-alpha-0/openjml-ubuntu-20.04-0.21.0-alpha-0.zip -O {verifier_dir}/openjml-ubuntu-20.04-0.21.0-alpha-0.zip")
+-                execute_command(f"unzip {verifier_dir}/openjml-ubuntu-20.04-0.21.0-alpha-0.zip -d {verifier_dir}/")
++                print("Downloading OpenJML version 21-0.21")
++                execute_command(f"wget https://github.com/OpenJML/OpenJML/releases/download/21-0.21/openjml-ubuntu-22.04-21-0.21.zip -O {verifier_dir}/openjml-ubuntu-22.04-21-0.21.zip")
++                execute_command(f"unzip {verifier_dir}/openjml-ubuntu-22.04-21-0.21.zip -d {verifier_dir}/")
+             elif version == 17:
+                 print("Downloading OpenJML version 0.17.0-alpha-12")
+                 execute_command(f"wget https://github.com/OpenJML/OpenJML/releases/download/0.17.0-alpha-12/openjml-ubuntu-20.04-0.17.0-alpha-12.zip -O {verifier_dir}/openjml-ubuntu-20.04-0.17.0-alpha-12.zip")
+@@ -234,7 +234,7 @@ class OpenJMLVerifierWithoutDocker(Verifier):
+         ) -> Tuple[int, str]:
+         
+         abs_path = os.path.abspath(path)
+-        command = "{} --esc --prover=cvc4 --nullable-by-default --esc-max-warnings 1 {}".format(self.exec_path, abs_path)
++        command = "{} --esc --prover=z3 --nullable-by-default --arithmetic-failure=hard --esc-max-warnings 1 {}".format(self.exec_path, abs_path)
+         print("Executing command: {}".format(command))
+         output = execute_command(command, timeout)
+         print(output)
