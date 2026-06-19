@@ -4,10 +4,10 @@ import tempfile
 import tqdm
 import sys
 
-def check_java_compiler(dataset_annotated_path, dataset_no_annotations_path):
+def check_java_compiler(dataset_path):
     all_succeed = True
 
-    java_files = list(dataset_annotated_path.glob('**/*.java')) + list(dataset_no_annotations_path.glob('**/*.java'))
+    java_files = list(dataset_path.glob('**/*.java'))
 
     with tempfile.TemporaryDirectory() as tmpdir:
         for java_file in tqdm.tqdm(java_files, desc="Checking Java compiler"):
@@ -221,7 +221,8 @@ if __name__ == "__main__":
     dataset_no_annotations_path = Path('dataset_v1_no_annotations')
 
     all_succeed = True
-    all_succeed &= check_java_compiler(dataset_annotated_path, dataset_no_annotations_path)
+    all_succeed &= check_java_compiler(dataset_annotated_path)
+    all_succeed &= check_java_compiler(dataset_no_annotations_path)
     all_succeed &= check_removed_annotations(dataset_no_annotations_path)
     all_succeed &= check_openjml(dataset_annotated_path)
     all_succeed &= check_self_logical_equivalence(dataset_annotated_path)
@@ -229,6 +230,10 @@ if __name__ == "__main__":
     all_succeed &= check_non_equivalent_samples()
     all_succeed &= check_completeness(dataset_annotated_path)
     all_succeed &= check_incomplete_samples()
+
+    # Verify that intentionally incomplete samples are still correct
+    # all_succeed &= check_java_compiler(Path('dataset_v1_annotated_incomplete_specs/'))
+    # all_succeed &= check_openjml(Path('dataset_v1_annotated_incomplete_specs/'))
 
     if all_succeed:
         print("All sanity checks passed!")
