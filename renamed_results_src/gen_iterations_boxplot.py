@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     difficulties = ['easy', 'medium', 'hard']
     categories = ['incorrect', 'correct_not_complete', 'complete_not_gt', 'complete_gt']
-    category_labels = ['Incorrect', 'Correct', 'Complete\nnot GT', 'Complete GT']
+    category_labels = ['Incorrect', 'At Least\nCorrect', 'Complete\nnot GT', 'Complete GT']
 
     # Normalize data
     df['experiment'] = df['experiment'].astype(str).str.strip()

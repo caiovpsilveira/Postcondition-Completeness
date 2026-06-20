@@ -23,18 +23,22 @@ It does not have a proper Java or JML parser and relies heavily on heuristics to
 
 ```
 proj_root/
-├── all_results/                # Our experimental results (logs, CSVs and spreadsheets)
-├── dataset_v1_annotated/       # Ground-Truth dataset (oracle)
-├── dataset_v1_no_annotations/  # Dataset clean
-├── figures/                    # Generated plots and figures
-├── specgen/                    # Source code and artifacts used from SpecGen
-├── src/                        # Source code for this project
-├── tests/                      # Test files for the completeness and equivalence scripts
-├── .gitignore                  # Git ignore file
-├── LICENSE                     # MIT license
-├── README.md                   # Project documentation
-├── requirements.txt            # Python (3.10.12) dependencies
-└── run_tests.py                # Sanity script to see if the setup, dataset and scripts are running as expected
+├── all_results/                           # Our experimental results (logs, CSVs and spreadsheets)
+├── dataset_v1_annotated/                  # Ground-Truth dataset (oracle)
+├── dataset_v1_no_annotations/             # Dataset clean
+├── dataset_v1_annotated_incomplete_specs/ # Ground-Truth dataset with some behaviors removed
+├── figures/                               # Generated plots and figures
+├── old_figures/                           # Generated plots and figures - old experiment names
+├── renamed_results_src                    # Scripts to generate the figures for the exps. we want to present. See PAPER NOTICE
+├── FormalBench_mutation_analysis          # Mutation-Based completeness verification artifacts
+├── specgen/                               # Source code and artifacts used from SpecGen
+├── src/                                   # Source code for this project
+├── tests/                                 # Test files for the completeness and equivalence scripts
+├── .gitignore                             # Git ignore file
+├── LICENSE                                # MIT license
+├── README.md                              # Project documentation
+├── requirements.txt                       # Python (3.10.12) dependencies
+└── run_tests.py                           # Sanity script to see if the setup, dataset and scripts are running as expected
 ```
 
 ---
@@ -119,13 +123,13 @@ For the reader continuity, we renamed the remaining experiments presented.
 Experiments E5, E7, E10, E12, E15 and E17 are the strict prompt experiments.
 The all_results contains the original data. The "renamed_results" still refers to the original data, but renames when plotting.
 
-E6  -> E5
-E8  -> E6
-E9  -> E7
-E11 -> E8
-E13 -> E9
-E14 -> E10
-E16 -> E11
+E6  -> E5;
+E8  -> E6;
+E9  -> E7;
+E11 -> E8;
+E13 -> E9;
+E14 -> E10;
+E16 -> E11.
 
 See renamed_results_src/ dir. It's a copy-adapted version of the figures scripts under src.
 

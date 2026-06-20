@@ -243,7 +243,7 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
     # Pretty legend labels
     legend_labels = {
         'incorrect': 'Incorrect',
-        'correct_not_complete': 'Correct',
+        'correct_not_complete': 'At Least\nCorrect',
         'complete_not_gt': 'Complete\nnot GT',
         'complete_gt': 'Complete GT',
     }
