@@ -32,9 +32,7 @@ def _parse_experiment_number(experiment: str):
 
 def _experiment_display_label(exp_num: int) -> str:
     # === REMAPPING / FILTERING EXPERIMENTS ===
-    # updated to show E* in Specgen experiments
-    starred = {1, 3, 6, 9}
-    return f"E{exp_num}{'*' if exp_num in starred else ''}"
+    return f"E{exp_num}"
 
 
 def _resolve_input_to_dataframe(input_path: str) -> pd.DataFrame:
@@ -102,12 +100,14 @@ if __name__ == '__main__':
     df = _resolve_input_to_dataframe(args.input)
 
     # === REMAPPING / FILTERING EXPERIMENTS ===
-    # Remove experiments: E5, E7, E10, E12, E15, E17
+    # Remove experiments: E1, E2, E5, E7, E10, E12, E15, E17
     # Rename experiments according to the mapping below so the remaining
     # experiments match the paper's renamed scheme.
-    # Mapping: E6->E5, E8->E6, E9->E7, E11->E8, E13->E9, E14->E10, E16->E11
-    remove_exps = {5, 7, 10, 12, 15, 17}
-    rename_map = {6: 5, 8: 6, 9: 7, 11: 8, 13: 9, 14: 10, 16: 11}
+    # Mapping: E3 -> E1, E4 -> E2, E6 -> E3; E8 -> E4; E9 -> E5; E11 -> E6; E13 -> E7; E14 -> E8; E16 -> E9.
+    remove_exps = {1, 2, 5, 7, 10, 12, 15, 17}
+    rename_map = {3: 1, 4: 2, 6: 3,
+                  8: 4, 9: 5, 11: 6,
+                  13: 7, 14: 8, 16: 9}
 
     def _map_and_filter_experiment(value):
         s = str(value).strip()
@@ -296,9 +296,9 @@ if __name__ == '__main__':
         # === REMAPPING / FILTERING EXPERIMENTS ===
         # updated for new experiment layout
         groups = [
-            ('GPT 3.5 turbo', [_experiment_display_label(n) for n in range(1, 6)]),
-            ('GPT 4.1 mini', [_experiment_display_label(n) for n in range(6, 9)]),
-            ('GPT 5 mini', [_experiment_display_label(n) for n in range(9, 12)]),
+            ('GPT 3.5 turbo', [_experiment_display_label(n) for n in range(1, 4)]),
+            ('GPT 4.1 mini', [_experiment_display_label(n) for n in range(4, 7)]),
+            ('GPT 5 mini', [_experiment_display_label(n) for n in range(7, 10)]),
         ]
         span_colors = ['#ffffff', '#f5f5f5', '#ffffff']
 

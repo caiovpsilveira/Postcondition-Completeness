@@ -135,28 +135,27 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
     df['_exp_num'] = df['_exp_num'].astype(int)
 
     # REMAP DATA SOURCE TO NEW EXPERIMENT NUMBERS
+    # E3 -> E1, E4 -> E2, E6 -> E3; E8 -> E4; E9 -> E5; E11 -> E6; E13 -> E7; E14 -> E8; E16 -> E9.
     mapping = {
-        1: 1, 2: 2, 3: 3, 4: 4, 
-        6: 5, 
-        8: 6, 9: 7, 11: 8, 
-        13: 9, 14: 10, 16: 11
+        3: 1, 4: 2,
+        6: 3, 
+        8: 4, 9: 5, 11: 6, 
+        13: 7, 14: 8, 16: 9
     }
     df = df[df['_exp_num'].isin(mapping.keys())].copy()
     df['_exp_num'] = df['_exp_num'].map(mapping)
 
     # Mapping experiment number -> label shown
     experiment_names = {
-        1: 'E1: SpecGen\nwith asm',
-        2: 'E2: Convers.\nwith asm',
-        3: 'E3: SpecGen',
-        4: 'E4: Convers.',
-        5: 'E5: Convers.\n+ EC',
-        6: 'E6: SpecGen',
-        7: 'E7: Convers.',
-        8: 'E8: Convers.\n+ EC',
-        9: 'E9: SpecGen',
-        10: 'E10: Convers.',
-        11: 'E11: Convers.\n+ EC',
+        1: 'E1: SpecGen',
+        2: 'E2: Convers.',
+        3: 'E3: Convers.\n+ EC',
+        4: 'E4: SpecGen',
+        5: 'E5: Convers.',
+        6: 'E6: Convers.\n+ EC',
+        7: 'E7: SpecGen',
+        8: 'E8: Convers.',
+        9: 'E9: Convers.\n+ EC',
     }
 
     # Override with custom labels if provided
@@ -410,37 +409,28 @@ def create_graphics(experiments, custom_labels=None, *, df: pd.DataFrame | None 
     #plt.show()
 
 if __name__ == '__main__':
-    #1. reproducibility:             {1,2}
-    #2. no arith null:               {1,3} {2,4}
-    #3. SpecGen vs Conversational:   {3,4} {6,7} {9,10}
-    #4. impact of the embedded compl {4,5} {7,8} {10,11}
-    #5. changed accross models       {3,6,9} {4,7,10} {5,8,11}
+    #1. SpecGen vs Conversational:   {1,2} {4,5} {7,8}
+    #2. impact of the embedded compl {2,3} {5,6} {8,9}
+    #3. changed accross models       {1,4,7} {2,5,8} {3,6,9}
 
     # Format: each item can be either:
     #   - a list of experiment IDs (uses default labels)
     #   - a tuple of (experiment_list, custom_labels_list)
     all_experiments_comparisons = [
-        # reproducibility
-        ['exp1', 'exp2'],
-
-        #arith non vs no arith null
-        ['exp1', 'exp3'],
-        ['exp2', 'exp4'],
-
         # SpecGen vs Conversational
-        ['exp3', 'exp4'],
-        ['exp6', 'exp7'],
-        ['exp9', 'exp10'],
-
-        #3. impact of the embedded completeness
+        ['exp1', 'exp2'],
         ['exp4', 'exp5'],
         ['exp7', 'exp8'],
-        ['exp10', 'exp11'],
 
-        # 4. changed accross models
-        #(['exp3', 'exp6', 'exp9'], ['E3: GPT-3.5 turbo', 'E6: GPT-4.1 mini', 'E9: GPT-5 mini']),
-        #(['exp4', 'exp7', 'exp10'], ['E4: GPT-3.5 turbo', 'E7: GPT-4.1 mini', 'E10: GPT-5 mini']),
-        #(['exp5', 'exp8', 'exp11'], ['E5: GPT-3.5 turbo', 'E8: GPT-4.1 mini', 'E11: GPT-5 mini'])
+        # impact of the embedded completeness
+        ['exp2', 'exp3'],
+        ['exp5', 'exp6'],
+        ['exp8', 'exp9'],
+
+        # changed accross models
+        #(['exp1', 'exp4', 'exp7'], ['E1: GPT-3.5 turbo', 'E4: GPT-4.1 mini', 'E7: GPT-5 mini']),
+        #(['exp2', 'exp5', 'exp8'], ['E2: GPT-3.5 turbo', 'E5: GPT-4.1 mini', 'E8: GPT-5 mini']),
+        #(['exp3', 'exp6', 'exp9'], ['E3: GPT-3.5 turbo', 'E6: GPT-4.1 mini', 'E9: GPT-5 mini'])
     ]
 
     parser = argparse.ArgumentParser(
@@ -472,10 +462,10 @@ if __name__ == '__main__':
     df['_exp_num'] = df['_exp_num'].astype(int)
 
     mapping = {
-        1: 1, 2: 2, 3: 3, 4: 4, 
-        6: 5, 
-        8: 6, 9: 7, 11: 8, 
-        13: 9, 14: 10, 16: 11
+        3: 1, 4: 2,
+        6: 3, 
+        8: 4, 9: 5, 11: 6, 
+        13: 7, 14: 8, 16: 9
     }
     df = df[df['_exp_num'].isin(mapping.keys())].copy()
     df['_exp_num'] = df['_exp_num'].map(mapping)

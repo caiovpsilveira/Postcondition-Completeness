@@ -108,36 +108,36 @@ python src/run_experiments.py --exp EXP
 
 `EXP` should be a string E1..E17, corresponding to the experiment name. For more details refer to the paper.
 
-| Model         | SpecGen    | Original Prompt | Strict Prompt | Original Prompt + EC | Strict Prompt + EC |
+| Model         | SpecGen    | Original Prompt | Strict Prompt | Original Prompt + EC   | Strict Prompt + EC   |
 |---------------|------------|-----------------|---------------|------------------------|----------------------|
 | GPT-3.5 turbo | E1 / E3    | E2 / E4         | E5            | E6                     | E7                   |
 | GPT-4.1 mini  | E8         | E9              | E10           | E11                    | E12                  |
 | GPT-5 mini    | E13        | E14             | E15           | E16                    | E17                  |
 
 
-PAPER NOTICE: for the paper submission, we choose to don't present the results of comparing different generation prompts.
+PAPER NOTICE: for the paper submission, we choose to don't present the results of comparing different generation prompts and from running _with_ non-null and no-overflow assumptions (as in Ma et al. evaluation).
 We ran experiments comparing the original generation prompt against a prompt with more strict generation rules (See specgen/prompt_format.py).
 The results were inconclusive, with a bit more better results towards the strit prompt.
 Due to the paper size and the low significance of these results, we decided to keep them out of the paper.
 For the reader continuity, we renamed the remaining experiments presented.
+Experiments E1 and E2 have the non-null and no-overflow assumptions.
 Experiments E5, E7, E10, E12, E15 and E17 are the strict prompt experiments.
 The all_results contains the original data. The "renamed_results" still refers to the original data, but renames when plotting.
 
-E6  -> E5;
-E8  -> E6;
-E9  -> E7;
-E11 -> E8;
-E13 -> E9;
-E14 -> E10;
-E16 -> E11.
+The mapping from the actual experiment setting to the one displayed on the paper:
+E3 -> E1; E4 -> E2; E6 -> E3; E8 -> E4; E9 -> E5; E11 -> E6; E13 -> E7; E14 -> E8; E16 -> E9.
+
+Or, coming from the paper, the mapping of the displayed experiment to the actual experiment setting:
+E1 -> E3; E2 -> E4; E3 -> E6; E4 -> E8; E5 -> E9; E6 -> E11; E7 -> E13; E8 -> E14; E9 -> E16
 
 See renamed_results_src/ dir. It's a copy-adapted version of the figures scripts under src.
 
+Paper table:
 | Model         | SpecGen    | Conversational  | Conversational + EC |
 |---------------|------------|-----------------|---------------------|
-| GPT-3.5 turbo | E1 / E3    | E2 / E4         | E5                  |
-| GPT-4.1 mini  | E6         | E7              | E8                  |
-| GPT-5 mini    | E9         | E10             | E11                 |
+| GPT-3.5 turbo | E1         | E2              | E3                  |
+| GPT-4.1 mini  | E4         | E5              | E6                  |
+| GPT-5 mini    | E7         | E8              | E9                  |
 
 
 
