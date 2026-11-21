@@ -1,6 +1,28 @@
 # Assessing Postcondition Completeness in Auto-Generated Function Contracts for Software Verification
 
-**Anonymized author(s)**
+Caio Vinícius Pereira Silveira and Mateus Felipe Tymburibá Ferreira.
+
+[See the paper on SBC Open Lib](https://sol.sbc.org.br/index.php/sast/article/view/45856)
+
+Citing us:
+```
+@inproceedings{sast,
+ author = {Caio Vinícius Silveira and Mateus Felipe Ferreira},
+ title = { Assessing Postcondition Completeness in Auto-Generated Function Contracts for Software Verification},
+ booktitle = {Proceedings of the XI Brazilian Symposium on Systematic and Automated Software Testing},
+ location = {São Paulo/SP},
+ year = {2026},
+ keywords = {},
+ issn = {0000-0000},
+ pages = {19--28},
+ publisher = {SBC},
+ address = {Porto Alegre, RS, Brazil},
+ doi = {10.5753/sast.2026.30683},
+ url = {https://sol.sbc.org.br/index.php/sast/article/view/45856}
+}
+```
+
+For citing/using this repository, please use the [Zenodo version 4](https://zenodo.org/records/22119557).
 
 This repository contains the experimental data and source code artifacts.
 
@@ -229,7 +251,7 @@ These were giving feedback suggesting usage of assumptions, which is undesired.
 ### Dataset
 The dataset is a mix of common computer science tasks and algorithms, sourced from [SpecGenBench](https://github.com/Lezhi-Ma/SpecGen-Artifact), [CloverBench](https://github.com/ChuyueSun/Clover), [LeetCode tasks](https://github.com/fluency03/leetcode-java/) and mixed sources.
 
-The JML annotations were manually added and verified for correctness and completeness by Anonymized author(s).
+The JML annotations were manually added and verified for correctness and completeness by Caio Vinícius Pereira Silveira.
 
 ### Remaining files
-The remaining files are distributed under the MIT license. Copyright Anonymized author(s).
+The remaining files are distributed under the MIT license. Copyright Caio Vinícius Pereira Silveira.
